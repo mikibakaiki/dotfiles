@@ -1,0 +1,14 @@
+# Ignore any local-only configuration or sensitive files
+*.local
+*.secret
+*.key
+*.pem
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Backup files
+*.bak
+*~

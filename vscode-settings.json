@@ -1,0 +1,66 @@
+{
+  "remote.SSH.remotePlatform": {
+    "mikis-pi": "linux"
+  },
+  "security.workspace.trust.untrustedFiles": "open",
+  "editor.fontFamily": "'FiraCode Nerd Font', 'CaskaydiaCove NF', 'Cascadia Code', Consolas, 'Courier New', monospace",
+  "editor.fontLigatures": true,
+  "editor.fontWeight": "400",
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "editor.formatOnSave": true,
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "gitlens.ai.model": "vscode",
+  "gitlens.ai.vscode.model": "copilot:claude-3.5-sonnet",
+  "github.copilot.nextEditSuggestions.enabled": true,
+  "github.copilot.chat.localeOverride": "en",
+  "github.copilot.chat.scopeSelection": true,
+  "github.copilot.chat.generateTests.codeLens": true,
+  "github.copilot.chat.followUps": "always",
+  "chat.tools.terminal.autoApprove": {
+    "docker exec": true,
+    "docker ps --format \"table {{.Names}}\\t{{.Status}}\\t{{.Networks}}\"": {
+      "approve": true,
+      "matchCommandLine": true
+    },
+    "docker network": true,
+    "json": true,
+    "python3": true,
+    "docker network inspect pihole_backend --format='{{json .IPAM}}' | python3 -m json.tool": {
+      "approve": true,
+      "matchCommandLine": true
+    },
+    "ip": true,
+    "timeout": true
+  },
+  "editor.codeLensFontFamily": "FiraCode Nerd Font",
+  "editor.inlineSuggest.fontFamily": "FiraCode Nerd Font",
+  "debug.console.fontFamily": "FiraCode Nerd Font",
+  "terminal.integrated.fontFamily": "'FiraCode Nerd Font', 'CaskaydiaCove NF', 'Cascadia Code', Consolas, 'Courier New', monospace",
+  "terminal.integrated.fontLigatures.enabled": true,
+  "terminal.integrated.cursorBlinking": true,
+  "terminal.integrated.enableImages": true,
+  "terminal.integrated.gpuAcceleration": "on",
+  "terminal.integrated.unicodeVersion": "11",
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "terminal.integrated.profiles.windows": {
+    "PowerShell": {
+      "source": "PowerShell",
+      "args": ["-NoLogo"],
+      "env": {
+        "PYTHONIOENCODING": "utf-8"
+      }
+    }
+  },
+  "terminal.integrated.env.windows": {},
+  "chat.editor.fontFamily": "",
+  "chat.fontFamily": "",
+  "workbench.colorTheme": "cursor-dark"
+}

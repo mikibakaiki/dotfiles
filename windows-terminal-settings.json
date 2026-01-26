@@ -1,0 +1,186 @@
+{
+  "$help": "https://aka.ms/terminal-documentation",
+  "$schema": "https://aka.ms/terminal-profiles-schema",
+  "actions": [
+    {
+      "command": {
+        "action": "copy",
+        "singleLine": false
+      },
+      "id": "User.copy.644BA8F2"
+    },
+    {
+      "command": "paste",
+      "id": "User.paste"
+    },
+    {
+      "command": "find",
+      "id": "User.find"
+    },
+    {
+      "command": {
+        "action": "splitPane",
+        "split": "auto",
+        "splitMode": "duplicate"
+      },
+      "id": "User.splitPane.A6751878"
+    }
+  ],
+  "copyFormatting": "none",
+  "copyOnSelect": false,
+  "defaultProfile": "{574e775e-4f2a-5b96-ac1e-a2962a402336}",
+  "keybindings": [
+    {
+      "id": "User.copy.644BA8F2",
+      "keys": "ctrl+c"
+    },
+    {
+      "id": "User.find",
+      "keys": "ctrl+shift+f"
+    },
+    {
+      "id": "User.paste",
+      "keys": "ctrl+v"
+    },
+    {
+      "id": "User.splitPane.A6751878",
+      "keys": "alt+shift+d"
+    }
+  ],
+  "newTabMenu": [
+    {
+      "type": "remainingProfiles"
+    }
+  ],
+  "profiles": {
+    "defaults": {
+      "font": {
+        "face": "FiraCode Nerd Font"
+      }
+    },
+    "list": [
+      {
+        "colorScheme": "Duotone Dark",
+        "commandline": "%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+        "elevate": false,
+        "experimental.retroTerminalEffect": true,
+        "guid": "{61c54bbd-c2c6-5271-96e7-009a87ff44bf}",
+        "hidden": true,
+        "name": "Windows PowerShell",
+        "opacity": 50,
+        "useAcrylic": true
+      },
+      {
+        "commandline": "%SystemRoot%\\System32\\cmd.exe",
+        "guid": "{0caa0dad-35be-5f56-a8ff-afceeeaa6101}",
+        "hidden": true,
+        "name": "Command Prompt"
+      },
+      {
+        "guid": "{b453ae62-4e3d-5e58-b989-0a998ec441b8}",
+        "hidden": true,
+        "name": "Azure Cloud Shell",
+        "source": "Windows.Terminal.Azure"
+      },
+      {
+        "guid": "{51855cb2-8cce-5362-8f54-464b92b32386}",
+        "hidden": true,
+        "name": "Ubuntu",
+        "source": "CanonicalGroupLimited.Ubuntu_79rhkp1fndgsc"
+      },
+      {
+        "guid": "{963ff2f7-6aed-5ce3-9d91-90d99571f53a}",
+        "hidden": false,
+        "name": "Ubuntu-24.04",
+        "source": "Windows.Terminal.Wsl"
+      },
+      {
+        "colorScheme": "Duotone Dark",
+        "guid": "{2c4de342-38b7-51cf-b940-2309a097f518}",
+        "hidden": false,
+        "name": "Ubuntu",
+        "source": "Windows.Terminal.Wsl"
+      },
+      {
+        "guid": "{d8e96812-b789-5068-a5ae-10b2fb53e95f}",
+        "hidden": true,
+        "name": "Ubuntu 24.04.1 LTS",
+        "source": "CanonicalGroupLimited.Ubuntu24.04LTS_79rhkp1fndgsc"
+      },
+      {
+        "colorScheme": "Duotone Dark",
+        "experimental.retroTerminalEffect": false,
+        "font": {
+          "face": "FiraCode Nerd Font"
+        },
+        "guid": "{574e775e-4f2a-5b96-ac1e-a2962a402336}",
+        "hidden": false,
+        "name": "PowerShell",
+        "opacity": 98,
+        "source": "Windows.Terminal.PowershellCore"
+      },
+      {
+        "guid": "{a110b629-c7f8-53f8-90f9-2cf01fb7a0cf}",
+        "hidden": true,
+        "name": "Developer Command Prompt for VS 2022",
+        "source": "Windows.Terminal.VisualStudio"
+      },
+      {
+        "guid": "{11673eab-1610-5189-ac04-fa03cb64cba4}",
+        "hidden": true,
+        "name": "Developer PowerShell for VS 2022",
+        "source": "Windows.Terminal.VisualStudio"
+      }
+    ]
+  },
+  "schemes": [
+    {
+      "background": "#0E1019",
+      "black": "#232323",
+      "blue": "#008DF8",
+      "brightBlack": "#444444",
+      "brightBlue": "#0092FF",
+      "brightCyan": "#67FFF0",
+      "brightGreen": "#ABE15B",
+      "brightPurple": "#9A5FEB",
+      "brightRed": "#FF2740",
+      "brightWhite": "#FFFFFF",
+      "brightYellow": "#FFD242",
+      "cursorColor": "#FF0018",
+      "cyan": "#00D8EB",
+      "foreground": "#FFFAF4",
+      "green": "#8CE10B",
+      "name": "Argonaut",
+      "purple": "#6D43A6",
+      "red": "#FF000F",
+      "selectionBackground": "#002A3B",
+      "white": "#FFFFFF",
+      "yellow": "#FFB900"
+    },
+    {
+      "background": "#1F1D27",
+      "black": "#1F1D27",
+      "blue": "#2488FF",
+      "brightBlack": "#353147",
+      "brightBlue": "#2488FF",
+      "brightCyan": "#6AD7D9",
+      "brightGreen": "#2DCD73",
+      "brightPurple": "#DE8D40",
+      "brightRed": "#D9393E",
+      "brightWhite": "#DFD1ED",
+      "brightYellow": "#D9B76E",
+      "cursorColor": "#FFFFFF",
+      "cyan": "#6AD7D9",
+      "foreground": "#B7A1FF",
+      "green": "#2DCD73",
+      "name": "Duotone Dark",
+      "purple": "#DE8D40",
+      "red": "#D9393E",
+      "selectionBackground": "#FFFFFF",
+      "white": "#B7A1FF",
+      "yellow": "#D9B76E"
+    }
+  ],
+  "themes": [],
+  "useAcrylicInTabRow": false
+}

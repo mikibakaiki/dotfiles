@@ -1,0 +1,51 @@
+# Your identity - used in all commits
+[user]
+	email = mikibakaiki@users.noreply.github.com
+	name = mikibakaiki
+
+# Use 'main' as default branch name instead of 'master' (GitHub standard)
+[init]
+	defaultBranch = main
+
+# Show common ancestor in merge conflicts for better context
+[merge]
+	conflictstyle = diff3
+
+# Automatically remove deleted remote branches when fetching
+[fetch]
+	prune = true
+
+# Reuse Recorded Resolution - remembers how you resolved conflicts
+[rerere]
+	enabled = true
+
+# Only push the current branch (safer than pushing all matching branches)
+[push]
+	default = simple
+
+# Don't rebase when pulling (merge instead, preserves exact history)
+[pull]
+	rebase = false
+
+# Enable colored output for better readability
+[color]
+	ui = auto
+
+# Helpful shortcuts to speed up common commands
+[alias]
+	st = status
+	co = checkout
+	br = branch
+	lg = log --graph --oneline --decorate --all
+	unstage = reset HEAD --
+
+# Windows line ending handling + VS Code as default editor
+[core]
+	autocrlf = true  # Convert LF to CRLF on checkout, CRLF to LF on commit
+	editor = code --wait  # Use VS Code for commit messages, rebases, etc.
+
+# Uncomment to sign commits with GPG (shows "Verified" badge on GitHub)
+# [commit]
+# 	gpgsign = true
+# [user]
+# 	signingkey = YOUR_GPG_KEY_ID
