@@ -1,6 +1,6 @@
 {
   "remote.SSH.remotePlatform": {
-    "mikis-pi": "linux"
+    "mikis-pi": "linux",
   },
   "security.workspace.trust.untrustedFiles": "open",
   "editor.fontFamily": "'FiraCode Nerd Font', 'CaskaydiaCove NF', 'Cascadia Code', Consolas, 'Courier New', monospace",
@@ -8,14 +8,14 @@
   "editor.fontWeight": "400",
   "typescript.updateImportsOnFileMove.enabled": "always",
   "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
   },
   "editor.formatOnSave": true,
   "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
   },
   "[json]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
   },
   "gitlens.ai.model": "vscode",
   "gitlens.ai.vscode.model": "copilot:claude-3.5-sonnet",
@@ -28,17 +28,17 @@
     "docker exec": true,
     "docker ps --format \"table {{.Names}}\\t{{.Status}}\\t{{.Networks}}\"": {
       "approve": true,
-      "matchCommandLine": true
+      "matchCommandLine": true,
     },
     "docker network": true,
     "json": true,
     "python3": true,
     "docker network inspect pihole_backend --format='{{json .IPAM}}' | python3 -m json.tool": {
       "approve": true,
-      "matchCommandLine": true
+      "matchCommandLine": true,
     },
     "ip": true,
-    "timeout": true
+    "timeout": true,
   },
   "editor.codeLensFontFamily": "FiraCode Nerd Font",
   "editor.inlineSuggest.fontFamily": "FiraCode Nerd Font",
@@ -55,12 +55,17 @@
       "source": "PowerShell",
       "args": ["-NoLogo"],
       "env": {
-        "PYTHONIOENCODING": "utf-8"
-      }
-    }
+        "PYTHONIOENCODING": "utf-8",
+      },
+    },
   },
   "terminal.integrated.env.windows": {},
   "chat.editor.fontFamily": "",
   "chat.fontFamily": "",
-  "workbench.colorTheme": "cursor-dark"
+  "workbench.colorTheme": "My Custom Theme",
+  "markdown.marp.themes": [
+    "https://rainbowflesh.github.io/css/rose-pine-dawn.css",
+      "https://rainbowflesh.github.io/css/rose-pine-moon.css",
+      "https://rainbowflesh.github.io/css/rose-pine.css"
+  ],
 }
