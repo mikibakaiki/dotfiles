@@ -1,0 +1,91 @@
+{
+  "$schema": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
+  "blocks": [
+    {
+      "type": "prompt",
+      "alignment": "left",
+      "segments": [
+        {
+          "foreground": "#0087d7",
+          "style": "plain",
+          "template": "\uf07b {{ .Path}}",
+          "type": "path",
+          "options": {
+            "style": "fish",
+            "dir_length": 15,
+            "full_length_dirs": 2,
+            // "folder_icon": " \uf07b ",
+            // "hide_root_location": true,
+            // "max_depth": 2,
+            // "mixed_threshold": 2,
+            "mapped_locations_enabled": true,
+            "mapped_locations": {
+              "C:\\Users\\mikibakaiki\\GitHub": "  "
+            }
+          }
+        },
+        {
+          "type": "session",
+          "style": "diamond",
+          "foreground": "#ffffff",
+          "background": "#c386f1",
+          "leading_diamond": "",
+          "trailing_diamond": "",
+          "template": "{{ if .SSHSession }} {{ end }}{{ .UserName }}"
+        },
+        {
+          // "properties": {
+          //   "cache_duration": "none",
+          //   "fetch_status": true
+          // },
+          "template": "<#5fafff>(</>{{ if gt (len .HEAD) 25 }}{{ trunc 12 .HEAD }}...{{ trunc -12 .HEAD }}{{ else }}{{ .HEAD }}{{ end }}{{ if or (.Working.Changed) (.Staging.Changed) }}*{{ end }}<#5fafff>)</> ",
+          "foreground": "#5fd787",
+          "type": "git",
+          "style": "plain",
+          "foreground_templates": [
+            "{{ if or (.Working.Changed) (.Staging.Changed) }}#ffaf00{{ end }}"
+          ]
+        }
+      ]
+    },
+
+    {
+      "type": "prompt",
+      "alignment": "right",
+      "segments": [
+        {
+          "type": "python",
+          "style": "plain",
+          "foreground": "#FFD43B",
+          "template": "{{ if .Venv }}({{ .Venv }}) {{ end }}"
+        },
+        {
+          "properties": {
+            "cache_duration": "none"
+          },
+          "template": "{{ .UserName }}@{{ .HostName }}",
+          "foreground": "#ffaf00",
+          "type": "session",
+          "style": "plain"
+        }
+      ]
+    },
+    {
+      "type": "prompt",
+      "alignment": "left",
+      "newline": true,
+      "segments": [
+        {
+          "properties": {
+            "cache_duration": "none"
+          },
+          "template": "$ ",
+          "foreground": "#8787ff",
+          "type": "text",
+          "style": "plain"
+        }
+      ]
+    }
+  ],
+  "version": 4
+}

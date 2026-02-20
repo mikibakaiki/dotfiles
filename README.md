@@ -39,7 +39,7 @@ My personal configuration files for development environments.
 #### 1. Clone this repository
 
 ```powershell
-git clone git@github.com:mikibakaiki/dotfiles.git $HOME\dotfiles
+git clone git@github.com:mikibakaiki/dotfiles.git $HOME\GitHub\dotfiles
 ```
 
 #### 2. Create symlinks
@@ -48,21 +48,21 @@ Run PowerShell as **Administrator**, then:
 
 ```powershell
 # Git configuration
-New-Item -ItemType SymbolicLink -Path $HOME\.gitconfig -Target $HOME\dotfiles\.gitconfig -Force
+New-Item -ItemType SymbolicLink -Path $HOME\.gitconfig -Target $HOME\GitHub\dotfiles\.gitconfig -Force
 
 # PowerShell profile
-New-Item -ItemType SymbolicLink -Path $PROFILE -Target $HOME\dotfiles\Microsoft.PowerShell_profile.ps1 -Force
+New-Item -ItemType SymbolicLink -Path $PROFILE -Target $HOME\GitHub\dotfiles\Microsoft.PowerShell_profile.ps1 -Force
 
 # Oh My Posh af-magic theme (copy to themes directory)
 # First, find your Oh My Posh themes path:
 # echo $env:POSH_THEMES_PATH
-Copy-Item -Path $HOME\dotfiles\af-magic.omp.json -Destination $env:POSH_THEMES_PATH\af-magic.omp.json -Force
+Copy-Item -Path $HOME\GitHub\dotfiles\af-magic.omp.json -Destination $env:POSH_THEMES_PATH\af-magic.omp.json -Force
 
 # Windows Terminal settings
-New-Item -ItemType SymbolicLink -Path $env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json -Target $HOME\dotfiles\windows-terminal-settings.json -Force
+New-Item -ItemType SymbolicLink -Path $env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json -Target $HOME\GitHub\dotfiles\windows-terminal-settings.json -Force
 
 # VS Code settings
-New-Item -ItemType SymbolicLink -Path $env:APPDATA\Code\User\settings.json -Target $HOME\dotfiles\vscode-settings.json -Force
+New-Item -ItemType SymbolicLink -Path $env:APPDATA\Code\User\settings.json -Target $HOME\GitHub\dotfiles\vscode-settings.json -Force
 ```
 
 #### 3. Install optional PowerShell modules (recommended)
@@ -132,7 +132,7 @@ echo $SHELL
 After making changes to files in this repository:
 
 ```bash
-cd ~/dotfiles  # or cd $HOME\dotfiles on Windows
+cd ~/dotfiles  # or cd $HOME\GitHub\dotfiles on Windows
 git add .
 git commit -m "Update configuration"
 git push
@@ -141,7 +141,7 @@ git push
 On another machine, pull the latest changes:
 
 ```bash
-cd ~/dotfiles  # or cd $HOME\dotfiles on Windows
+cd ~/dotfiles  # or cd $HOME\GitHub\dotfiles on Windows
 git pull
 ```
 

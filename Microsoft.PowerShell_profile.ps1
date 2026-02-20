@@ -3,7 +3,7 @@
 $env:LC_ALL='C.UTF-8'
 
 # fnm - node version manager
-#fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
+fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
 
 # oh-my-posh with custom theme
 
@@ -14,7 +14,10 @@ $env:LC_ALL='C.UTF-8'
 # --config "$env:POSH_THEMES_PATH\cobalt2.omp.json" | Invoke-Expression
 
 # af-magic theme
-oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH\af-magic.omp.json" | Invoke-Expression
+# --config "$env:POSH_THEMES_PATH\af-magic-improved.omp.json"
+
+# af-magic theme
+oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH\af-magic-improved.omp.json" | Invoke-Expression
 
 # https://www.hanselman.com/blog/my-ultimate-powershell-prompt-with-oh-my-posh-and-the-windows-terminal
 # To install, run Install-Module -Name Terminal-Icons -Repository PSGallery
