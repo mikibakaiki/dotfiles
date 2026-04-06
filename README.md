@@ -51,6 +51,13 @@ Run PowerShell as **Administrator**, then:
 # Git configuration
 New-Item -ItemType SymbolicLink -Path $HOME\.gitconfig -Target $HOME\GitHub\dotfiles\.gitconfig -Force
 
+# Personal Git identity (local-only, ignored by git)
+@"
+[user]
+	name = Your Name
+	email = you@users.noreply.github.com
+"@ | Set-Content -Path $HOME\.gitconfig.local -Encoding UTF8
+
 # PowerShell profile
 New-Item -ItemType SymbolicLink -Path $PROFILE -Target $HOME\GitHub\dotfiles\Microsoft.PowerShell_profile.ps1 -Force
 
@@ -107,6 +114,13 @@ git clone git@github.com:mikibakaiki/dotfiles.git ~/dotfiles
 ```bash
 # Git configuration
 ln -sf ~/dotfiles/.gitconfig ~/.gitconfig
+
+# Personal Git identity (local-only, ignored by git)
+cat > ~/.gitconfig.local <<'EOF'
+[user]
+	name = Your Name
+	email = you@example.com
+EOF
 
 # Bash configuration
 ln -sf ~/dotfiles/.bashrc ~/.bashrc
@@ -195,10 +209,15 @@ Get-PoshThemes
 
 ## Customization
 
-Before using these dotfiles, you may want to update:
+Before using these dotfiles, create or update `~/.gitconfig.local` with your commit identity:
 
-1. **Email address** in `.gitconfig` - Consider using GitHub's private email (`username@users.noreply.github.com`)
-2. **Name** in `.gitconfig` - Your preferred display name for commits
+```ini
+[user]
+	name = Your Name
+	email = you@example.com
+```
+
+That file is ignored by this repository because it matches `*.local` in [.gitignore](.gitignore).
 
 ## Useful links
 

@@ -1,7 +1,6 @@
-# Your identity - used in all commits
-[user]
-	email = mikibakaiki@users.noreply.github.com
-	name = mikibakaiki
+# Personal identity is loaded from a local-only override file
+[include]
+	path = ~/.gitconfig.local
 
 # Use 'main' as default branch name instead of 'master' (GitHub standard)
 [init]
