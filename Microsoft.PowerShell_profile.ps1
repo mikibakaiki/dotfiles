@@ -3,7 +3,9 @@
 $env:LC_ALL='C.UTF-8'
 
 # fnm - node version manager
-fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
+if (Get-Command fnm -ErrorAction SilentlyContinue) {
+	fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
+}
 
 # oh-my-posh with custom theme
 
@@ -21,10 +23,15 @@ oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH\af-magic-improved.omp.json"
 
 # https://www.hanselman.com/blog/my-ultimate-powershell-prompt-with-oh-my-posh-and-the-windows-terminal
 # To install, run Install-Module -Name Terminal-Icons -Repository PSGallery
-Import-Module -Name Terminal-Icons
+if (Get-Module -ListAvailable Terminal-Icons) {
+	Import-Module -Name Terminal-Icons
+}
 
 # https://www.hanselman.com/blog/adding-predictive-intellisense-to-my-windows-terminal-powershell-prompt-with-psreadline
 # Install-Module PSReadLine -AllowPrerelease -Force
-Set-PSReadLineOption -PredictionSource History
-Set-PSReadLineOption -PredictionViewStyle ListView
-Set-PSReadLineOption -EditMode Windows
+if (Get-Module -ListAvailable PSReadLine) {
+	Import-Module PSReadLine
+	Set-PSReadLineOption -PredictionSource History
+	Set-PSReadLineOption -PredictionViewStyle ListView
+	Set-PSReadLineOption -EditMode Windows
+}

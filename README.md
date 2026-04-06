@@ -5,11 +5,12 @@ My personal configuration files for development environments.
 ## Contents
 
 - `.gitconfig` - Global Git configuration with aliases, colors, and best practices
-- `Microsoft.PowerShell_profile.ps1` - PowerShell profile with Oh My Posh (af-magic theme), fnm, and UTF-8 encoding
-- `af-magic.omp.json` - Custom Oh My Posh theme (af-magic style with git integration and Python venv support)
+- `Microsoft.PowerShell_profile.ps1` - PowerShell profile with Oh My Posh (af-magic-improved theme), optional fnm loading, Terminal-Icons, PSReadLine, and UTF-8 encoding
+- `af-magic-improved.omp.json` - Custom Oh My Posh theme used by the PowerShell profile
+- `af-magic.omp.json` - Legacy/alternate Oh My Posh theme with af-magic styling
 - `windows-terminal-settings.json` - Windows Terminal settings with Duotone Dark theme and FiraCode Nerd Font
 - `vscode-settings.json` - VS Code user settings with fonts, formatters, Copilot, and terminal config
-- `.bashrc` - Bash shell configuration with .NET Core, aliases, and colorized output
+- `.bashrc` - Bash shell configuration with .NET PATH additions and colorized output
 - `.zshrc` - Zsh shell configuration with Oh My Zsh, NVM, pyenv, and .NET Core
 
 ## Prerequisites
@@ -53,10 +54,10 @@ New-Item -ItemType SymbolicLink -Path $HOME\.gitconfig -Target $HOME\GitHub\dotf
 # PowerShell profile
 New-Item -ItemType SymbolicLink -Path $PROFILE -Target $HOME\GitHub\dotfiles\Microsoft.PowerShell_profile.ps1 -Force
 
-# Oh My Posh af-magic theme (copy to themes directory)
+# Oh My Posh theme (copy to themes directory)
 # First, find your Oh My Posh themes path:
 # echo $env:POSH_THEMES_PATH
-Copy-Item -Path $HOME\GitHub\dotfiles\af-magic.omp.json -Destination $env:POSH_THEMES_PATH\af-magic.omp.json -Force
+Copy-Item -Path $HOME\GitHub\dotfiles\af-magic-improved.omp.json -Destination $env:POSH_THEMES_PATH\af-magic-improved.omp.json -Force
 
 # Windows Terminal settings
 New-Item -ItemType SymbolicLink -Path $env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json -Target $HOME\GitHub\dotfiles\windows-terminal-settings.json -Force
@@ -75,10 +76,7 @@ Install-Module -Name Terminal-Icons -Repository PSGallery -Scope CurrentUser
 Install-Module PSReadLine -AllowPrerelease -Scope CurrentUser -Force
 ```
 
-After installing these modules, uncomment the relevant lines in your PowerShell profile:
-
-- Lines 21-22 for Terminal-Icons
-- Lines 25-28 for PSReadLine
+After installing these modules, the profile loads them automatically, so no uncommenting is required.
 
 #### 4. Verify
 
@@ -91,7 +89,7 @@ Get-Content $PROFILE
 
 # Verify Oh My Posh theme path (should show the themes directory)
 echo $env:POSH_THEMES_PATH
-Test-Path "$env:POSH_THEMES_PATH\af-magic.omp.json"
+Test-Path "$env:POSH_THEMES_PATH\af-magic-improved.omp.json"
 
 # Verify Windows Terminal settings (restart Windows Terminal to see changes)
 ```
@@ -153,11 +151,11 @@ The PowerShell profile includes several customization options:
 
 ### Oh My Posh Themes
 
-The profile is configured to use the **af-magic** theme by default. You can switch themes by commenting/uncommenting lines in the profile:
+The profile is configured to use the **af-magic-improved** theme by default. You can switch themes by commenting/uncommenting lines in the profile:
 
-- **af-magic** (line 17): Custom theme with git status, Python venv, and user@host display
-- **cobalt2** (line 14): Built-in Oh My Posh theme
-- **default** (line 11): Standard Oh My Posh theme
+- **af-magic-improved**: Custom theme with git status, Python venv, and user@host display
+- **cobalt2**: Built-in Oh My Posh theme
+- **default**: Standard Oh My Posh theme
 
 To use a different built-in theme, explore available themes:
 
@@ -165,26 +163,25 @@ To use a different built-in theme, explore available themes:
 Get-PoshThemes
 ```
 
-### Optional Modules (commented out by default)
+### Optional Modules
 
-**Terminal-Icons** (lines 21-22)
+**Terminal-Icons**
 
 - Adds colorful file and folder icons to `ls`/`dir` output
 - Install: `Install-Module -Name Terminal-Icons -Repository PSGallery`
-- Enable: Uncomment lines 21-22 in the profile
+- The profile loads it automatically when the module is installed
 
-**PSReadLine** (lines 25-28)
+**PSReadLine**
 
 - Provides predictive IntelliSense based on command history
 - Shows suggestions in a list view as you type
 - Install: `Install-Module PSReadLine -AllowPrerelease -Force`
-- Enable: Uncomment lines 25-28 in the profile
+- The profile loads it automatically when the module is installed
 - Note: Requires PowerShell 7.2+ for best experience with prerelease features
 
-### fnm - Node Version Manager (line 5)
+### fnm - Node Version Manager
 
-- Commented out by default
-- Uncomment if you use fnm for Node.js version management
+- Loaded automatically when `fnm` is installed
 - Enables automatic Node version switching based on `.nvmrc` or `.node-version` files
 
 ## Git Configuration Highlights
