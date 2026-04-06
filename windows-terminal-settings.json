@@ -14,16 +14,16 @@
       "id": "User.paste"
     },
     {
-      "command": "find",
-      "id": "User.find"
-    },
-    {
       "command": {
         "action": "splitPane",
         "split": "auto",
         "splitMode": "duplicate"
       },
       "id": "User.splitPane.A6751878"
+    },
+    {
+      "command": "find",
+      "id": "User.find"
     }
   ],
   "copyFormatting": "none",
@@ -35,12 +35,12 @@
       "keys": "ctrl+c"
     },
     {
-      "id": "User.find",
-      "keys": "ctrl+shift+f"
-    },
-    {
       "id": "User.paste",
       "keys": "ctrl+v"
+    },
+    {
+      "id": "User.find",
+      "keys": "ctrl+shift+f"
     },
     {
       "id": "User.splitPane.A6751878",
@@ -130,6 +130,22 @@
         "hidden": true,
         "name": "Developer PowerShell for VS 2022",
         "source": "Windows.Terminal.VisualStudio"
+      },
+      {
+        "guid": "{7a0fc547-15eb-51b7-8bd3-54551cef2738}",
+        "hidden": false,
+        "name": "docker-desktop",
+        "source": "Microsoft.WSL"
+      },
+      {
+        "colorScheme": "Dimidium",
+        "commandline": "C:\\Program Files\\Git\\bin\\bash.exe -i -l",
+        "guid": "{0da2d571-6cc3-4014-85d2-89fac44c03f9}",
+        "hidden": false,
+        "icon": "C:\\Program Files\\Git\\mingw64\\share\\git\\git-for-windows.ico",
+        "name": "Git Bash",
+        "startingDirectory": "%USERPROFILE%",
+        "tabTitle": "Git Bash"
       }
     ]
   },
