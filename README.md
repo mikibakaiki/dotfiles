@@ -16,6 +16,7 @@ Some files in this repository were brought over from previous setups and may be 
 - `vscode-settings.json` - VS Code user settings with fonts, formatters, Copilot, and terminal config
 - `.bashrc` - Bash shell configuration with .NET PATH additions and colorized output
 - `.zshrc` - Zsh shell configuration with Oh My Zsh, NVM, pyenv, and .NET Core
+- `media/` - Images and icons used in the repo
 
 ## Prerequisites
 
