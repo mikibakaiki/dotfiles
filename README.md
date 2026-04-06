@@ -2,6 +2,10 @@
 
 My personal configuration files for development environments.
 
+## Disclaimer
+
+Some files in this repository were brought over from previous setups and may be outdated. For additional historical context, see the legacy repo at https://github.com/mikibakaiki/linux_config, which may still contain useful ideas or files for this dotfiles collection.
+
 ## Contents
 
 - `.gitconfig` - Global Git configuration with aliases, colors, and best practices
