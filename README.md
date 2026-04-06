@@ -40,6 +40,32 @@ Some files in this repository were brought over from previous setups and may be 
 
 ## Installation
 
+### One-command auto-detect (optional)
+
+From the repo root, this command selects the correct init script for the current OS:
+
+```bash
+if [ "$(uname -s)" = "Darwin" ] || [ "$(uname -s)" = "Linux" ]; then ./init.sh; else pwsh -ExecutionPolicy Bypass -File .\\init.ps1; fi
+```
+
+Dry run variant:
+
+```bash
+if [ "$(uname -s)" = "Darwin" ] || [ "$(uname -s)" = "Linux" ]; then ./init.sh --dry-run; else pwsh -ExecutionPolicy Bypass -File .\\init.ps1 -WhatIf; fi
+```
+
+PowerShell equivalent:
+
+```powershell
+if ($IsWindows) { pwsh -ExecutionPolicy Bypass -File .\init.ps1 } else { bash ./init.sh }
+```
+
+PowerShell dry run equivalent:
+
+```powershell
+if ($IsWindows) { pwsh -ExecutionPolicy Bypass -File .\init.ps1 -WhatIf } else { bash ./init.sh --dry-run }
+```
+
 ### Windows (PowerShell)
 
 #### 1. Clone this repository
