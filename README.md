@@ -224,9 +224,10 @@ Before using these dotfiles, create or update `~/.gitconfig.local` with your com
 
 That file is ignored by this repository because it matches `*.local` in [.gitignore](.gitignore).
 
-## Useful links
+## Useful URLs
 
 1. [Terminal Colors Inspiration](https://www.freecodecamp.org/news/windows-terminal-themes-color-schemes-powershell-customize/)
+2. [PNG to ICO](https://foxp.github.io/PNG-to-ICO/)
 
 ## License
 
