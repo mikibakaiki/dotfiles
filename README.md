@@ -48,7 +48,28 @@ Some files in this repository were brought over from previous setups and may be 
 git clone git@github.com:mikibakaiki/dotfiles.git $HOME\GitHub\dotfiles
 ```
 
-#### 2. Create symlinks
+#### 2. Run the init script (recommended)
+
+From the repo root:
+
+```powershell
+# Minimal setup (creates symlinks, copies Oh My Posh theme when available)
+pwsh -ExecutionPolicy Bypass -File .\init.ps1
+
+# Also write git identity and install optional modules
+pwsh -ExecutionPolicy Bypass -File .\init.ps1 -GitName "Your Name" -GitEmail "you@users.noreply.github.com" -InstallOptionalModules
+
+# Dry run (preview actions without applying)
+pwsh -ExecutionPolicy Bypass -File .\init.ps1 -WhatIf
+```
+
+Notes:
+
+- Run PowerShell as Administrator if symlink creation fails.
+- If `.gitconfig.local` already exists, it is not overwritten unless you pass `-ForceGitIdentity`.
+- Use `-WhatIf` to preview actions without applying changes.
+
+#### 3. Create symlinks (manual alternative)
 
 Run PowerShell as **Administrator**, then:
 
@@ -78,7 +99,7 @@ New-Item -ItemType SymbolicLink -Path $env:LOCALAPPDATA\Packages\Microsoft.Windo
 New-Item -ItemType SymbolicLink -Path $env:APPDATA\Code\User\settings.json -Target $HOME\GitHub\dotfiles\vscode-settings.json -Force
 ```
 
-#### 3. Install optional PowerShell modules (recommended)
+#### 4. Install optional PowerShell modules (recommended)
 
 ```powershell
 # Terminal-Icons: Adds colorful icons to file/folder listings
@@ -90,7 +111,7 @@ Install-Module PSReadLine -AllowPrerelease -Scope CurrentUser -Force
 
 After installing these modules, the profile loads them automatically, so no uncommenting is required.
 
-#### 4. Verify
+#### 5. Verify
 
 ```powershell
 # Verify Git config
@@ -115,6 +136,26 @@ git clone git@github.com:mikibakaiki/dotfiles.git ~/dotfiles
 ```
 
 #### 2. Create symlinks
+
+Or use the init script (recommended):
+
+```bash
+cd ~/dotfiles
+chmod +x ./init.sh
+
+# Minimal setup (symlinks)
+./init.sh
+
+# Also write git identity
+./init.sh --git-name "Your Name" --git-email "you@example.com"
+
+# Dry run (preview actions without applying)
+./init.sh --dry-run
+```
+
+Notes:
+
+- If `~/.gitconfig.local` already exists, it is not overwritten unless you pass `--force-git-identity`.
 
 ```bash
 # Git configuration
