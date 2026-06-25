@@ -4,11 +4,14 @@ shell-integration          = fish
 shell-integration-features = cursor, title
 
 # Font
-font-family = FiraCode Nerd Font
+# Other options: 
+# JetBrainsMono Nerd Font Mono
+# CaskaydiaCove Nerd Font Mono 
+font-family = FiraCode Nerd Font Mono 
 font-size   = 14
 
 # Theme
-theme = catppuccin-mocha
+theme = Catppuccin Mocha
 
 # Window
 window-padding-x = 12
