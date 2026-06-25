@@ -1,0 +1,6 @@
+node_modules
+skills
+package\.json$
+package-lock\.json$
+tui\.json$
+opencode\.json$

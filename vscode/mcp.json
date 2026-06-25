@@ -1,0 +1,20 @@
+{
+  "servers": {
+    "jira-mcp": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "~/.local/share/mcp/jira-mcp/node_modules/@dna-ai-lab/jira-mcp/build/server.js"
+      ],
+      "envFile": "~/.local/share/mcp/jira-mcp/.env"
+    },
+    "confluence-mcp": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "~/.local/share/mcp/confluence-mcp/node_modules/@dna-ai-lab/confluence-mcp/build/server.js"
+      ],
+      "envFile": "~/.local/share/mcp/confluence-mcp/.env"
+    }
+  }
+}

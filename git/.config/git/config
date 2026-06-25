@@ -1,0 +1,29 @@
+
+[core]
+	quotepath = off
+	editor = code --wait
+	autocrlf = input
+	eol = lf
+	excludesFile = ~/.config/git/ignore
+
+[i18n]
+	logoutputencoding = utf8
+	commitencoding = utf8
+[alias]
+	# Toggle aliases by shell (keep only one variant uncommented per alias name).
+	# 1) PowerShell: keep PowerShell aliases uncommented.
+	# 2) Bash/WSL: comment PowerShell aliases and uncomment Bash aliases.
+	# 3) Verify active aliases: git config --global --get-regexp '^alias\.(reset-branch|cleanup|prune-local)$'
+	
+	# PowerShell variant (pwsh / VS Code terminal on Windows):
+	# reset-branch = "!pwsh -NoProfile -Command \"git fetch origin master; git reset --hard origin/master; \\$branch = git branch --show-current; if (\\$branch) { git push --force origin \\$branch }\""
+	# cleanup = "!pwsh -NoProfile -Command \"git branch --merged master | Select-String -NotMatch '\\*|master|main|develop' | ForEach-Object { \\$_.ToString().Trim() } | ForEach-Object { if (\\$_){ git branch -d \\$_ } }\""
+	# prune-local = "!pwsh -NoProfile -Command \"git fetch --prune; git branch -vv | Select-String ': gone]' | ForEach-Object { \\$_.ToString().Split()[0].Trim() } | ForEach-Object { if (\\$_){ git branch -D \\$_ } }\""
+	
+	# Bash variant (Git Bash / WSL): comment PowerShell lines above, then uncomment below.
+	
+	reset-branch = "!f(){ git fetch origin master && git reset --hard origin/master && git push --force origin $(git branch --show-current); }; f"
+	cleanup = "!git branch --merged master | grep -Ev '^\\*|master$|main$|develop$' | xargs -r git branch -d"
+	prune-local = "!git fetch --prune && git branch -vv | awk '/: gone]/{print $1}' | xargs -r git branch -D"
+[fetch]
+	prune = true

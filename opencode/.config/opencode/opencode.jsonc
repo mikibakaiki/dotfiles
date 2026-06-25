@@ -1,0 +1,38 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // Model — via GitHub Copilot subscription (no separate Anthropic billing)
+  "model": "github-copilot/claude-sonnet-4.6",
+
+  // MCP servers — credentials come from fish .env.work via {env:VAR}
+  "mcp": {
+    "jira-mcp": {
+      "type": "local",
+      "command": [
+        "node",
+        "/Users/joao.campos/.local/share/mcp/jira-mcp/node_modules/@dna-ai-lab/jira-mcp/build/server.js",
+      ],
+      "environment": {
+        "JIRA_PAT": "{env:JIRA_PAT}",
+      },
+    },
+    "confluence-mcp": {
+      "type": "local",
+      "command": [
+        "node",
+        "/Users/joao.campos/.local/share/mcp/confluence-mcp/node_modules/@dna-ai-lab/confluence-mcp/build/server.js",
+      ],
+      "environment": {
+        "CONFLUENCE_PAT": "{env:CONFLUENCE_PAT}",
+      },
+    },
+  },
+
+  // Plugins — dcp via npm (always latest), caveman via local file
+  // graphify excluded: it's a skill/RAG tool, not a session plugin
+  "plugin": [
+    "@tarquinen/opencode-dcp@latest",
+    "./plugins/caveman/plugin.js",
+    "./plugins/graphify.js",
+  ],
+}

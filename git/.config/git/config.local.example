@@ -1,0 +1,5 @@
+[user]
+	name = NAME
+	email = EMAIL
+[credential "URL"]
+	provider = PROVIDER

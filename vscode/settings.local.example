@@ -1,0 +1,14 @@
+// VS Code local/work settings — set these manually via Cmd+Shift+P → "Open User Settings (JSON)"
+// Do NOT commit this file. These settings are appended to your main settings.json by hand on each machine.
+{
+  "atlascode.jira.jqlList": [
+    {
+      "id": "generated-id",
+      "siteId": "jira.com",
+      "name": "Assigned To Me: New, This PI, This Sprint or In Development",
+      "query": "assignee = currentUser() AND resolution = Unresolved AND status in (\"In Development\", New, \"This PI\", \"This Sprint\", Design) order by updated DESC",
+      "enabled": true,
+      "monitor": true
+    }
+  ]
+}

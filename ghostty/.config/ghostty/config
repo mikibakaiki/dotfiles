@@ -1,0 +1,20 @@
+# Shell
+command                    = /opt/homebrew/bin/fish
+shell-integration          = fish
+shell-integration-features = cursor, title
+
+# Font
+font-family = FiraCode Nerd Font
+font-size   = 14
+
+# Theme
+theme = catppuccin-mocha
+
+# Window
+window-padding-x = 12
+window-padding-y = 10
+
+# Behaviour
+confirm-close-surface   = false
+mouse-hide-while-typing = true
+copy-on-select          = false

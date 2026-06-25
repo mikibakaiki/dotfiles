@@ -1,0 +1,2 @@
+# vscode is managed via vscode/install.sh, not stow
+^vscode$

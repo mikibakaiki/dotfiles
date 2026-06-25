@@ -1,0 +1,25 @@
+# ── Fish secrets (never commit) ────────────────────────────────────────────────
+**/conf.d/.env.personal
+**/conf.d/.env.work
+**/fish_variables
+
+# ── Git per-machine identity ───────────────────────────────────────────────────
+**/git/config.local
+
+# ── opencode runtime (managed by opencode itself) ──────────────────────────────
+**/opencode/node_modules/
+**/opencode/plugins/
+**/opencode/skills/
+**/opencode/package.json
+**/opencode/package-lock.json
+**/opencode/tui.json
+**/opencode/opencode.json
+
+# ── macOS ──────────────────────────────────────────────────────────────────────
+**/.DS_Store
+
+# ── General (safety net) ───────────────────────────────────────────────────────
+node_modules/
+*.log
+
+**/vscode/settings.local.json
