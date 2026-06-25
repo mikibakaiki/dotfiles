@@ -1,0 +1,5 @@
+# Never track private keys
+id_*
+!*.pub
+known_hosts
+authorized_keys
