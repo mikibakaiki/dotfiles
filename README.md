@@ -10,6 +10,7 @@ Each tool's config lives in this repo and gets symlinked into the correct locati
 ```
 dotfiles/
 ├── .gitignore
+├── .stow-local-ignore        — excludes vscode from stow */
 ├── .stowrc                   — stow defaults: target=$HOME, verbose
 ├── bootstrap.sh              — fresh machine setup
 ├── README.md
@@ -27,24 +28,25 @@ dotfiles/
 │           ├── 90-path-dedupe.fish      — deduplicates PATH, runs last
 │           ├── aliases.fish             — abbreviations
 │           ├── fish_frozen_theme.fish   — theme
-│           ├── fnm.fish                 — Node version manager
+│           ├── fnm.fish                 — Node version manager init
 │           ├── fzf.fish                 — fuzzy finder + key bindings
-│           ├── pyenv.fish               — Python version manager
+│           ├── prompt.fish              — starship init
+│           ├── pyenv.fish               — Python version manager init
 │           ├── .env.personal.example    — template → copy to .env.personal
 │           └── .env.work.example        — template → copy to .env.work
 │
 ├── ghostty/                  ← stow package → ~/.config/ghostty/
 │   └── .config/ghostty/
-│       └── config            — terminal, fish integration, font, theme
+│       └── config            — font, theme (minimal — ghostty auto-detects fish)
 │
 ├── git/                      ← stow package → ~/.config/git/
 │   └── .config/git/
 │       ├── config            — shared settings, aliases, delta, no [user] block
 │       ├── config.local.example  — template → copy to config.local
-│       └── ignore            — global gitignore (DS_Store, node_modules, etc.)
+│       └── ignore            — global gitignore
 │
 ├── opencode/                 ← stow package → ~/.config/opencode/
-│   ├── .stow-local-ignore
+│   ├── .stow-local-ignore    — excludes node_modules, skills, tui.json
 │   └── .config/opencode/
 │       ├── opencode.jsonc    — model, MCP servers, plugins
 │       ├── dcp.jsonc         — DCP plugin config
@@ -54,33 +56,34 @@ dotfiles/
 │       └── plugins/
 │           └── graphify.js   — graphify local plugin
 │
+├── ssh/                      ← stow package → ~/.ssh/
+│   ├── .stow-local-ignore    — excludes private keys, known_hosts
+│   └── .ssh/
+│       └── config            — host aliases, key mappings (personal vs work)
+│
 ├── starship/                 ← stow package → ~/.config/starship.toml
 │   └── .config/
 │       └── starship.toml     — catppuccin mocha prompt
 │
 ├── vscode/                   ← NOT stowed, uses install.sh
-│   ├── install.sh            — creates symlinks into ~/Library/Application Support/Code/User/
+│   ├── .stow-local-ignore
+│   ├── install.sh            — symlinks into ~/Library/Application Support/Code/User/
 │   ├── settings.json         — editor, terminal, extensions config
 │   ├── mcp.json              — MCP servers for GitHub Copilot
-│   ├── settings.local.example — template for work-specific settings (Jira JQL etc.)
-│   └── .stow-local-ignore
+│   └── settings.local.example — template for work-specific settings
 │
 └── zed/                      ← stow package → ~/.config/zed/
-    ├── .stow-local-ignore
+    ├── .stow-local-ignore    — excludes themes/, prompts/
     └── .config/zed/
-        ├── settings.json     — editor, terminal (fish), agent model
-        └── themes/
+        └── settings.json     — editor, terminal (fish), agent model
 ```
 
 ---
 
 ## How stow works
 
-Each subdirectory is a stow **package**. The path inside it mirrors `~/` exactly.
-Running `stow fish` makes stow walk `fish/` and create a symlink for every file,
-placing it relative to `$HOME`.
-
-Example:
+Each subdirectory is a stow **package**. The path inside mirrors `~/` exactly.
+Running `stow fish` makes stow walk `fish/` and symlink every file relative to `$HOME`.
 
 ```
 ~/dotfiles/fish/.config/fish/config.fish
@@ -88,22 +91,28 @@ Example:
 ~/.config/fish/config.fish  →  ~/dotfiles/fish/.config/fish/config.fish
 ```
 
-The actual files live in the repo. The tools see them at the paths they expect.
+Note: `ssh/` is an exception — it targets `~/.ssh/` directly, not `~/.config/`:
+
+```
+~/dotfiles/ssh/.ssh/config
+                 ↓ stow creates
+~/.ssh/config  →  ~/dotfiles/ssh/.ssh/config
+```
 
 ---
 
 ## Fresh machine setup
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/YOU/dotfiles/main/bootstrap.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/mikibakaiki/dotfiles/main/bootstrap.sh)
 ```
 
 Or manually:
 
 ```bash
-git clone git@github.com:YOU/dotfiles.git ~/dotfiles
+git clone git@github-personal:mikibakaiki/dotfiles.git ~/dotfiles
 cd ~/dotfiles
-stow fish ghostty git opencode starship zed
+stow fish ghostty git opencode ssh starship zed
 ~/dotfiles/vscode/install.sh
 ```
 
@@ -118,6 +127,7 @@ stow fish           # symlink the fish package
 stow -R fish        # restow (use after adding or moving files)
 stow -D fish        # remove symlinks for one package
 stow --simulate */  # dry run — shows what would happen
+stow */             # stow all packages (vscode excluded via .stow-local-ignore)
 ```
 
 If stow reports a conflict, a real file already exists at the target.
@@ -139,6 +149,7 @@ These files live **only on your machine** and are never committed:
 | `~/.config/fish/conf.d/.env.personal` | Personal API keys          | `.env.personal.example` |
 | `~/.config/fish/conf.d/.env.work`     | Work URLs and tokens       | `.env.work.example`     |
 | `~/.config/git/config.local`          | Git identity (name, email) | `config.local.example`  |
+| `~/.ssh/id_ed25519_github_personal`   | Personal GitHub SSH key    | —                       |
 
 Create them on a fresh machine:
 
@@ -152,36 +163,84 @@ cp ~/.config/fish/conf.d/.env.work.example \
 # Git identity
 cp ~/.config/git/config.local.example \
    ~/.config/git/config.local
+
+# SSH key — generate fresh, never copy private keys between machines
+ssh-keygen -t ed25519 -C "your.personal@email.com" -f ~/.ssh/id_ed25519_github_personal
+ssh-add --apple-use-keychain ~/.ssh/id_ed25519_github_personal
+# then add the public key to github.com/settings/ssh/new
 ```
 
-Fill in real values. See `fish/.config/fish/ENV_VARS.md` for the full list
-of expected keys and what each one is for.
+See `fish/.config/fish/ENV_VARS.md` for the full list of expected env keys.
 
-The secret loader (`conf.d/30-env-secrets.fish`) silently skips missing `.env`
-files — a fresh machine works before secrets are populated.
+---
+
+## SSH config
+
+`~/.ssh/config` (tracked at `ssh/.ssh/config`) defines host aliases so different
+SSH keys can be used for different GitHub accounts:
+
+```
+Host github-personal        → uses id_ed25519_github_personal
+Host github.com             → uses work key (default)
+```
+
+Clone personal repos using the alias:
+
+```bash
+git clone git@github-personal:mikibakaiki/reponame.git
+```
+
+Private keys are excluded via `ssh/.stow-local-ignore` and never committed.
+
+---
+
+## Git identity
+
+The `git/` package puts everything under `~/.config/git/` (XDG-compliant).
+`GIT_CONFIG_GLOBAL` is set in `config.fish` to ensure git always finds it.
+
+No `[user]` block in the tracked config — identity is per-machine via `config.local`:
+
+```ini
+# ~/.config/git/config.local  (gitignored)
+[user]
+    name  = Your Name
+    email = your.work@email.com
+```
+
+For the dotfiles repo itself, a personal identity is set repo-locally:
+
+```bash
+cd ~/dotfiles
+git config user.name  "Your Name"
+git config user.email "your.personal@email.com"
+```
+
+This writes to `~/dotfiles/.git/config` and overrides the global identity
+only for this repo.
 
 ---
 
 ## VS Code
 
-VS Code stores its config in `~/Library/Application Support/Code/User/` (macOS),
+VS Code stores config in `~/Library/Application Support/Code/User/` on macOS,
 not in `~/.config/`, so stow can't manage it directly.
 
-The `vscode/install.sh` script creates the symlinks manually:
+`vscode/install.sh` creates the symlinks manually:
 
 ```bash
 ~/dotfiles/vscode/install.sh
 ```
 
 For work-specific settings (Jira JQL queries, internal URLs), see
-`vscode/settings.local.example` — these are set manually in VS Code on each
-work machine and are not committed.
+`vscode/settings.local.example` — set these manually in VS Code on each
+work machine, not committed.
 
 ---
 
 ## opencode
 
-Plugins used:
+Plugins:
 
 | Plugin                    | Type  | Purpose                                       |
 | ------------------------- | ----- | --------------------------------------------- |
@@ -189,33 +248,11 @@ Plugins used:
 | `opencode-caveman`        | npm   | Token compression                             |
 | `./plugins/graphify.js`   | local | Knowledge graph / RAG over codebases          |
 
-MCP servers (Jira, Confluence) are configured in `opencode.jsonc`.
-Credentials are injected at runtime via `{env:JIRA_PAT}` — values come
-from `~/.config/fish/conf.d/.env.work`, never hardcoded.
+MCP servers (Jira, Confluence) are in `opencode.jsonc`.
+Credentials injected via `{env:JIRA_PAT}` — values from `.env.work`, never hardcoded.
 
-Runtime files (`node_modules/`, `skills/`, `tui.json`, `package.json`) are
-excluded via `.stow-local-ignore` and `.gitignore` — opencode manages these itself.
-
----
-
-## Git config
-
-The `git/` package puts everything under `~/.config/git/` (XDG-compliant).
-Git 2.x reads this location automatically. `GIT_CONFIG_GLOBAL` is also set
-explicitly in `config.fish` as a belt-and-suspenders guarantee.
-
-There is no `[user]` block in the tracked config — identity is per-machine:
-
-```bash
-# ~/.config/git/config.local  (gitignored)
-[user]
-    name  = Your Name
-    email = you@example.com
-```
-
-Tracked config includes: delta diffs, `zdiff3` conflict style,
-`push.autoSetupRemote`, rebase-by-default pull, branch cleanup aliases,
-SSH URL rewrites for GitHub.
+Runtime files (`node_modules/`, `skills/`, `tui.json`) excluded via
+`.stow-local-ignore` — opencode manages these itself.
 
 ---
 
@@ -276,5 +313,5 @@ git add fish/.config/fish/conf.d/mymodule.fish
 git commit -m "feat(fish): add mymodule"
 ```
 
-Prefix with a number only if load order matters (`90-path-dedupe.fish` must
-run last). Otherwise plain names are fine — fish sources `conf.d/` alphabetically.
+Prefix with a number only if load order matters.
+Fish sources `conf.d/` alphabetically — `90-path-dedupe.fish` must run last.
