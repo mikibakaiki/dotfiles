@@ -6,6 +6,11 @@
 	eol = lf
 	excludesFile = ~/.config/git/ignore
 
+# Machine-specific config (user, credentials) — not tracked by stow.
+# Personal repos (e.g. ~/dotfiles) override via their own .git/config [user] section.
+[include]
+    path = ~/.config/git/config.local
+
 [i18n]
 	logoutputencoding = utf8
 	commitencoding = utf8
