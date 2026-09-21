@@ -14,8 +14,12 @@ wiki/
   index.md      The catalog. Every page in the vault is reachable from here.
   log.md        Append-only record of what was ingested when.
   sources/      One page per ingested raw file — a structured summary of that handoff.
-  notes/        Everything else: concepts, tools, services, people, projects, areas.
+  notes/        Everything else: concepts, services, people, projects, areas, and general
+                notes about a tool (what it is, how you use it, how it's configured).
                 One flat directory, deliberately (see "Why flat" below).
+                Version-specific caveats do NOT go here — they go in `tools/`. A page about
+                how you run llama.cpp is `notes/llama-cpp.md`; "b6xxx broke the prompt cache
+                with <this error>" is an entry in `tools/llama-cpp.md`.
   tickets/      One rollup page per ticket key, with a running timeline.
 tools/          One page per tool, each with a `## Version caveats` section.
                 Shared with the work vault — see "The tools/ folder".
@@ -64,8 +68,9 @@ Rules:
 - `updated` changes whenever the page is edited.
 - One subject per page. When unsure whether to create a new page or extend an existing one,
   extend the existing one.
-- Carry `facet`, `tools` and `keywords` from the raw file's frontmatter into pages you create
-  from it, so exact error strings and version numbers stay greppable.
+- Carry `facet`, `tools`, `tags` and `keywords` from the raw file's frontmatter into pages you
+  create from it, so exact error strings and version numbers stay greppable. Extend the raw
+  file's `tags` rather than inventing a fresh set.
 - Written in English. Keep Portuguese terms where they are the natural name for something.
 
 ## index.md

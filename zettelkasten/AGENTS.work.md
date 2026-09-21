@@ -68,8 +68,9 @@ Rules:
 - `updated` changes whenever the page is edited.
 - One subject per page. When unsure whether to create a new page or extend an existing one,
   extend the existing one.
-- Carry `facet`, `tools` and `keywords` from the raw file's frontmatter into pages you create
-  from it, so exact error strings and version numbers stay greppable.
+- Carry `facet`, `tools`, `tags` and `keywords` from the raw file's frontmatter into pages you
+  create from it, so exact error strings and version numbers stay greppable. Extend the raw
+  file's `tags` rather than inventing a fresh set.
 - Ticket keys, system names, hostnames and internal URLs are fine here — this vault is work-only
   and never leaves the work machine. Keep them **out** of the shared `tools/` pages (below).
 

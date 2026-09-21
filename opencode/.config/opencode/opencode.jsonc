@@ -37,19 +37,24 @@
   // Privacy wall for every session outside the vaults (e.g. Copilot agents in work repos).
   // Last matching rule wins. Personal vault is off-limits, except raw/ so /handoff can write there
   // (you get a prompt: approve "once", never "always") and tools/ (public-grade caveats).
+  // Both vaults' raw/ are "ask", deliberately: the work vault holds ticket keys and internal
+  // hostnames, so it has no business taking an unprompted write from an arbitrary session either.
+  // The prompt is also the only signal you get that /handoff picked a facet — and so a vault —
+  // you didn't expect.
   "permission": {
     "external_directory": {
       "*": "ask",
       "~/code/Zettelkasten/**": "deny",
       "~/code/Zettelkasten/raw/**": "ask",
       "~/code/Zettelkasten/tools/**": "ask",
-      "~/code/Zettelkasten-work/raw/**": "allow"
+      "~/code/Zettelkasten-work/raw/**": "ask"
     }
   },
 
   "plugin": [
     // Pinned: bump deliberately and record it in a handoff.
-    // 3.2.0 was released 2026-09-20; wait a week or two for bug reports before moving.
+    // Holding at 3.1.15 because 3.2.0 was released 2026-09-20 and hadn't been soaked yet.
+    // Re-evaluate that on any bump — don't read this as still-current advice.
     "@tarquinen/opencode-dcp@3.1.15"
   ]
 

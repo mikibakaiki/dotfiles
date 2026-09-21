@@ -67,7 +67,9 @@ Changed/added in this session:
   never paraphrase) more load-bearing than usual — spot-check the first few real handoffs against
   their sessions to confirm the local model is holding that line.
 - `fish/.config/fish/conf.d/zk.fish` — new: `zk`, `zk-ingest-work`, `zk-ingest-personal`,
-  `zk-wall-test`.
+  `zk-lint`, `zk-lint-work`, `zk-sync`, `zk-wall-test`. Note the header comment: never run the
+  two ingests concurrently (both can write the shared `tools/` folder, no locking), and the
+  local-model commands need `llama-server` up on `127.0.0.1:8080`.
 - `zettelkasten/AGENTS.personal.md`, `zettelkasten/AGENTS.work.md` — new: the vault schema
   templates, copied into each vault root as `AGENTS.md` in step 4. Not stowed (excluded in
   `.stow-local-ignore`) — the vaults are separate git repos and own their copy.
@@ -363,9 +365,44 @@ zk "what did we do about <topic from the handoff>?"
 
 Confirm the Archivist cites the page(s) the Librarian just created.
 
+Two things to watch on this first run, both unverified against your actual OpenCode version:
+
+- `zk` passes the question positionally to interactive `opencode --agent archivist`. If that
+  build doesn't accept a free-text question that way, you'll get an empty session with the
+  question dropped. If so, change `zk` to use `opencode run --agent archivist "$argv"` — at the
+  cost of losing the interactive follow-up, which is most of the point of the Archivist.
+- Check the raw file's `ingested:` stamp landed. It's written early (right after the source
+  page) specifically so an interrupted ingest leaves the file marked rather than half-processed
+  — but that also means an ingest that dies mid-way leaves real work undone behind a file that
+  looks processed. The Librarian is told to report what it didn't finish; read that report.
+
+Finally, run a lint pass to confirm the health-check path works at all:
+
+```fish
+zk-lint
+```
+
 ---
 
-## 7. Optional
+## 7. Recurring maintenance
+
+Nothing in this system schedules itself. These are the jobs it silently assumes you'll do — if
+none of them ever happen, the vault degrades quietly rather than breaking loudly.
+
+| When | Do | Why |
+| ---- | -- | --- |
+| After any **work** ingest | `git -C ~/code/Zettelkasten diff tools/` | The public-grade rule on the shared folder is the one rule enforced only by prompt. This is the check. |
+| Weekly-ish | `zk-sync` | Commits both vaults. They're the only recovery path if an ingest overwrites something — an uncommitted vault has no undo. |
+| Monthly-ish | `zk-lint` and `zk-lint-work` | Finds orphan pages, contradictions, unprocessed `raw/` files, unindexed tool pages, and caveats missing a "fixed in" status. This is the system's only self-healing mechanism. |
+| Every few months | Read `wiki/notes/` page count | The schema's promotion rule: past ~75 pages *and* an obvious 10+ page cluster, split that cluster into its own directory and update `AGENTS.md`. |
+| ~6 months in | Look at `tools/` | If it's still nearly empty, the shared-folder idea isn't earning its complexity — fold those pages into `wiki/notes/` and drop the cross-vault sharing. That's a real, expected outcome, not a failure. |
+
+If you'd rather not remember any of this, the honest minimum is `zk-sync` plus an occasional
+`zk-lint` — those two cover recovery and detection, and everything else is a refinement.
+
+---
+
+## 8. Optional
 
 ### omo-slim (oh-my-opencode-slim)
 

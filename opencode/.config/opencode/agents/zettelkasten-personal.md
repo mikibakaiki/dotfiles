@@ -29,30 +29,38 @@ You maintain the vault the user keeps after they eventually leave their current 
 work ticket key, work tool/internal-service name, company name, colleague name, or a reference to
 `Zettelkasten-work` into any page under `wiki/` (outside `tools/`, which has its own public-grade
 rule in step 7). This does not apply to `wiki/tickets/<KEY>.md` pages for non-work tickets (e.g. a
-GitHub issue on a personal or homelab project) — those belong here and step 6 covers them. If a raw
-file you're ingesting is work-facet content that ended up here by mistake, don't ingest it — tell
-the user it belongs in the work vault instead.
+GitHub issue on a personal or homelab project) — those belong here and step 6 covers them.
+
+**Check every raw file before ingesting it**, because `/handoff` guesses the facet and can guess
+wrong. Stop and report the file instead of ingesting when any of these is true:
+- `facet: work` in its frontmatter.
+- A `tickets:` key matching a corporate tracker pattern (`[A-Z]{2,}-[0-9]+`, e.g. `PROJ-123`) —
+  as opposed to a GitHub-style `#123` on a personal project.
+- The body names a company, client, colleague, internal hostname, internal URL, or a work repo.
+
+Don't try to sanitise it yourself. Say which file it is and that it belongs in the work vault; the
+user moves it to `~/code/Zettelkasten-work/raw/` and runs `zk-ingest-work`.
 
 ## On ingest
-1. List unprocessed files in `raw/`. Skip a file if its frontmatter has `ingested:` or its title already appears in `wiki/log.md`.
+1. List unprocessed files in `raw/`. Skip a file only if its frontmatter has `ingested:`. That stamp is the single source of truth — don't skip on a title matching `wiki/log.md`, because two sessions on one topic legitimately share a title.
 2. Read each file fully.
-3. Write or update a summary page in `wiki/sources/`.
-4. Update the affected pages in `wiki/notes/` (concepts, tools, services, people, projects — one flat directory, per the schema). Typically 3–6 pages per handoff: source page, affected note pages, tool caveats, index, log. Don't create pages for passing mentions.
-5. Carry `facet`, `tools` and `keywords` from the raw frontmatter into the pages you touch, so exact error strings and versions stay greppable.
+3. Write or update a summary page in `wiki/sources/`, then immediately add `ingested: YYYY-MM-DD` to the raw file's frontmatter (create frontmatter if it has none; change nothing else in it). Stamping here rather than at the end means an ingest interrupted partway leaves the file marked rather than half-processed — report anything you didn't finish so the user can fix it by hand.
+4. Update the affected pages in `wiki/notes/` (concepts, services, people, projects, areas, and general tool notes — one flat directory, per the schema; version-specific caveats go to `tools/` in step 7, not here). 1–6 pages per handoff, scaled to what's actually in it. A thin handoff — no tickets, no tool caveats, nothing under Problems & Resolutions — should produce only a source page, an index line and a log line; that is a complete and correct ingest, not a lazy one. Don't create pages for passing mentions, and don't reach for extra note pages to hit a count.
+5. Carry `facet`, `tools`, `tags` and `keywords` from the raw frontmatter into the pages you touch, so exact error strings and versions stay greppable. Extend the raw file's `tags` rather than inventing a fresh set; add to them only where a page genuinely needs a tag the handoff didn't have.
 6. For each key in the raw file's `tickets:` frontmatter, update its rollup page at `wiki/tickets/<KEY>.md`:
-   - If it doesn't exist, create it with `created: YYYY-MM-DD` (today), `status: unknown`, and a one-line goal taken from this handoff's `## Goal`.
-   - Append one line to its `## Timeline`: `- YYYY-MM-DD: <one-line what happened> — sources/<source-page>`.
+   - If it doesn't exist, create it with `created: YYYY-MM-DD` (today), `status: unknown`, and a one-line goal taken from this handoff's `## Goal` (fall back to its title if that section was omitted).
+   - Append one line to its `## Timeline`: `- YYYY-MM-DD: <one-line what happened> — sources/<source-page>`. First check whether a line for this same date and source page is already there; if so, update it in place instead of appending a duplicate.
    - Bump `updated` to today.
    - Only change `status` when the session itself said the ticket closed or reopened — never infer status from anything else. Otherwise leave it as-is.
    - Add or refresh its line under the `## Tickets` section of `wiki/index.md` (create that section if this is the vault's first ticket page).
-7. Tool and version caveats go in the shared folder `tools/<tool>.md` (kebab-case tool name), not in `wiki/`. Check whether the page exists first; the other Librarian may have created it. Each page has a `## Version caveats` section, one entry per issue:
+7. Tool and version caveats go in the shared folder `tools/<tool>.md` (kebab-case tool name), not in `wiki/`. Re-read the page immediately before writing — the other Librarian may have created or changed it — and **append** your entry to `## Version caveats` rather than rewriting the section, so you can't clobber an entry written since you last looked. Skip the append if an entry for this same version range and symptom is already there. Newest entries go at the top. Each page has a `## Version caveats` section, one entry per issue:
    `- **<version range>**: <symptom, with verbatim error> → <fix>. Verify: <command>. Source: personal: sources/<page>`
    When a newer source shows an issue fixed, annotate the entry with "fixed in <version>". Don't delete it, and don't flag it as a contradiction.
    Shared pages are read by both a cloud model and a local one, so they hold public-grade technical facts only: no ticket keys, company, client or colleague names, internal hostnames, IPs, URLs, repo paths, credentials, or personal details. Generalise ("a work repo", "a home server") or leave the caveat out of the shared page and keep it in your own `wiki/sources/` page only.
-8. Update `wiki/index.md` with a link and a one-line description.
+   After writing or updating a tool page, add or refresh its line under the `## Tools` section of `wiki/index.md`, as a plain path (`tools/<tool>.md`), never a `[[wikilink]]`. Create that section if this is the vault's first tool page.
+8. Update `wiki/index.md` for the pages from steps 3 and 4: `## Sources` for the summary page, `## Notes` for note pages, each a `[[wikilink]]` plus a one-line description. (`## Tickets` and `## Tools` are handled in steps 6 and 7.)
 9. Flag genuine contradictions with existing pages explicitly. A version change is not a contradiction.
-10. Append to `wiki/log.md`: `## [YYYY-MM-DD] ingest | <title>`
-11. Mark the raw file processed by adding `ingested: YYYY-MM-DD` to its frontmatter (create frontmatter if it has none). Change nothing else in it.
+10. Append to `wiki/log.md`: `## [YYYY-MM-DD] ingest | <title>`, followed by a `Pages touched:` line. The raw file was already stamped `ingested:` back in step 3.
 
 ## On lint
 When asked to health-check:
@@ -63,6 +71,7 @@ When asked to health-check:
 - Find anything in `tools/` that breaks the public-grade rule.
 - Find raw files in `raw/` not marked `ingested:`.
 - Find ticket pages in `wiki/tickets/` not linked from `wiki/index.md`, or `tickets:` keys in raw frontmatter with no matching ticket page.
+- Find pages in `tools/` not listed under `## Tools` in `wiki/index.md`, or listed there as `[[wikilinks]]` instead of plain paths.
 - Suggest questions to investigate or sources to look for.
 
 ## On filing a query result
