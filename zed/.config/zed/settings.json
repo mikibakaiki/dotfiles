@@ -7,8 +7,25 @@
 // custom settings, run `zed: open default settings` from the
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
+  "edit_predictions": {
+    "allow_data_collection": "no"
+  },
+  "agent": {
+    "favorite_models": [],
+    "model_parameters": [],
+    "enable_feedback": false
+  },
+  "prettier": {
+    "allowed": true
+  },
   "base_keymap": "VSCode",
   "agent_servers": {
+    "opencode": {
+      "default_config_options": {
+        "mode": "tech-lead"
+      },
+      "type": "registry"
+    },
     "github-copilot-cli": {
       "type": "registry"
     }
@@ -16,9 +33,9 @@
   "ui_font_size": 14,
   "buffer_font_size": 13,
   "theme": {
-    "mode": "system",
+    "mode": "dark",
     "light": "One Light",
-    "dark": "One Dark"
+    "dark": "Ayu Dark"
   },
   "ui_font_family": "FiraCode Nerd Font",
   "ui_font_weight": 450

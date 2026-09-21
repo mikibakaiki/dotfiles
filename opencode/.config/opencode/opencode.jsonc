@@ -2,14 +2,14 @@
   "$schema": "https://opencode.ai/config.json",
 
   // Model — via GitHub Copilot subscription (no separate Anthropic billing)
-  "model": "github-copilot/claude-sonnet-4.6",
+  "model": "github-copilot/claude-sonnet-5",
 
   // MCP servers — credentials come from fish .env.work via {env:VAR}
   "mcp": {
     "jira-mcp": {
       "type": "local",
       "command": [
-        "node",
+        "/Users/joao.campos/.local/share/fnm/node-versions/v24.16.0/installation/bin/node",
         "/Users/joao.campos/.local/share/mcp/jira-mcp/node_modules/@dna-ai-lab/jira-mcp/build/server.js",
       ],
       "environment": {
@@ -19,20 +19,45 @@
     "confluence-mcp": {
       "type": "local",
       "command": [
-        "node",
+        "/Users/joao.campos/.local/share/fnm/node-versions/v24.16.0/installation/bin/node",
         "/Users/joao.campos/.local/share/mcp/confluence-mcp/node_modules/@dna-ai-lab/confluence-mcp/build/server.js",
       ],
       "environment": {
         "CONFLUENCE_PAT": "{env:CONFLUENCE_PAT}",
       },
     },
+    "jenkins": {
+      "type": "remote",
+      "url": "https://oakci.dna.fi/jenkins/mcp-server/mcp",
+      "headers": {
+        "Authorization": "Basic {env:JENKINS_TOKEN}",
+      },
+    },
+  },
+
+  "tools": {
+    "jira-mcp*": false,
+    "confluence-mcp*": false,
+    "jenkins*": false,
+  },
+  "agent": {
+    "requirements-clarifier": {
+      "tools": {
+        "jira-mcp*": true,
+        "confluence-mcp*": true,
+        "jenkins*": true,
+      },
+    },
+    "explore": {
+      "tools": {
+        "jira-mcp*": true,
+        "confluence-mcp*": true,
+        "jenkins*": true,
+      },
+    },
   },
 
   // Plugins — dcp via npm (always latest), caveman via local file
   // graphify excluded: it's a skill/RAG tool, not a session plugin
-  "plugin": [
-    "@tarquinen/opencode-dcp@latest",
-    "./plugins/caveman/plugin.js",
-    "./plugins/graphify.js",
-  ],
+  "plugin": ["@tarquinen/opencode-dcp@latest", "./plugins/graphify.js"],
 }

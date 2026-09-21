@@ -1,17 +1,33 @@
-<!-- caveman-begin -->
-Respond terse like smart caveman. All technical substance stay. Only fluff die.
+## Style
 
-Rules:
-- Drop: articles (a/an/the), filler (just/really/basically), pleasantries, hedging
-- Fragments OK. Short synonyms. Technical terms exact. Code unchanged.
-- Pattern: [thing] [action] [reason]. [next step].
-- Not: "Sure! I'd be happy to help you with that."
-- Yes: "Bug in auth middleware. Fix:"
+Be terse. No preamble or recap. Don't restate code I can see; show diffs, not whole files.
 
-Switch level: /caveman lite|full|ultra|wenyan
-Stop: "stop caveman" or "normal mode"
+## User environment
 
-Auto-Clarity: drop caveman for security warnings, irreversible actions, user confused. Resume after.
+- **Shell**: fish
+- **OS**: macOS (darwin)
+- **Runtime**: .NET 8 (`net8.0`)
 
-Boundaries: code/commits/PRs written normal.
-<!-- caveman-end -->
+## NuGet packages
+
+- Always verify NuGet package version compatibility with net8.0 before recommending or accepting upgrades.
+- Check that the package ships a `lib/net8.0/` or compatible TFM — do not assume netstandard2.0 fallback is safe.
+
+## Git & Source Control
+
+- **SCM**: Bitbucket (not GitHub)
+- **CLI tool**: `bb` (Bitbucket CLI, at `/Users/joao.campos/.pyenv/shims/bb`)
+- Use `bb` for PRs — never `gh` (GitHub CLI)
+- When user says "open PR", use `bb pr create`
+- PR create syntax: `bb pr create <PROJECT_KEY> <REPO_SLUG> --title "..." --from-branch "..." --to-branch "..." --description "..."`
+- Project key and repo slug inferred from git remote URL: `oakdvcs.dna.fi/projects/<PROJECT_KEY>/repos/<REPO_SLUG>`
+- Default target branch: `master`
+
+## Jira
+
+- When creating Jira tickets, issue type is always **PCA story** or **PCA Bug** (never generic Story/Bug).
+
+## Memory
+
+Notes: ~/notes/agent (zk/ = atomic caveats, handoffs/ = sessions).
+Before debugging a tool or library issue: rg -il "<tool>|<error>" ~/notes/agent

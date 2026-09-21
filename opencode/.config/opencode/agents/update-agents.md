@@ -35,10 +35,10 @@ You are a maintenance agent. Your job is to keep agent configuration files up to
 
 5. **Report what you found** — before making any changes, present a summary table:
 
-   | Agent file | Current model | Latest available | Action |
-   |---|---|---|---|
-   | jira.md | github-copilot/claude-haiku-4.5 | github-copilot/claude-haiku-4.6 | Update |
-   | implement.md | github-copilot/claude-sonnet-4.6 | github-copilot/claude-sonnet-4.6 | Up to date |
+   | Agent file   | Current model                   | Latest available                | Action     |
+   | ------------ | ------------------------------- | ------------------------------- | ---------- |
+   | jira.md      | github-copilot/claude-haiku-4.5 | github-copilot/claude-haiku-4.6 | Update     |
+   | implement.md | github-copilot/claude-sonnet-5  | github-copilot/claude-sonnet-5  | Up to date |
 
 6. **Ask for confirmation** — use the `question` tool to present the summary table and ask the user to confirm before editing any files:
 
