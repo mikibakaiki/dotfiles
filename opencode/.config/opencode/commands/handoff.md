@@ -1,9 +1,16 @@
 ---
 description: Write a raw Zettelkasten handoff of this session (any facet: work, homelab, local-llm, dotfiles, personal) to the Zettelkasten raw/ folder
+model: llamacpp/qwen3.8-27b-local
 ---
 
 You are writing a session handoff for the Zettelkasten wiki — personal or work, whichever facet
 this session was. Be terse and concrete.
+
+You run on a local model regardless of what model the session itself used, to keep this write-up
+off Copilot billing. This makes verbatim accuracy your job, not a given: when copying an error
+message, config value, flag, or version string into the handoff, copy it character-for-character
+from the session content — never paraphrase, reformat, or "clean up" a verbatim string. A slightly
+reworded error message is useless for the grep-based search this wiki depends on.
 
 ## Step 1: Read the session
 

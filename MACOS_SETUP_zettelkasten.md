@@ -61,7 +61,11 @@ Changed/added in this session:
 - `opencode/.config/opencode/agents/librarian.md`, `agents/wiki.md` — **deleted** (superseded by
   the two new Librarians; old single-vault design).
 - `opencode/.config/opencode/commands/handoff.md` — rewritten: now facet-aware, routes to
-  `Zettelkasten-work/raw/` vs `Zettelkasten/raw/`.
+  `Zettelkasten-work/raw/` vs `Zettelkasten/raw/`, and pinned to run on the local Qwen model
+  regardless of what model the session itself used, so the write-up never hits Copilot billing.
+  This makes the handoff's verbatim-accuracy instruction (copy errors/versions/flags exactly,
+  never paraphrase) more load-bearing than usual — spot-check the first few real handoffs against
+  their sessions to confirm the local model is holding that line.
 - `fish/.config/fish/conf.d/zk.fish` — new: `zk`, `zk-ingest-work`, `zk-ingest-personal`,
   `zk-wall-test`.
 - `zettelkasten.md` and `zettelkasten-personal.md` both gained a "keep the vault portable" rule:
@@ -297,7 +301,9 @@ opencode
 
 Note the path it reports (`Written: <path>`). Open that file and review/amend it — check the
 frontmatter (`facet`, `tickets`, `tools`, `tags`, `keywords`) and that no secrets/hostnames leaked
-in verbatim error strings.
+in verbatim error strings. Also check any error message or version string against what actually
+appeared in the scratch session — `/handoff` runs on the local model now (for token cost), and a
+paraphrased "close enough" error string defeats the grep-based search this wiki relies on.
 
 Then ingest it:
 
