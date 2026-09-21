@@ -8,8 +8,9 @@ This file defines the structure and conventions for this vault. The Personal Lib
 
 ```
 raw/            Immutable source documents — handoffs written by /handoff. Never edit the body
-                of a file here; the only permitted change is adding `ingested: YYYY-MM-DD` to
-                its frontmatter.
+                of a file here; the only permitted changes are the `ingested: YYYY-MM-DD` and
+                `refused: YYYY-MM-DD <reason>` frontmatter stamps.
+                To re-ingest a file after amending it, delete its `ingested:` line.
 wiki/
   index.md      The catalog. Every page in the vault is reachable from here.
   log.md        Append-only record of what was ingested when.

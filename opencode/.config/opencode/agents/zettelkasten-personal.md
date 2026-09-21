@@ -32,19 +32,27 @@ rule in step 7). This does not apply to `wiki/tickets/<KEY>.md` pages for non-wo
 GitHub issue on a personal or homelab project) — those belong here and step 6 covers them.
 
 **Check every raw file before ingesting it**, because `/handoff` guesses the facet and can guess
-wrong. Stop and report the file instead of ingesting when any of these is true:
+wrong. Refuse a file when either of these is true:
 - `facet: work` in its frontmatter.
-- A `tickets:` key matching a corporate tracker pattern (`[A-Z]{2,}-[0-9]+`, e.g. `PROJ-123`) —
-  as opposed to a GitHub-style `#123` on a personal project.
-- The body names a company, client, colleague, internal hostname, internal URL, or a work repo.
+- The body names the user's employer, a client, or a colleague.
 
-Don't try to sanitise it yourself. Say which file it is and that it belongs in the work vault; the
-user moves it to `~/code/Zettelkasten-work/raw/` and runs `zk-ingest-work`.
+Nothing else is a refusal trigger. In particular, homelab hostnames (`nas.local`), personal
+infrastructure and open-source tracker keys (`CVE-2026-1234`, `GH-1234`, `SPARK-4123`, `ADR-003`)
+all belong in this vault — this is the homelab and personal-projects vault, so that content is
+expected, not a leak. When it's genuinely ambiguous, ingest it and say what you were unsure about;
+a false refusal costs the user more than a borderline page does.
+
+To refuse: add `refused: YYYY-MM-DD <one-line reason>` to the file's frontmatter, change nothing
+else, and report it. The stamp stops the next run from silently re-refusing it, and lint lists
+refused files so they don't get lost. Don't sanitise the file yourself.
+
+If the user tells you a refused file is fine, ingest it: remove the `refused:` line and process it
+normally.
 
 ## On ingest
 1. List unprocessed files in `raw/`. Skip a file only if its frontmatter has `ingested:`. That stamp is the single source of truth — don't skip on a title matching `wiki/log.md`, because two sessions on one topic legitimately share a title.
 2. Read each file fully.
-3. Write or update a summary page in `wiki/sources/`, then immediately add `ingested: YYYY-MM-DD` to the raw file's frontmatter (create frontmatter if it has none; change nothing else in it). Stamping here rather than at the end means an ingest interrupted partway leaves the file marked rather than half-processed — report anything you didn't finish so the user can fix it by hand.
+3. Write or update a summary page in `wiki/sources/`.
 4. Update the affected pages in `wiki/notes/` (concepts, services, people, projects, areas, and general tool notes — one flat directory, per the schema; version-specific caveats go to `tools/` in step 7, not here). 1–6 pages per handoff, scaled to what's actually in it. A thin handoff — no tickets, no tool caveats, nothing under Problems & Resolutions — should produce only a source page, an index line and a log line; that is a complete and correct ingest, not a lazy one. Don't create pages for passing mentions, and don't reach for extra note pages to hit a count.
 5. Carry `facet`, `tools`, `tags` and `keywords` from the raw frontmatter into the pages you touch, so exact error strings and versions stay greppable. Extend the raw file's `tags` rather than inventing a fresh set; add to them only where a page genuinely needs a tag the handoff didn't have.
 6. For each key in the raw file's `tickets:` frontmatter, update its rollup page at `wiki/tickets/<KEY>.md`:
@@ -60,7 +68,8 @@ user moves it to `~/code/Zettelkasten-work/raw/` and runs `zk-ingest-work`.
    After writing or updating a tool page, add or refresh its line under the `## Tools` section of `wiki/index.md`, as a plain path (`tools/<tool>.md`), never a `[[wikilink]]`. Create that section if this is the vault's first tool page.
 8. Update `wiki/index.md` for the pages from steps 3 and 4: `## Sources` for the summary page, `## Notes` for note pages, each a `[[wikilink]]` plus a one-line description. (`## Tickets` and `## Tools` are handled in steps 6 and 7.)
 9. Flag genuine contradictions with existing pages explicitly. A version change is not a contradiction.
-10. Append to `wiki/log.md`: `## [YYYY-MM-DD] ingest | <title>`, followed by a `Pages touched:` line. The raw file was already stamped `ingested:` back in step 3.
+10. Append to `wiki/log.md`: `## [YYYY-MM-DD] ingest | <title>`, followed by a `Pages touched:` line.
+11. Last, mark the raw file processed: add `ingested: YYYY-MM-DD` to its frontmatter (create frontmatter if it has none). Change nothing else in it. This goes last on purpose — if an ingest dies partway, the file stays unstamped and the next run reprocesses it, which the dedupe checks in steps 6 and 7 make safe. A file that is stamped but missing from `wiki/log.md` means a run died between steps 10 and 11; lint catches that.
 
 ## On lint
 When asked to health-check:
@@ -69,7 +78,9 @@ When asked to health-check:
 - Find concepts mentioned but lacking their own page.
 - Find caveats in `tools/` without a "fixed in" status on tools that have had newer sources since.
 - Find anything in `tools/` that breaks the public-grade rule.
-- Find raw files in `raw/` not marked `ingested:`.
+- Find raw files in `raw/` not marked `ingested:` and not marked `refused:`.
+- Find raw files marked `ingested:` with no matching `## [date] ingest | <title>` entry in `wiki/log.md` — that means a run died just before stamping, and the file's pages may be incomplete.
+- Find raw files marked `refused:`, and list them with their reason so the user can move or override them.
 - Find ticket pages in `wiki/tickets/` not linked from `wiki/index.md`, or `tickets:` keys in raw frontmatter with no matching ticket page.
 - Find pages in `tools/` not listed under `## Tools` in `wiki/index.md`, or listed there as `[[wikilinks]]` instead of plain paths.
 - Suggest questions to investigate or sources to look for.

@@ -38,7 +38,7 @@ Keep the work vault accurate, interlinked and up to date. You don't answer quest
 ## On ingest
 1. List unprocessed files in `raw/`. Skip a file only if its frontmatter has `ingested:`. That stamp is the single source of truth — don't skip on a title matching `wiki/log.md`, because two sessions on one topic legitimately share a title.
 2. Read each file fully.
-3. Write or update a summary page in `wiki/sources/`, then immediately add `ingested: YYYY-MM-DD` to the raw file's frontmatter (create frontmatter if it has none; change nothing else in it). Stamping here rather than at the end means an ingest interrupted partway leaves the file marked rather than half-processed — report anything you didn't finish so the user can fix it by hand.
+3. Write or update a summary page in `wiki/sources/`.
 4. Update the affected pages in `wiki/notes/` (concepts, services, systems, projects, areas, and general tool notes — one flat directory, per the schema; version-specific caveats go to the shared `tools/` folder in step 7, not here). 1–6 pages per handoff, scaled to what's actually in it. A thin handoff — no tickets, no tool caveats, nothing under Problems & Resolutions — should produce only a source page, an index line and a log line; that is a complete and correct ingest, not a lazy one. Don't create pages for passing mentions, and don't reach for extra note pages to hit a count.
 5. Carry `facet`, `tools`, `tags` and `keywords` from the raw frontmatter into the pages you touch, so exact error strings and versions stay greppable. Extend the raw file's `tags` rather than inventing a fresh set; add to them only where a page genuinely needs a tag the handoff didn't have.
 6. For each key in the raw file's `tickets:` frontmatter, update its rollup page at `wiki/tickets/<KEY>.md`:
@@ -54,7 +54,8 @@ Keep the work vault accurate, interlinked and up to date. You don't answer quest
    If `~/code/Zettelkasten/tools/` is unreachable (the personal vault isn't on this machine, or the path is blocked), don't retry or look for another path: keep the caveat in your own `wiki/sources/` page and say so in your report.
 8. Update `wiki/index.md` for the pages from steps 3 and 4: `## Sources` for the summary page, `## Notes` for note pages, each a `[[wikilink]]` plus a one-line description. (`## Tickets` is handled in step 6.) This vault's index has no `## Tools` section — shared tool pages live in the personal vault and are never indexed here.
 9. Flag genuine contradictions with existing pages explicitly. A version change is not a contradiction.
-10. Append to `wiki/log.md`: `## [YYYY-MM-DD] ingest | <title>`, followed by a `Pages touched:` line. The raw file was already stamped `ingested:` back in step 3.
+10. Append to `wiki/log.md`: `## [YYYY-MM-DD] ingest | <title>`, followed by a `Pages touched:` line.
+11. Last, mark the raw file processed: add `ingested: YYYY-MM-DD` to its frontmatter (create frontmatter if it has none). Change nothing else in it. This goes last on purpose — if an ingest dies partway, the file stays unstamped and the next run reprocesses it, which the dedupe checks in steps 6 and 7 make safe. A file that is stamped but missing from `wiki/log.md` means a run died between steps 10 and 11; lint catches that.
 
 ## On lint
 When asked to health-check:
@@ -64,6 +65,7 @@ When asked to health-check:
 - Find caveats in `~/code/Zettelkasten/tools/` without a "fixed in" status on tools that have had newer sources since.
 - Find anything in `~/code/Zettelkasten/tools/` that breaks the public-grade rule.
 - Find raw files in `raw/` not marked `ingested:`.
+- Find raw files marked `ingested:` with no matching `## [date] ingest | <title>` entry in `wiki/log.md` — that means a run died just before stamping, and the file's pages may be incomplete.
 - Find ticket pages in `wiki/tickets/` not linked from `wiki/index.md`, or `tickets:` keys in raw frontmatter with no matching ticket page.
 - Suggest questions to investigate or sources to look for.
 

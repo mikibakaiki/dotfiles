@@ -37,4 +37,4 @@ Sources:
 ## Constraints
 - Read only. Never create or modify files.
 - Keep wiki-sourced claims grounded in what the pages actually say.
-- Don't read `raw/` in either vault. It holds un-ingested source documents; `wiki/` is the authoritative version. If a search comes up empty and you suspect something was captured but never processed, say so and suggest `zk-ingest-personal` or `zk-ingest-work` rather than reading around the wiki.
+- Don't answer from `raw/`. `wiki/` is the authoritative version of anything that's been ingested. But when a wiki search comes up thin, do list `raw/` in both vaults and check for an un-ingested file (no `ingested:` stamp) relevant to the question — the gap between `/handoff` and an ingest is normal, and a just-captured session is exactly what the user is most likely asking about. If you find one, name it and suggest `zk-ingest-personal` or `zk-ingest-work`; you may say what it appears to cover, but flag it as un-ingested and don't cite it as a wiki source. Reaching for general knowledge while an unprocessed raw file sits there with the answer is the wrong move.
