@@ -10,7 +10,7 @@ Each tool's config lives in this repo and gets symlinked into the correct locati
 ```
 dotfiles/
 ├── .gitignore
-├── .stow-local-ignore        — excludes vscode from stow */
+├── .stow-local-ignore        — excludes vscode and zettelkasten from stow */
 ├── .stowrc                   — stow defaults: target=$HOME, verbose
 ├── bootstrap.sh              — fresh machine setup
 ├── README.md
@@ -46,14 +46,17 @@ dotfiles/
 │       └── ignore            — global gitignore
 │
 ├── opencode/                 ← stow package → ~/.config/opencode/
-│   ├── .stow-local-ignore    — excludes node_modules, skills, tui.json
+│   ├── .stow-local-ignore    — excludes runtime files opencode manages itself
+│   │                           (node_modules, skills, tui.json, package*.json)
+│   │                           and opencode.json, the untracked local-override slot
 │   └── .config/opencode/
 │       ├── opencode.jsonc    — model, small_model, provider, privacy wall, plugins
 │       ├── dcp.jsonc         — DCP plugin config
 │       ├── style.md          — terse-chat / normal-English instructions
 │       ├── AGENTS.md         — agent usage guide
-│       ├── agents/           — agent definition files (.md)
-│       └── commands/         — slash command definitions (.md)
+│       ├── agents/           — agent definitions, incl. the Zettelkasten trio:
+│       │                       zettelkasten (work), zettelkasten-personal, archivist
+│       └── commands/         — slash commands, incl. /handoff
 │
 ├── ssh/                      ← stow package → ~/.ssh/
 │   ├── .stow-local-ignore    — excludes private keys, known_hosts
@@ -71,11 +74,19 @@ dotfiles/
 │   ├── mcp.json              — MCP servers for GitHub Copilot
 │   └── settings.local.example — template for work-specific settings
 │
-└── zed/                      ← stow package → ~/.config/zed/
-    ├── .stow-local-ignore    — excludes themes/, prompts/
-    └── .config/zed/
-        └── settings.json     — editor, terminal (fish), agent model
+├── zed/                      ← stow package → ~/.config/zed/
+│   ├── .stow-local-ignore    — excludes themes/, prompts/
+│   └── .config/zed/
+│       └── settings.json     — editor, terminal (fish), agent model
+│
+└── zettelkasten/             ← NOT stowed — copied into the vault roots
+    ├── AGENTS.personal.md    — schema for ~/code/Zettelkasten
+    └── AGENTS.work.md        — schema for ~/code/Zettelkasten-work
 ```
+
+The vaults are their own git repos, so their schema is copied rather than symlinked — a symlink
+would make vault content depend on this repo being checked out. See
+`MACOS_SETUP_zettelkasten.md`.
 
 ---
 
@@ -126,7 +137,7 @@ stow fish           # symlink the fish package
 stow -R fish        # restow (use after adding or moving files)
 stow -D fish        # remove symlinks for one package
 stow --simulate */  # dry run — shows what would happen
-stow */             # stow all packages (vscode excluded via .stow-local-ignore)
+stow */             # stow all packages (vscode, zettelkasten excluded via .stow-local-ignore)
 ```
 
 If stow reports a conflict, a real file already exists at the target.
@@ -261,7 +272,7 @@ override (same pattern as `.env.work` below), which OpenCode merges on top at st
 
 See `MACOS_SETUP_zettelkasten.md` for the Zettelkasten dual-vault agent system
 (`zettelkasten.md`/`zettelkasten-personal.md`/`archivist.md`, `/handoff`, and the
-`zk`/`zk-ingest-work`/`zk-ingest-personal` fish functions).
+`zk-status`/`zk-ingest`/`zk` fish functions, plus `zk-lint` and `zk-sync`).
 
 Runtime files (`node_modules/`, `skills/`, `tui.json`) excluded via
 `.stow-local-ignore` — opencode manages these itself.

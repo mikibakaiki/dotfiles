@@ -16,3 +16,6 @@ before the session ends. Suggest it; never run it unprompted.
 Don't suggest it for routine work: a clean edit, a passing test run, a question answered. The
 point is to catch the things that will be painful to rediscover in six months, not to log
 everything.
+
+This doesn't apply to the Zettelkasten agents themselves (`zettelkasten`, `zettelkasten-personal`,
+`archivist`) — they maintain and query the wiki, so they never suggest writing into it.

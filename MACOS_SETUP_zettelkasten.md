@@ -74,9 +74,10 @@ Changed/added in this session:
 - `zettelkasten/AGENTS.personal.md`, `zettelkasten/AGENTS.work.md` — new: the vault schema
   templates, copied into each vault root as `AGENTS.md` in step 4. Not stowed (excluded in
   `.stow-local-ignore`) — the vaults are separate git repos and own their copy.
-- `zettelkasten.md` and `zettelkasten-personal.md` both gained a "keep the vault portable" rule:
-  never write ticket keys, work tool/service names, company or colleague names, or
-  `Zettelkasten-work` references into the personal vault (outside `tools/`) — see step 5.
+- `zettelkasten-personal.md` gained a "keep this vault portable" rule (never write work ticket
+  keys or employer/client/colleague names into `wiki/`) and a `refused:` stamp for misrouted
+  work-facet files. `zettelkasten.md`'s equivalent is the public-grade rule on `tools/`, the
+  only personal-vault path it can reach — see step 5.
 - All three agent files (`zettelkasten.md`, `zettelkasten-personal.md`, `archivist.md`) gained
   ticket-rollup handling (`wiki/tickets/<KEY>.md`) — unrelated to the work/personal split, but
   touched in the same working tree.
@@ -283,7 +284,7 @@ agents work to.
 
 ---
 
-## 5. Fish wall test
+## 5. Privacy wall check
 
 The work/personal split here is about **organization, not a hard security boundary**: two vaults
 so it's easy to navigate day to day, and so the work vault can be cleanly left behind (or deleted)
@@ -292,7 +293,7 @@ against a hostile or misbehaving model — that's a different, heavier problem (
 separation, sandboxing) that isn't needed here and isn't set up.
 
 ```bash
-stow fish   # if not already done in step 1
+stow fish   # if not already done in steps 1–2
 ```
 
 Open a new shell, then run this once — it's a setup check, not something to re-run later, which is
@@ -317,12 +318,12 @@ notes, not deliberate circumvention.
 - `zettelkasten.md`'s own `external_directory` override (`"~/code/Zettelkasten/tools/**": allow`)
   is too broad and accidentally matches more than `tools/`
 
-The other side of "leaves cleanly" is content, not access: `zettelkasten-personal.md` and
-`zettelkasten.md` both now carry an explicit rule to never write ticket keys, work tool/service
-names, company or colleague names, or `Zettelkasten-work` references into the personal vault
-(`tools/` excepted, which has its own public-grade rule). Spot-check this after a few real work
-ingests — grep the personal vault's `wiki/` for anything that looks work-identifiable and correct
-the agent's behavior if you find something:
+The other side of "leaves cleanly" is content, not access. The Personal Librarian carries a
+portability rule: never write work ticket keys, employer/client/colleague names, or
+`Zettelkasten-work` references into `wiki/`. The Work Librarian carries the public-grade rule on
+`tools/`, which is the only personal-vault path it can reach at all. Spot-check both after a few
+real work ingests — grep the personal vault's `wiki/` for anything that looks work-identifiable
+and correct the agent's behavior if you find something:
 
 ```bash
 grep -ril "ticket\|jira\|confluence" ~/code/Zettelkasten/wiki --include="*.md" | grep -v '/tools/'
@@ -366,16 +367,18 @@ zk "what did we do about <topic from the handoff>?"
 
 Confirm the Archivist cites the page(s) the Librarian just created.
 
-Two things to watch on this first run, both unverified against your actual OpenCode version:
+Two things to watch on this first run:
 
-- `zk` passes the question positionally to interactive `opencode --agent archivist`. If that
-  build doesn't accept a free-text question that way, you'll get an empty session with the
-  question dropped. If so, change `zk` to use `opencode run --agent archivist "$argv"` — at the
-  cost of losing the interactive follow-up, which is most of the point of the Archivist.
-- Check the raw file's `ingested:` stamp landed. It's written early (right after the source
-  page) specifically so an interrupted ingest leaves the file marked rather than half-processed
-  — but that also means an ingest that dies mid-way leaves real work undone behind a file that
-  looks processed. The Librarian is told to report what it didn't finish; read that report.
+- `zk` passes the question positionally to interactive `opencode --agent archivist`, which is
+  unverified against your OpenCode version. If that build doesn't accept a free-text question
+  that way, you'll get an empty session with the question dropped. If so, change `zk` to use
+  `opencode run --agent archivist "$argv"` — at the cost of losing the interactive follow-up,
+  which is most of the point of the Archivist.
+- Check the raw file's `ingested:` stamp landed. It's written last, after the log entry, so an
+  ingest that dies partway leaves the file unstamped and the next run redoes it — the dedupe
+  checks in steps 6 and 7 make that safe. The one narrow window left is a run that dies between
+  the log append and the stamp; `zk-lint` catches that as a file stamped `ingested:` with no
+  matching `wiki/log.md` entry.
 
 Finally, run a lint pass to confirm the health-check path works at all:
 
@@ -393,14 +396,15 @@ none of them ever happen, the vault degrades quietly rather than breaking loudly
 | When | Do | Why |
 | ---- | -- | --- |
 | After any **work** ingest | `git -C ~/code/Zettelkasten log -p -1 tools/` | The public-grade rule on the shared folder is the one rule enforced only by prompt. This is the check. Use `log -p` rather than `diff`, because the ingest already committed via `zk-sync`. |
-| Monthly-ish | `zk-lint` and `zk-lint-work` | Finds orphan pages, contradictions, unprocessed and refused `raw/` files, stamped-but-unlogged files from a died-late ingest, unindexed tool pages, and caveats missing a "fixed in" status. This is the system's only self-healing mechanism. |
+| Monthly-ish | `zk-lint` and `zk-lint-work` | Finds orphan pages, contradictions, unprocessed `raw/` files, stamped-but-unlogged files from a died-late ingest, and caveats missing a "fixed in" status. `zk-lint` additionally surfaces refused files and unindexed tool pages, both of which are personal-vault-only. This is the system's only self-healing mechanism. |
 | ~6 months in | Look at `tools/` | If it's still nearly empty, the shared-folder idea isn't earning its complexity — fold those pages into `wiki/notes/` and drop the cross-vault sharing. That's a real, expected outcome, not a failure. |
 
 Committing is no longer on this list: `zk-ingest*` runs `zk-sync` itself on success, so the vaults
 commit after every ingest. Run `zk-sync` by hand only if you've edited vault files directly.
 
-If you'd rather not remember any of this, the honest minimum is an occasional `zk-lint`. Everything
-else is a refinement.
+If you'd rather not remember all of it: the `tools/` check after a work ingest is the floor, because
+it's the only enforcement the public-grade rule has. An occasional `zk-lint` is the next most
+valuable. The six-month `tools/` review is the only genuinely optional row.
 
 ---
 

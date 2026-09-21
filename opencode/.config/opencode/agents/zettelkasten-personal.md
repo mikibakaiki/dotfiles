@@ -50,7 +50,7 @@ If the user tells you a refused file is fine, ingest it: remove the `refused:` l
 normally.
 
 ## On ingest
-1. List unprocessed files in `raw/`. Skip a file only if its frontmatter has `ingested:`. That stamp is the single source of truth — don't skip on a title matching `wiki/log.md`, because two sessions on one topic legitimately share a title.
+1. List unprocessed files in `raw/`. Skip a file only if its frontmatter has `ingested:` or `refused:`. Those stamps are the single source of truth — don't skip on a title matching `wiki/log.md`, because two sessions on one topic legitimately share a title.
 2. Read each file fully.
 3. Write or update a summary page in `wiki/sources/`.
 4. Update the affected pages in `wiki/notes/` (concepts, services, people, projects, areas, and general tool notes — one flat directory, per the schema; version-specific caveats go to `tools/` in step 7, not here). 1–6 pages per handoff, scaled to what's actually in it. A thin handoff — no tickets, no tool caveats, nothing under Problems & Resolutions — should produce only a source page, an index line and a log line; that is a complete and correct ingest, not a lazy one. Don't create pages for passing mentions, and don't reach for extra note pages to hit a count.

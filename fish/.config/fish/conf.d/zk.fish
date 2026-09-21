@@ -39,20 +39,24 @@ end
 function zk-ingest --description 'Ingest any vault with pending raw files'
     set -l did 0
     if test (count (zk-_pending ~/code/Zettelkasten)) -gt 0
-        zk-ingest-personal $argv; set did 1
+        zk-ingest-personal $argv; or return $status
+        set did 1
     end
     if test (count (zk-_pending ~/code/Zettelkasten-work)) -gt 0
-        zk-ingest-work $argv; set did 1
+        zk-ingest-work $argv; or return $status
+        set did 1
     end
     test $did -eq 1; or echo "Nothing pending. (zk-status)"
 end
 
 # Raw files with neither an `ingested:` nor a `refused:` stamp.
+# Only the leading `---` frontmatter block counts: a verbatim error string in the body that
+# happens to start with "ingested:" must not silently mark a file as done.
 function zk-_pending --description 'Internal: list unprocessed raw files in a vault'
     test -d $argv[1]/raw; or return 0
     for f in $argv[1]/raw/*.md
         test -e $f; or continue
-        grep -qE '^(ingested|refused):' $f; or echo $f
+        sed -n '1{/^---$/!q}; 1d; /^---$/q; p' $f | grep -qE '^(ingested|refused):'; or echo $f
     end
 end
 

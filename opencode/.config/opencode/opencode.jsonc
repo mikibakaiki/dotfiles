@@ -1,7 +1,8 @@
 {
   "$schema": "https://opencode.ai/config.json",
 
-  // Terse chat replies; anything written to disk stays in normal English. Replaces caveman.md.
+  // Terse chat replies; anything written to disk stays in normal English, plus the /handoff
+  // nudge. Replaces the opencode-caveman plugin.
   "instructions": ["style.md"],
 
   // Model — via GitHub Copilot subscription (no separate Anthropic billing)
@@ -39,8 +40,8 @@
   // (you get a prompt: approve "once", never "always") and tools/ (public-grade caveats).
   // Both vaults' raw/ are "ask", deliberately: the work vault holds ticket keys and internal
   // hostnames, so it has no business taking an unprompted write from an arbitrary session either.
-  // The prompt is also the only signal you get that /handoff picked a facet — and so a vault —
-  // you didn't expect.
+  // The prompt is also a signal that /handoff picked a facet — and so a vault — you didn't
+  // expect; /handoff echoing its frontmatter is the other.
   "permission": {
     "external_directory": {
       "*": "ask",
