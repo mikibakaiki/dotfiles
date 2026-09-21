@@ -2,7 +2,8 @@
 description: Write a raw Zettelkasten handoff of this session (any facet: work, homelab, local-llm, dotfiles, personal) to the Zettelkasten raw/ folder
 ---
 
-You are writing a session handoff for the personal Zettelkasten wiki. Be terse and concrete.
+You are writing a session handoff for the Zettelkasten wiki — personal or work, whichever facet
+this session was. Be terse and concrete.
 
 ## Step 1: Read the session
 

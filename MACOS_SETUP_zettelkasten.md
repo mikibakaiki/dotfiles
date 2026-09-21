@@ -176,11 +176,16 @@ If any of these aren't supported by your installed version:
 - Adjust the patterns (e.g. expand `~` to the literal home path yourself in `opencode.jsonc`) and
   note the workaround in a handoff once the dry run (step 6) works.
 
-Delete any stray old-style config so it can't shadow the new one:
+If you did **not** set up the local `opencode.json` override in step 2 (no work MCP servers or
+work-specific `AGENTS.md` instructions needed), check whether a stray one exists from before this
+change and remove it so it can't shadow the new `opencode.jsonc`:
 
 ```bash
-rm -f ~/.config/opencode/opencode.json   # only if it exists; opencode.jsonc is the one now used
+cat ~/.config/opencode/opencode.json 2>/dev/null   # inspect first — don't blindly delete
 ```
+
+If step 2's override *is* what's there (your `mcp`/`instructions` block), leave it — that file is
+supposed to exist now. Only delete it if it's leftover cruft unrelated to what step 2 asked for.
 
 ---
 
