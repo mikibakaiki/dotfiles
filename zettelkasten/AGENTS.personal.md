@@ -38,9 +38,8 @@ tools/          One page per tool, each with a `## Version caveats` section.
 - On a small vault, a five-way taxonomy means five filing decisions per ingest. That friction
   is the most common reason personal wikis get abandoned.
 
-**Promotion rule:** when `notes/` exceeds roughly 75 pages *and* a cluster of 10+ related pages
-is obvious, promote that cluster to its own directory (`notes/homelab/`, etc.) and update this
-file. Promote on evidence, never in advance.
+If `notes/` ever gets big enough that flatness genuinely hurts, split out a subdirectory then —
+with the actual pages in front of you. Don't pre-plan the split.
 
 ## Page format
 

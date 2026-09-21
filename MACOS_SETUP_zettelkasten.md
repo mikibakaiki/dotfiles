@@ -67,8 +67,8 @@ Changed/added in this session:
   never paraphrase) more load-bearing than usual — spot-check the first few real handoffs against
   their sessions to confirm the local model is holding that line.
 - `fish/.config/fish/conf.d/zk.fish` — new: `zk`, `zk-status`, `zk-ingest`, `zk-ingest-work`,
-  `zk-ingest-personal`, `zk-lint`, `zk-lint-work`, `zk-sync`, `zk-wall-test`. Day to day you only
-  need `zk-status`, `zk-ingest` and `zk`; the rest are for when you want to be specific. Note the
+  `zk-ingest-personal`, `zk-lint`, `zk-lint-work`, `zk-sync`. Day to day you only need
+  `zk-status`, `zk-ingest` and `zk`; the rest are for when you want to be specific. Note the
   header comment: never run the two ingests concurrently (both can write the shared `tools/`
   folder, no locking), and the local-model commands need `llama-server` up on `127.0.0.1:8080`.
 - `zettelkasten/AGENTS.personal.md`, `zettelkasten/AGENTS.work.md` — new: the vault schema
@@ -295,10 +295,12 @@ separation, sandboxing) that isn't needed here and isn't set up.
 stow fish   # if not already done in step 1
 ```
 
-Open a new shell, then:
+Open a new shell, then run this once — it's a setup check, not something to re-run later, which is
+why it isn't a `zk-*` command:
 
 ```fish
-zk-wall-test
+cd ~/code/Zettelkasten-work
+opencode run --agent zettelkasten "Read ~/code/Zettelkasten/wiki/index.md and grep ~/code/Zettelkasten/raw for 'the'. Report exactly what each tool returned."
 ```
 
 This runs the Work Librarian (`zettelkasten.md`, Copilot model) **started correctly inside the work
@@ -392,7 +394,6 @@ none of them ever happen, the vault degrades quietly rather than breaking loudly
 | ---- | -- | --- |
 | After any **work** ingest | `git -C ~/code/Zettelkasten log -p -1 tools/` | The public-grade rule on the shared folder is the one rule enforced only by prompt. This is the check. Use `log -p` rather than `diff`, because the ingest already committed via `zk-sync`. |
 | Monthly-ish | `zk-lint` and `zk-lint-work` | Finds orphan pages, contradictions, unprocessed and refused `raw/` files, stamped-but-unlogged files from a died-late ingest, unindexed tool pages, and caveats missing a "fixed in" status. This is the system's only self-healing mechanism. |
-| Every few months | Read `wiki/notes/` page count | The schema's promotion rule: past ~75 pages *and* an obvious 10+ page cluster, split that cluster into its own directory and update `AGENTS.md`. |
 | ~6 months in | Look at `tools/` | If it's still nearly empty, the shared-folder idea isn't earning its complexity — fold those pages into `wiki/notes/` and drop the cross-vault sharing. That's a real, expected outcome, not a failure. |
 
 Committing is no longer on this list: `zk-ingest*` runs `zk-sync` itself on success, so the vaults

@@ -94,8 +94,6 @@ function zk-sync --description 'Commit both vaults'
     end
 end
 
-function zk-wall-test --description 'Check the work Librarian cannot see personal notes'
-    pushd ~/code/Zettelkasten-work; or return 1
-    opencode run --agent zettelkasten "Read ~/code/Zettelkasten/wiki/index.md and grep ~/code/Zettelkasten/raw for 'the'. Report exactly what each tool returned."
-    popd
-end
+# The external_directory wall check that used to live here as `zk-wall-test` is a one-time setup
+# step, not something to re-run, and it tested a boundary that was never meant to be a security
+# boundary. It's in step 5 of MACOS_SETUP_zettelkasten.md instead.
