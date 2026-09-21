@@ -1,93 +1,84 @@
 ---
-description: Create a Zettelkasten raw summary of this session — what was done, problems faced, decisions made — and write it to ~/code/Zettelkasten/raw/
+description: Write a raw Zettelkasten handoff of this session (any facet: work, homelab, local-llm, dotfiles, personal) to the Zettelkasten raw/ folder
+model: llamacpp/qwen3.8-27b-local
 ---
 
-You are writing a session handoff summary for the personal Zettelkasten wiki.
+You are writing a session handoff for the Zettelkasten wiki — personal or work, whichever facet
+this session was. Be terse and concrete.
+
+You run on a local model regardless of what model the session itself used, to keep this write-up
+off Copilot billing. This makes verbatim accuracy your job, not a given: when copying an error
+message, config value, flag, or version string into the handoff, copy it character-for-character
+from the session content — never paraphrase, reformat, or "clean up" a verbatim string. A slightly
+reworded error message is useless for the grep-based search this wiki depends on.
 
 ## Step 1: Read the session
 
-Use the `session_read` tool to read the current session's full message history. If the session ID is not known, use `session_list` to find the most recent session.
+Use `session_read` for the current session's full history (use `session_list` to find it if needed). This matters because context may have been pruned. If these tools don't exist, work from your current context and add `partial: true` to the frontmatter.
 
-## Step 2: Extract these items from the conversation
+## Step 2: Extract
 
-- **Jira tickets**: Any PROJ-XXX, or similar ticket keys mentioned. For each, note the title/goal if discussed.
-- **What we did**: A clear summary of the work completed. Be concrete — mention files changed, features added, configs updated.
-- **Problems & resolutions**: Every issue, error, or blocker encountered, and exactly how it was resolved. Include root causes where known.
-- **Reasoning & decisions**: Why we chose one approach over another. Trade-offs discussed. Things we decided NOT to do and why.
-- **Files changed**: If code was written, list the key files and what changed.
-- **Anything else notable**: Discoveries, surprises, things to watch out for, follow-up items left open.
+- **Facet**: one of `work | homelab | local-llm | dotfiles | personal | other`.
+- **Tickets**: any ticket keys (PROJ-123, GitHub #123) with their goal. Optional.
+- **What we did**: files, commands, configs, endpoints.
+- **Problems & resolutions**: symptom, root cause, fix, and how to verify the fix. Copy error messages **verbatim**. Record the **tool + exact version** involved (run `<tool> --version` if unknown and cheap).
+- **Decisions**: what was chosen, what was rejected, and why.
+- **Open items / watch-outs.**
 
-## Step 3: Determine filename
+Never include secrets, tokens, credentials, personal data, or internal hostnames/URLs; write `<redacted>` instead.
 
-- If one or more Jira tickets were the primary focus: `<ticket-slug>-<YYYY-MM-DD>.md` (e.g. `proj-123-2026-06-17.md`)
-- If multiple unrelated tickets: use the dominant one or a topic slug
-- If no ticket (config work, research, tooling): derive a short kebab-case slug from the session topic (e.g. `omo-install-2026-07-09.md`)
-- Date: today's date in YYYY-MM-DD format
+## Step 3: Filename
 
-## Step 4: Write the file
+`<ticket-or-topic-slug>-<YYYY-MM-DD>.md` in kebab-case, using today's date. If the file exists, append `-2`, `-3`.
+Folder: `~/code/Zettelkasten-work/raw/` if facet is `work`, otherwise `~/code/Zettelkasten/raw/`. If OpenCode asks for permission to write there, that's expected.
 
-Write to `~/code/Zettelkasten/raw/<filename>`.
+## Step 4: Write
 
-Use this structure (omit sections that don't apply):
+Omit empty sections.
 
 ```markdown
-# <Ticket> — <Title> (or just # <Topic> if no ticket)
-
-## Ticket
-
-**Key:** <ticket key>
-**Summary:** <one-line description>
-**Status:** <status if known>
-
-### Goal
-
-<What the ticket was asking for, in plain language.>
-
 ---
+date: YYYY-MM-DD
+facet: <facet>
+tickets: [PROJ-123]
+tools: [llama.cpp b6xxx, opencode 1.x, fish 4.x]
+tags: [<topic>, <topic>]
+keywords: [<exact error fragments, flags, config keys worth grepping>]
+---
+
+# <Ticket — Title> or <Topic>
+
+## Goal
+<One or two lines.>
 
 ## What We Did
-
-<Concrete summary of work completed. Mention specific files, endpoints, configs, commands.>
-
----
+- <concrete item, with file/command>
 
 ## Problems & Resolutions
+### 1. <title>
+**Symptom:** `<verbatim error>`
+**Env:** <tool + version, OS, relevant config>
+**Root cause:** <why>
+**Fix:** <what was done>
+**Verify:** `<command that shows it's fixed>`
 
-### 1. <Problem title>
-
-**Problem:** <What went wrong or was unclear.>
-**Root cause:** <Why it happened.>
-**Fix:** <What was done to resolve it.>
-
-(repeat for each problem)
-
----
-
-## Reasoning & Decisions
-
-- **<Decision>**: <Why this approach was chosen. What was considered and rejected.>
-
-(one bullet per significant decision)
-
----
+## Decisions
+- **<decision>**: <why; alternatives rejected>
 
 ## Files Changed
+| File | Change |
+| ---- | ------ |
 
-| File           | Change      |
-| -------------- | ----------- |
-| `path/to/file` | Description |
-
----
-
-## Notes
-
-<Follow-up items, open questions, things to watch out for, discoveries worth remembering.>
+## Open / Watch Out
+- <follow-ups, caveats, version-specific gotchas>
 ```
 
 ## Step 5: Report
 
-Tell the user the full path of the file written. Keep it to one line:
+Reply with one line only:
 
-> Written: `~/code/Zettelkasten/raw/<filename>`
+> Written: `<full path>`
 
-The file is intentionally left as raw markdown for the user to amend before running `@zettelkasten` to ingest it into the wiki.
+The file is raw and meant to be amended before running `zk-ingest-work` or `zk-ingest-personal` to ingest it.
+
+$ARGUMENTS

@@ -48,13 +48,12 @@ dotfiles/
 ├── opencode/                 ← stow package → ~/.config/opencode/
 │   ├── .stow-local-ignore    — excludes node_modules, skills, tui.json
 │   └── .config/opencode/
-│       ├── opencode.jsonc    — model, MCP servers, plugins
+│       ├── opencode.jsonc    — model, small_model, provider, privacy wall, plugins
 │       ├── dcp.jsonc         — DCP plugin config
+│       ├── style.md          — terse-chat / normal-English instructions
 │       ├── AGENTS.md         — agent usage guide
 │       ├── agents/           — agent definition files (.md)
-│       ├── commands/         — slash command definitions (.md)
-│       └── plugins/
-│           └── graphify.js   — graphify local plugin
+│       └── commands/         — slash command definitions (.md)
 │
 ├── ssh/                      ← stow package → ~/.ssh/
 │   ├── .stow-local-ignore    — excludes private keys, known_hosts
@@ -242,14 +241,27 @@ work machine, not committed.
 
 Plugins:
 
-| Plugin                    | Type  | Purpose                                       |
-| ------------------------- | ----- | --------------------------------------------- |
-| `@tarquinen/opencode-dcp` | npm   | Dynamic context pruning — reduces token usage |
-| `opencode-caveman`        | npm   | Token compression                             |
-| `./plugins/graphify.js`   | local | Knowledge graph / RAG over codebases          |
+| Plugin                    | Type | Purpose                                       |
+| ------------------------- | ---- | ---------------------------------------------- |
+| `@tarquinen/opencode-dcp` | npm  | Dynamic context pruning — reduces token usage |
 
-MCP servers (Jira, Confluence) are in `opencode.jsonc`.
-Credentials injected via `{env:JIRA_PAT}` — values from `.env.work`, never hardcoded.
+Pinned to an exact version in `opencode.jsonc` (bumped deliberately, recorded in a handoff)
+rather than tracking `@latest`.
+
+`instructions: ["style.md"]` in `opencode.jsonc` replaces the old `opencode-caveman` plugin —
+terse chat replies, normal English for anything written to disk. The `./plugins/graphify.js`
+local plugin referenced here previously was never actually committed to the repo; dropped.
+
+Work-specific MCP servers (Jira, Confluence, Jenkins, etc.) are **not** in the tracked
+`opencode.jsonc` — they were hardcoded to a different machine's local paths and have been
+removed. Add them back per-machine via an untracked, gitignored `~/.config/opencode/opencode.json`
+override (same pattern as `.env.work` below), which OpenCode merges on top at startup. See
+`MACOS_SETUP_zettelkasten.md` for the exact override format. Credentials still come from
+`{env:JIRA_PAT}` etc., values from `.env.work`, never hardcoded.
+
+See `MACOS_SETUP_zettelkasten.md` for the Zettelkasten dual-vault agent system
+(`zettelkasten.md`/`zettelkasten-personal.md`/`archivist.md`, `/handoff`, and the
+`zk`/`zk-ingest-work`/`zk-ingest-personal` fish functions).
 
 Runtime files (`node_modules/`, `skills/`, `tui.json`) excluded via
 `.stow-local-ignore` — opencode manages these itself.

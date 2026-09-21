@@ -496,7 +496,11 @@ Implementation complete. Tests passed. The changes are ready for your review.
 - Use `git diff` to inspect the changes manually.
 - Say "run code review" if you'd like both review agents to analyse them.
 - Say "commit" only if you want me to stage and commit on your behalf.
+- Worth capturing this for the Zettelkasten? Run `/handoff` if so — it writes a raw note to the
+  right vault (work or personal) for you to review before ingesting. Skip it for anything trivial.
 ```
+
+Suggest `/handoff`, never run it yourself — the user decides whether this task is worth a wiki entry.
 
 When the user requests a code review, **first gather context** before invoking the reviewers:
 
@@ -612,6 +616,11 @@ Rules:
 - If an issue was raised but its exact location is uncertain, note the file and the nearest known anchor (function name, class name, or block).
 - Do not include positives or open questions in this report — it is strictly the list of comments to be posted on the PR.
 
+After presenting the PR Comment Report, add one line suggesting `/handoff` if the review surfaced
+anything worth remembering (a real root cause, a version-specific gotcha, a rejected approach and
+why). Don't suggest it for a review that closed clean with nothing notable. Never run `/handoff`
+yourself — suggest it and stop.
+
 ## Worktree Awareness
 
 This project uses git worktrees. You may be running inside a worktree rather than the main checkout. Always operate only within your current working directory — never read from or write to sibling worktree directories or the main `b2b-online/` checkout.
@@ -672,34 +681,11 @@ The tech-lead handles all git operations. The only human step is opening a termi
 
 ### Worktree closing — knowledge capture
 
-When the user asks to close a worktree, before running the removal commands, use the `question` tool to ask:
-
-> "Should I write a summary of this worktree to the Zettelkasten before closing?"
-
-Only proceed with the summary if the user says yes. Never write it automatically.
-
-If yes, write a markdown file to `~/code/Zettelkasten/raw/` named after the ticket slug and today's date (e.g., `PROJ-123-2026-06-17.md`) with the following structure:
-
-```markdown
-# <Ticket slug> — <short title>
-
-**Date closed:** YYYY-MM-DD
-**Branch:** <branch-name>
-
-## Goal
-
-What was this ticket trying to achieve? One short paragraph.
-
-## What was implemented
-
-Bullet list of the actual changes made.
-
-## Notable events
-
-Any blockers, key decisions, pivots, or things worth remembering about how this work unfolded.
-```
-
-Leave the file as raw — the user will amend it before the librarian ingests it.
+Before running the removal commands, if a handoff wasn't already written for this task (see Step 7
+and the review-close report), ask the user whether to run `/handoff` first. It writes a raw note
+to the correct vault — work or personal, based on the session — with the full frontmatter schema
+(`facet`, `tickets`, `tools`, `keywords`) the wiki's search and ticket rollups depend on. Don't
+write a handoff file yourself with a different structure; always go through `/handoff`.
 
 ## Operational Protocol
 
