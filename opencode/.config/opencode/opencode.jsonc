@@ -1,63 +1,61 @@
 {
   "$schema": "https://opencode.ai/config.json",
 
+  // Terse chat replies; anything written to disk stays in normal English. Replaces caveman.md.
+  "instructions": ["style.md"],
+
   // Model — via GitHub Copilot subscription (no separate Anthropic billing)
   "model": "github-copilot/claude-sonnet-5",
 
-  // MCP servers — credentials come from fish .env.work via {env:VAR}
-  "mcp": {
-    "jira-mcp": {
-      "type": "local",
-      "command": [
-        "/Users/joao.campos/.local/share/fnm/node-versions/v24.16.0/installation/bin/node",
-        "/Users/joao.campos/.local/share/mcp/jira-mcp/node_modules/@dna-ai-lab/jira-mcp/build/server.js",
-      ],
-      "environment": {
-        "JIRA_PAT": "{env:JIRA_PAT}",
+  // Keeps background tasks (titles, summaries) off Copilot.
+  // llama-server answers with whichever model is loaded, so this works with either one running.
+  // Caveat: if llama-server is down, title generation fails even when the main model is Copilot.
+  "small_model": "llamacpp/qwen3.8-27b-local",
+
+  "provider": {
+    "llamacpp": {
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "http://127.0.0.1:8080/v1"
       },
-    },
-    "confluence-mcp": {
-      "type": "local",
-      "command": [
-        "/Users/joao.campos/.local/share/fnm/node-versions/v24.16.0/installation/bin/node",
-        "/Users/joao.campos/.local/share/mcp/confluence-mcp/node_modules/@dna-ai-lab/confluence-mcp/build/server.js",
-      ],
-      "environment": {
-        "CONFLUENCE_PAT": "{env:CONFLUENCE_PAT}",
-      },
-    },
-    "jenkins": {
-      "type": "remote",
-      "url": "https://oakci.dna.fi/jenkins/mcp-server/mcp",
-      "headers": {
-        "Authorization": "Basic {env:JENKINS_TOKEN}",
-      },
-    },
+      "models": {
+        "qwen3.8-27b-local": {
+          "name": "Qwen3.8 27B (local)",
+          "tool_call": true,
+          // context must match llama-server's -c flag; 16384 output leaves room for thinking
+          "limit": { "context": 65536, "output": 16384 }
+        },
+        "qwen3.6-35b-a3b-local": {
+          "name": "Qwen3.6 35B-A3B (local, fast)",
+          "tool_call": true,
+          "limit": { "context": 65536, "output": 16384 }
+        }
+      }
+    }
   },
 
-  "tools": {
-    "jira-mcp*": false,
-    "confluence-mcp*": false,
-    "jenkins*": false,
-  },
-  "agent": {
-    "requirements-clarifier": {
-      "tools": {
-        "jira-mcp*": true,
-        "confluence-mcp*": true,
-        "jenkins*": true,
-      },
-    },
-    "explore": {
-      "tools": {
-        "jira-mcp*": true,
-        "confluence-mcp*": true,
-        "jenkins*": true,
-      },
-    },
+  // Privacy wall for every session outside the vaults (e.g. Copilot agents in work repos).
+  // Last matching rule wins. Personal vault is off-limits, except raw/ so /handoff can write there
+  // (you get a prompt: approve "once", never "always") and tools/ (public-grade caveats).
+  "permission": {
+    "external_directory": {
+      "*": "ask",
+      "~/code/Zettelkasten/**": "deny",
+      "~/code/Zettelkasten/raw/**": "ask",
+      "~/code/Zettelkasten/tools/**": "ask",
+      "~/code/Zettelkasten-work/raw/**": "allow"
+    }
   },
 
-  // Plugins — dcp via npm (always latest), caveman via local file
-  // graphify excluded: it's a skill/RAG tool, not a session plugin
-  "plugin": ["@tarquinen/opencode-dcp@latest", "./plugins/graphify.js"],
+  "plugin": [
+    // Pinned: bump deliberately and record it in a handoff.
+    // 3.2.0 was released 2026-09-20; wait a week or two for bug reports before moving.
+    "@tarquinen/opencode-dcp@3.1.15"
+  ]
+
+  // NOTE: work-specific MCP servers (Jira/Confluence/Jenkins) used to live in this file,
+  // hardcoded to a work machine's local paths. Removed — they don't belong in tracked
+  // dotfiles. Re-add them on the work machine via a local, gitignored override instead.
+  // See the "Work MCP servers" section of the macOS setup guide for the exact mechanism,
+  // following the same pattern as fish/.config/fish/conf.d/.env.work (untracked, machine-local).
 }
