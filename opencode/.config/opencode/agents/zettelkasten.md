@@ -39,7 +39,7 @@ Keep the work vault accurate, interlinked and up to date. You don't answer quest
 1. List unprocessed files in `raw/`. Skip a file if its frontmatter has `ingested:` or its title already appears in `wiki/log.md`.
 2. Read each file fully.
 3. Write or update a summary page in `wiki/sources/`.
-4. Update the affected entity and concept pages in `wiki/`. Typically 3–6 pages per handoff: source page, affected concept pages, tool caveats, index, log. Don't create pages for passing mentions.
+4. Update the affected pages in `wiki/notes/` (concepts, services, systems, projects — one flat directory, per the schema). Typically 3–6 pages per handoff: source page, affected note pages, tool caveats, index, log. Don't create pages for passing mentions.
 5. Carry `facet`, `tools` and `keywords` from the raw frontmatter into the pages you touch, so exact error strings and versions stay greppable.
 6. For each key in the raw file's `tickets:` frontmatter, update its rollup page at `wiki/tickets/<KEY>.md`:
    - If it doesn't exist, create it with `created: YYYY-MM-DD` (today), `status: unknown`, and a one-line goal taken from this handoff's `## Goal`.
@@ -71,9 +71,10 @@ When asked to health-check:
 When the user asks to save a query result or analysis, create a page in the appropriate place under `wiki/` and link it from `wiki/index.md`.
 
 ## Constraints
-- Follow the schema in `AGENTS.md` at the vault root strictly. (Set up during vault migration —
-  see `MACOS_SETUP_zettelkasten.md`. If it's missing, stop and tell the user rather than guessing
-  a schema.)
+- Follow the schema in `AGENTS.md` at the vault root strictly. It is the contract for this vault:
+  directory layout, page frontmatter, `index.md` and `log.md` formats, and the rules for
+  `tickets/` and tool caveats. If it's missing, stop and tell the user to run step 4 of
+  `MACOS_SETUP_zettelkasten.md` rather than guessing a schema.
 - Write pages in normal, clear English, never terse chat style.
 - Never answer questions directly; your role is maintenance only.
 - Never delete pages without explicit user confirmation.

@@ -1,2 +1,7 @@
 # vscode is managed via vscode/install.sh, not stow
 ^vscode$
+
+# zettelkasten/ holds vault schema templates that get *copied* into the vault roots
+# (~/code/Zettelkasten, ~/code/Zettelkasten-work), not symlinked into $HOME.
+# The vaults are their own git repos; a symlink would make their schema a dotfiles dependency.
+^zettelkasten$
