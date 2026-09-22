@@ -66,11 +66,18 @@ Changed/added in this session:
   This makes the handoff's verbatim-accuracy instruction (copy errors/versions/flags exactly,
   never paraphrase) more load-bearing than usual — spot-check the first few real handoffs against
   their sessions to confirm the local model is holding that line.
-- `fish/.config/fish/conf.d/zk.fish` — new: `zk`, `zk-ingest-work`, `zk-ingest-personal`,
-  `zk-wall-test`.
-- `zettelkasten.md` and `zettelkasten-personal.md` both gained a "keep the vault portable" rule:
-  never write ticket keys, work tool/service names, company or colleague names, or
-  `Zettelkasten-work` references into the personal vault (outside `tools/`) — see step 5.
+- `fish/.config/fish/conf.d/zk.fish` — new: `zk`, `zk-status`, `zk-ingest`, `zk-ingest-work`,
+  `zk-ingest-personal`, `zk-lint`, `zk-lint-work`, `zk-sync`. Day to day you only need
+  `zk-status`, `zk-ingest` and `zk`; the rest are for when you want to be specific. Note the
+  header comment: never run the two ingests concurrently (both can write the shared `tools/`
+  folder, no locking), and the local-model commands need `llama-server` up on `127.0.0.1:8080`.
+- `zettelkasten/AGENTS.personal.md`, `zettelkasten/AGENTS.work.md` — new: the vault schema
+  templates, copied into each vault root as `AGENTS.md` in step 4. Not stowed (excluded in
+  `.stow-local-ignore`) — the vaults are separate git repos and own their copy.
+- `zettelkasten-personal.md` gained a "keep this vault portable" rule (never write work ticket
+  keys or employer/client/colleague names into `wiki/`) and a `refused:` stamp for misrouted
+  work-facet files. `zettelkasten.md`'s equivalent is the public-grade rule on `tools/`, the
+  only personal-vault path it can reach — see step 5.
 - All three agent files (`zettelkasten.md`, `zettelkasten-personal.md`, `archivist.md`) gained
   ticket-rollup handling (`wiki/tickets/<KEY>.md`) — unrelated to the work/personal split, but
   touched in the same working tree.
@@ -193,44 +200,77 @@ supposed to exist now. Only delete it if it's leftover cruft unrelated to what s
 
 ---
 
-## 4. Migrate the vaults
+## 4. Set up the vaults
 
 Goal: two sibling vaults, separate git repos, no symlinks or nesting between them.
 
-```bash
-mkdir -p ~/code/Zettelkasten-work/raw ~/code/Zettelkasten-work/wiki
-mkdir -p ~/code/Zettelkasten/tools   # raw/ and wiki/ should already exist if you have a vault today
-```
+Each vault gets an `AGENTS.md` at its root defining its structure — that's the schema both
+Librarians and the Archivist are told to follow strictly. The two templates are tracked in this
+repo at `zettelkasten/AGENTS.personal.md` and `zettelkasten/AGENTS.work.md`. They are **copied**
+into the vault roots, not stowed: the vaults are their own git repos, and a symlink would make
+their schema a dotfiles dependency. (`zettelkasten/` is excluded in `.stow-local-ignore` so a bare
+`stow` can't do this by accident.)
 
-1. **Move existing work content** out of the personal vault into the new work vault:
+Read both templates before running this — they're short, and they're the actual contract the
+agents work to.
+
+1. **Create the directories:**
    ```bash
-   # inspect first — figure out which raw/ and wiki/ files are actually work-facet before moving
-   ls ~/code/Zettelkasten/raw
+   mkdir -p ~/code/Zettelkasten/{raw,wiki/{sources,notes,tickets},tools}
+   mkdir -p ~/code/Zettelkasten-work/{raw,wiki/{sources,notes,tickets}}
    ```
-   Move files whose content/frontmatter is work-related into
-   `~/code/Zettelkasten-work/raw/` and `~/code/Zettelkasten-work/wiki/`. Do this by hand or with
-   `git mv`/`mv` per file — don't bulk-move without checking, since op has real content in it.
+   Note the work vault has **no** `tools/` — tool caveats are shared, and live only in the
+   personal vault. See "The tools/ folder" in the personal template for why.
 
-2. **Copy the wiki-root `AGENTS.md` schema** (the raw/wiki/tools structure and page-format rules —
-   see the body of the old `wiki.md` agent for what that schema looked like) into
-   `~/code/Zettelkasten-work/AGENTS.md`, adjusted to drop the `tools/` directory (work vault has no
-   local `tools/`; it only writes into the personal vault's shared `tools/` per the new
-   `zettelkasten.md` agent).
-
-3. **Create `tools/`** in the personal vault if it doesn't exist yet:
+2. **Install the schema into each vault root:**
    ```bash
-   mkdir -p ~/code/Zettelkasten/tools
+   cp ~/dotfiles/zettelkasten/AGENTS.personal.md ~/code/Zettelkasten/AGENTS.md
+   cp ~/dotfiles/zettelkasten/AGENTS.work.md     ~/code/Zettelkasten-work/AGENTS.md
    ```
+   If you later change the schema, edit the tracked template and re-copy — don't diverge the
+   vault copy silently.
 
-4. **Update schema paths** in each vault's `AGENTS.md` to reflect the new split (work vault has no
-   `tools/`; personal vault's `AGENTS.md` should mention `tools/` alongside `raw/`/`wiki/`).
+3. **Seed the two index files** in each vault, so the Librarians have something to append to
+   rather than inventing structure on first run:
+   ```bash
+   printf '# Index\n\n## Sources\n\n## Notes\n\n## Tickets\n' > ~/code/Zettelkasten/wiki/index.md
+   printf '# Log\n' > ~/code/Zettelkasten/wiki/log.md
+   printf '# Index\n\n## Sources\n\n## Notes\n\n## Tickets\n' > ~/code/Zettelkasten-work/wiki/index.md
+   printf '# Log\n' > ~/code/Zettelkasten-work/wiki/log.md
+   ```
+   The personal `index.md` also grows a `## Tools` section, but only once `tools/` has a page in
+   it — leave it out for now.
 
-5. **Mark already-ingested raw files.** For every file in both vaults' `raw/` whose content is
-   already reflected in `wiki/` (check `wiki/log.md`), add `ingested: YYYY-MM-DD` to its
-   frontmatter (use the date it was actually ingested if you know it, otherwise today's date with
-   a note).
+4. **Sort any existing content.** You mentioned the vault is near-blank, so this is likely a
+   no-op — but check:
+   ```bash
+   ls ~/code/Zettelkasten/raw ~/code/Zettelkasten/wiki 2>/dev/null
+   ```
+   Anything work-related moves to `~/code/Zettelkasten-work/`; anything already summarised into
+   `wiki/` gets `ingested: YYYY-MM-DD` added to its frontmatter in `raw/` so the Librarians skip
+   it. Move file by file — don't bulk-move.
 
-6. **Confirm the vaults are properly separated:**
+5. **`tools/` starts empty, and that's correct.** Don't create placeholder pages. A tool page is
+   written the first time a Librarian has a real version-specific caveat to record — a verbatim
+   error, the version range it affects, the fix, and a command to verify. Until then an empty
+   directory is the honest state.
+
+   This folder is the one deliberately-shared surface between the two vaults, and the one rule
+   enforced only by prompt rather than by config, so it's worth knowing what you're opting into:
+   after any **work** ingest, `git diff` it and confirm nothing company-identifiable landed there.
+   If it's still nearly empty in six months, that's real evidence the shared-folder idea isn't
+   earning its complexity, and folding those pages into `wiki/notes/` would be a reasonable
+   simplification.
+
+6. **Initialise git in each vault**, if they aren't repos already:
+   ```bash
+   cd ~/code/Zettelkasten      && git init && git add -A && git commit -m "Initial vault structure"
+   cd ~/code/Zettelkasten-work && git init && git add -A && git commit -m "Initial vault structure"
+   ```
+   Separate repos, deliberately — the work vault can then be deleted or left behind wholesale
+   without touching anything you keep.
+
+7. **Confirm the vaults are properly separated:**
    ```bash
    # neither path should be inside the other
    realpath ~/code/Zettelkasten
@@ -244,7 +284,7 @@ mkdir -p ~/code/Zettelkasten/tools   # raw/ and wiki/ should already exist if yo
 
 ---
 
-## 5. Fish wall test
+## 5. Privacy wall check
 
 The work/personal split here is about **organization, not a hard security boundary**: two vaults
 so it's easy to navigate day to day, and so the work vault can be cleanly left behind (or deleted)
@@ -253,13 +293,15 @@ against a hostile or misbehaving model — that's a different, heavier problem (
 separation, sandboxing) that isn't needed here and isn't set up.
 
 ```bash
-stow fish   # if not already done in step 1
+stow fish   # if not already done in steps 1–2
 ```
 
-Open a new shell, then:
+Open a new shell, then run this once — it's a setup check, not something to re-run later, which is
+why it isn't a `zk-*` command:
 
 ```fish
-zk-wall-test
+cd ~/code/Zettelkasten-work
+opencode run --agent zettelkasten "Read ~/code/Zettelkasten/wiki/index.md and grep ~/code/Zettelkasten/raw for 'the'. Report exactly what each tool returned."
 ```
 
 This runs the Work Librarian (`zettelkasten.md`, Copilot model) **started correctly inside the work
@@ -276,12 +318,12 @@ notes, not deliberate circumvention.
 - `zettelkasten.md`'s own `external_directory` override (`"~/code/Zettelkasten/tools/**": allow`)
   is too broad and accidentally matches more than `tools/`
 
-The other side of "leaves cleanly" is content, not access: `zettelkasten-personal.md` and
-`zettelkasten.md` both now carry an explicit rule to never write ticket keys, work tool/service
-names, company or colleague names, or `Zettelkasten-work` references into the personal vault
-(`tools/` excepted, which has its own public-grade rule). Spot-check this after a few real work
-ingests — grep the personal vault's `wiki/` for anything that looks work-identifiable and correct
-the agent's behavior if you find something:
+The other side of "leaves cleanly" is content, not access. The Personal Librarian carries a
+portability rule: never write work ticket keys, employer/client/colleague names, or
+`Zettelkasten-work` references into `wiki/`. The Work Librarian carries the public-grade rule on
+`tools/`, which is the only personal-vault path it can reach at all. Spot-check both after a few
+real work ingests — grep the personal vault's `wiki/` for anything that looks work-identifiable
+and correct the agent's behavior if you find something:
 
 ```bash
 grep -ril "ticket\|jira\|confluence" ~/code/Zettelkasten/wiki --include="*.md" | grep -v '/tools/'
@@ -305,14 +347,12 @@ in verbatim error strings. Also check any error message or version string agains
 appeared in the scratch session — `/handoff` runs on the local model now (for token cost), and a
 paraphrased "close enough" error string defeats the grep-based search this wiki relies on.
 
-Then ingest it:
+Then ingest it — `zk-ingest` picks whichever vault the file landed in, so you don't have to
+decide:
 
 ```fish
-# if facet: personal (or homelab/local-llm/dotfiles/other)
-zk-ingest-personal
-
-# if facet: work
-zk-ingest-work
+zk-status    # what's pending, in both vaults
+zk-ingest    # ingest it, then auto-commit via zk-sync
 ```
 
 Check the Librarian's output: it should have written to `wiki/sources/`, updated `wiki/index.md`
@@ -327,9 +367,48 @@ zk "what did we do about <topic from the handoff>?"
 
 Confirm the Archivist cites the page(s) the Librarian just created.
 
+Two things to watch on this first run:
+
+- `zk` passes the question positionally to interactive `opencode --agent archivist`, which is
+  unverified against your OpenCode version. If that build doesn't accept a free-text question
+  that way, you'll get an empty session with the question dropped. If so, change `zk` to use
+  `opencode run --agent archivist "$argv"` — at the cost of losing the interactive follow-up,
+  which is most of the point of the Archivist.
+- Check the raw file's `ingested:` stamp landed. It's written last, after the log entry, so an
+  ingest that dies partway leaves the file unstamped and the next run redoes it — the dedupe
+  checks in steps 6 and 7 make that safe. The one narrow window left is a run that dies between
+  the log append and the stamp; `zk-lint` catches that as a file stamped `ingested:` with no
+  matching `wiki/log.md` entry.
+
+Finally, run a lint pass to confirm the health-check path works at all:
+
+```fish
+zk-lint
+```
+
 ---
 
-## 7. Optional
+## 7. Recurring maintenance
+
+Nothing in this system schedules itself. These are the jobs it silently assumes you'll do — if
+none of them ever happen, the vault degrades quietly rather than breaking loudly.
+
+| When | Do | Why |
+| ---- | -- | --- |
+| After any **work** ingest | `git -C ~/code/Zettelkasten log -p -1 tools/` | The public-grade rule on the shared folder is the one rule enforced only by prompt. This is the check. Use `log -p` rather than `diff`, because the ingest already committed via `zk-sync`. |
+| Monthly-ish | `zk-lint` and `zk-lint-work` | Finds orphan pages, contradictions, unprocessed `raw/` files, stamped-but-unlogged files from a died-late ingest, and caveats missing a "fixed in" status. `zk-lint` additionally surfaces refused files and unindexed tool pages, both of which are personal-vault-only. This is the system's only self-healing mechanism. |
+| ~6 months in | Look at `tools/` | If it's still nearly empty, the shared-folder idea isn't earning its complexity — fold those pages into `wiki/notes/` and drop the cross-vault sharing. That's a real, expected outcome, not a failure. |
+
+Committing is no longer on this list: `zk-ingest*` runs `zk-sync` itself on success, so the vaults
+commit after every ingest. Run `zk-sync` by hand only if you've edited vault files directly.
+
+If you'd rather not remember all of it: the `tools/` check after a work ingest is the floor, because
+it's the only enforcement the public-grade rule has. An occasional `zk-lint` is the next most
+valuable. The six-month `tools/` review is the only genuinely optional row.
+
+---
+
+## 8. Optional
 
 ### omo-slim (oh-my-opencode-slim)
 

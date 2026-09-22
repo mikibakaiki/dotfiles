@@ -75,10 +75,20 @@ keywords: [<exact error fragments, flags, config keys worth grepping>]
 
 ## Step 5: Report
 
-Reply with one line only:
+Reply with the path and the frontmatter you wrote, nothing else:
 
 > Written: `<full path>`
+>
+> ```
+> facet: <facet>
+> tickets: [...]
+> tools: [...]
+> tags: [...]
+> keywords: [...]
+> ```
 
-The file is raw and meant to be amended before running `zk-ingest-work` or `zk-ingest-personal` to ingest it.
+Echoing the frontmatter lets the user check the facet (which decides the vault) and the keywords
+(which decide whether this is findable later) without opening the file. Then `zk-ingest` picks up
+whichever vault it landed in.
 
 $ARGUMENTS

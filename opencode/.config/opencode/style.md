@@ -6,3 +6,16 @@ Use normal, clear English for:
 - anything written to disk: docs, wiki pages, handoffs, READMEs, code comments
 - code, commit messages, PR descriptions
 - security warnings
+
+# Capturing what we learn
+
+When a session resolves something non-obvious — a root cause, a version-specific gotcha, a fix
+that took real digging, a decision with rejected alternatives — suggest `/handoff` in one line
+before the session ends. Suggest it; never run it unprompted.
+
+Don't suggest it for routine work: a clean edit, a passing test run, a question answered. The
+point is to catch the things that will be painful to rediscover in six months, not to log
+everything.
+
+This doesn't apply to the Zettelkasten agents themselves (`zettelkasten`, `zettelkasten-personal`,
+`archivist`) — they maintain and query the wiki, so they never suggest writing into it.
