@@ -229,6 +229,43 @@ git config user.email "your.personal@email.com"
 This writes to `~/dotfiles/.git/config` and overrides the global identity
 only for this repo.
 
+### Do this immediately after cloning
+
+A fresh clone has **no** repo-local identity, so the global one — which on a work machine is the
+work identity — applies until you override it. Any commit made in that window is authored with a
+work name and address, and since author metadata is part of the commit, it cannot be edited out
+later without rewriting history. This repo's first commit went in that way.
+
+Check before the first commit, every time you clone:
+
+```bash
+cd ~/dotfiles && git config user.email    # must be the personal address
+```
+
+### A durable guard
+
+Rather than remembering per repo, scope the work identity to work directories with a conditional
+include, and make personal the default:
+
+```ini
+# ~/.config/git/config.local  (gitignored)
+[user]
+    name  = Your Name
+    email = your.personal@email.com
+
+[includeIf "gitdir:~/work/"]
+    path = config.work
+```
+
+```ini
+# ~/.config/git/config.work  (gitignored)
+[user]
+    email = your.work@email.com
+```
+
+Now the work address is only ever used inside `~/work/`, and anything outside it — this repo
+included — defaults to personal. Failing safe beats remembering.
+
 ---
 
 ## VS Code
