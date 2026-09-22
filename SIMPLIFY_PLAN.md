@@ -169,7 +169,7 @@ the work/personal divergence, and the duplicated "why flat" essay.
 
 ### 2. `opencode/.config/opencode/agents/zettelkasten.md` — the single Librarian
 
-Delete `zettelkasten-personal.md`. Rewrite `zettelkasten.md` (currently 82 lines, target ~40),
+Delete `zettelkasten-personal.md`. Rewrite `zettelkasten.md` (currently 82 lines, ~65 after),
 keeping the filename so `zk-ingest` and `zk-lint` don't change.
 
 Frontmatter:
