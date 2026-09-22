@@ -23,4 +23,4 @@ policies — belongs in an untracked override, not here. Create
 { "instructions": ["style.md", "AGENTS.work.local.md"] }
 ```
 
-See the "Work MCP servers and AGENTS.md" section of `MACOS_SETUP_zettelkasten.md`.
+See `docs/setup-work-machine.md`.

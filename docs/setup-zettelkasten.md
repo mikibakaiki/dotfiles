@@ -1,53 +1,22 @@
-# macOS setup guide — agent tooling, GPU limit, the Zettelkasten vault
+# Setup: the Zettelkasten wiki
 
-Run this on the machine that will hold the vault, after pulling the dotfiles changes. Everything
-here needs macOS tools (launchd, sysctl, opencode CLI, fish) that don't exist on the machine the
-edits were made on, so none of it was run or verified for you. Go through it in order; stop and
-check output at each numbered step before moving on.
+**Run this on every machine that should capture notes** — the work MacBook, the personal desktop.
+Not the Pi.
+
+**Prerequisite:** [setup-local-llm.md](setup-local-llm.md). Every agent here runs on
+`llama-server`; if it isn't up, nothing on this page works. Check with `llm-status` before
+starting.
+
+Takes about 20 minutes including the dry run.
 
 ```bash
-cd ~/dotfiles   # or wherever this repo lives on the Mac
+cd ~/dotfiles   # or wherever this repo lives
 git pull
 ```
 
 ---
 
-## 1. GPU LaunchDaemon (A1–A3)
-
-Files already in the repo:
-- `llm/.config/llm/local.iogpu.wired-limit.plist`
-- `fish/.config/fish/functions/llm-gpu-persist.fish`
-- `fish/.config/fish/conf.d/llm-gpu.fish`
-
-Stow them if not already:
-
-```bash
-stow llm fish
-```
-
-Install the daemon (asks for sudo — read `llm-gpu-persist.fish` first if you want to know exactly
-what it does before running it):
-
-```fish
-llm-gpu-persist
-```
-
-Verify:
-
-```bash
-sysctl iogpu.wired_limit_mb
-```
-
-Expect `iogpu.wired_limit_mb: 24576`. Open a **new** shell and confirm the conf.d guard is silent
-(no `⚠ GPU wired limit=...` warning). If the value doesn't stick after a reboot, check:
-
-```bash
-sudo launchctl print system/local.iogpu.wired-limit
-```
-
----
-
-## 2. OpenCode files
+## 1. OpenCode files
 
 What each tracked file does:
 
@@ -68,7 +37,7 @@ What each tracked file does:
   `zk-_pending`. All the local-model commands need `llama-server` up on `127.0.0.1:8080`; the
   header comment has the one-liner that checks it.
 - `zettelkasten/AGENTS.md` — the vault schema template, copied into the vault root as `AGENTS.md`
-  in section 4. Not stowed (excluded in `.stow-local-ignore`) — the vault is its own git repo and
+  in section 3. Not stowed (excluded in `.stow-local-ignore`) — the vault is its own git repo and
   owns its copy.
 
 Stow:
@@ -77,90 +46,7 @@ Stow:
 stow opencode fish
 ```
 
-### Work MCP servers and AGENTS.md — local, untracked overrides
-
-The old `opencode.jsonc` had Jira/Confluence/Jenkins MCP servers hardcoded to absolute paths under
-a previous owner's home directory. They were **removed** from the tracked file rather than guessed
-at. `opencode/.config/opencode/AGENTS.md` has likewise been stripped of employer-specific content
-(SCM host, CLI conventions, ticket types, runtime policies) — that belongs in an untracked
-override, and the tracked file now says so and nothing more.
-
-Nothing tracked in this repo should name an employer, an internal hostname, or a real person. The
-gitignored slots below are where that content lives.
-
-OpenCode merges config from multiple places, later ones winning: global
-`~/.config/opencode/opencode.jsonc` → a project-local `opencode.json`/`.jsonc` → `OPENCODE_CONFIG`
-env var if set. `.gitignore` already reserves `**/opencode/opencode.json` (no `c`) and
-`**/opencode/AGENTS.*.local.md` as untracked override slots that live right next to the tracked
-files but never show up in `git status`. Use them instead of editing the tracked files:
-
-**MCP servers** — create `~/.config/opencode/opencode.json`:
-
-```json
-{
-  "mcp": {
-    "jira-mcp": {
-      "type": "local",
-      "command": ["node", "/absolute/path/to/jira-mcp/build/server.js"],
-      "environment": { "JIRA_PAT": "{env:JIRA_PAT}" }
-    },
-    "confluence-mcp": {
-      "type": "local",
-      "command": ["node", "/absolute/path/to/confluence-mcp/build/server.js"],
-      "environment": { "CONFLUENCE_PAT": "{env:CONFLUENCE_PAT}" }
-    },
-    "jenkins": {
-      "type": "remote",
-      "url": "https://your-jenkins/mcp-server/mcp",
-      "headers": { "Authorization": "Basic {env:JENKINS_TOKEN}" }
-    }
-  },
-  "tools": {
-    "jira-mcp*": false,
-    "confluence-mcp*": false,
-    "jenkins*": false
-  },
-  "agent": {
-    "requirements-clarifier": {
-      "tools": { "jira-mcp*": true, "confluence-mcp*": true, "jenkins*": true }
-    },
-    "explore": {
-      "tools": { "jira-mcp*": true, "confluence-mcp*": true, "jenkins*": true }
-    }
-  }
-}
-```
-
-Fill in real paths/URLs for your actual MCP servers. `JIRA_PAT` etc. resolve from
-`~/.config/fish/conf.d/.env.work` as usual — don't hardcode tokens into this file even though it's
-gitignored.
-
-**AGENTS.md instructions** — if you actually want work-specific standing instructions (Bitbucket
-`bb` CLI conventions, ticket type rules, etc.), don't restore them into the tracked `AGENTS.md`.
-Instead point `instructions` at a second untracked file via the same override:
-
-```json
-{
-  "instructions": ["style.md", "AGENTS.work.local.md"]
-}
-```
-
-(merge this into the same `opencode.json` as the `mcp` block above — one file, one JSON object)
-
-then create `~/.config/opencode/AGENTS.work.local.md` with only the content you actually still
-need. Don't just copy the old stale file over — it referenced a different person's machine paths
-and may not even be your workflow (Bitbucket vs. GitHub, `bb` vs `gh`, etc.); write it fresh.
-
-Verify the override is being picked up and still invisible to git:
-
-```bash
-cd ~/dotfiles && git status --short   # should show nothing for opencode.json / AGENTS.*.local.md
-opencode run --agent zettelkasten "list your available mcp tools"   # or similar, to confirm merge
-```
-
----
-
-## 3. Verify your OpenCode version supports what the config needs
+## 2. Verify your OpenCode version supports what the config needs
 
 ```bash
 opencode --version
@@ -176,22 +62,21 @@ Check against the OpenCode changelog/docs for:
 If any of these aren't supported by your installed version:
 - Upgrade OpenCode, **or**
 - Adjust the patterns (e.g. expand `~` to the literal home path yourself in `opencode.jsonc`) and
-  note the workaround in a handoff once the dry run (section 5) works.
+  note the workaround in a handoff once the dry run (section 4) works.
 
-If you did **not** set up the local `opencode.json` override in section 2, check whether a stray
+If you did **not** set up the local `opencode.json` override in setup-work-machine.md, check whether a stray
 one exists from before this change and remove it so it can't shadow the new `opencode.jsonc`:
 
 ```bash
 cat ~/.config/opencode/opencode.json 2>/dev/null   # inspect first — don't blindly delete
 ```
 
-If section 2's override *is* what's there (your `mcp`/`instructions` block), leave it — that file
-is supposed to exist now. Only delete it if it's leftover cruft unrelated to what section 2 asked
-for.
+If that override *is* what's there (your `mcp`/`instructions` block), leave it — that file
+is supposed to exist now. Only delete it if it's leftover cruft unrelated to that.
 
 ---
 
-## 4. Set up the vault
+## 3. Set up the vault
 
 **One vault per machine, always at `~/code/Zettelkasten`.** The machine decides what's in it: run
 this guide on the work MacBook and the vault holds work content; run it on the personal desktop and
@@ -262,7 +147,7 @@ Read the template before running this — it's short, and it's the actual contra
 
 ---
 
-## 5. Dry run
+## 4. Dry run
 
 In a scratch OpenCode session (this just needs to produce some conversation to hand off):
 
@@ -318,7 +203,7 @@ zk-lint
 
 ---
 
-## 6. Recurring maintenance
+## 5. Recurring maintenance
 
 Nothing in this system schedules itself. This is the one job it assumes you'll do — if it never
 happens, the vault degrades quietly rather than breaking loudly.
@@ -332,7 +217,7 @@ vault files directly.
 
 ---
 
-## 7. Optional
+## 6. Optional
 
 ### omo-slim (oh-my-opencode-slim)
 
@@ -363,16 +248,18 @@ Don't wire it into the main config. If you want to measure it:
 ## Notes on what this session could not verify
 
 Written on Linux with no `fish`, `opencode` CLI, or `launchd` — every command above comes from the
-spec and **none of it has been run**. The fish file's structure, the frontmatter stamp detection
-and the JSONC parse were checked statically; nothing else was. Treat sections 1, 3 and 5 as the
-ones most likely to surface a real problem (version mismatches, pattern-matching quirks) and go
-slowly through them.
+spec and **none of it has been run**. What *was* checked statically: the fish file's structure, the
+frontmatter stamp detection (against a body line starting `ingested:`, a file with no frontmatter,
+and a legacy `refused:` stamp), and that `opencode.jsonc` parses with its permission map intact.
+Nothing else. Treat sections 2 and 4 as the ones most likely to surface a real problem — version
+mismatches and pattern-matching quirks — and go slowly through them.
 
-Run `fish -n ~/.config/fish/conf.d/zk.fish` once after stowing — that's the real syntax check, and
-it couldn't be run here.
+Run this once after stowing; it's the real syntax check and it couldn't be done from here:
 
-Also: the brief mentions existing fish helpers `__llm_gpu_limit`, `__llm_serve`, `llm-up`,
-`llm-fast` from an earlier session — none of these exist in the dotfiles repo. If you still use
-them, they live somewhere not tracked here (or were never committed); check before assuming
-`llm-gpu-persist` replaces them, since `llm-up`/`llm-fast` sound like they might start
-`llama-server` itself, which is a different job.
+```bash
+fish -n ~/.config/fish/conf.d/zk.fish
+```
+
+---
+
+**Next, only on the work MacBook:** [setup-work-machine.md](setup-work-machine.md)

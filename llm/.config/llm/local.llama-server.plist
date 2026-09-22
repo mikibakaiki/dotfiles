@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  LaunchAgent (user, not root) that keeps llama-server up on 127.0.0.1:8080.
+  Install with `llm-serve-persist`. See docs/setup-local-llm.md.
+
+  Two arguments are load-bearing and must not be changed casually:
+    -c 65536   must match `limit.context` in opencode/.config/opencode/opencode.jsonc.
+               A mismatch truncates prompts silently rather than erroring.
+    -np 1      Metal OOMs under the default auto-parallelism. One slot is also all
+               this setup needs: nothing here issues concurrent requests.
+-->
+<plist version="1.0"><dict>
+  <key>Label</key><string>local.llama-server</string>
+  <key>ProgramArguments</key><array>
+    <string>/opt/homebrew/bin/llama-server</string>
+    <string>-hf</string><string>unsloth/Qwen3.8-27B-GGUF:Q4_K_M</string>
+    <string>-c</string><string>65536</string>
+    <string>-ngl</string><string>all</string>
+    <string>--host</string><string>127.0.0.1</string>
+    <string>--port</string><string>8080</string>
+    <string>-np</string><string>1</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><dict>
+    <key>SuccessfulExit</key><false/>
+  </dict>
+  <key>StandardOutPath</key><string>/tmp/llama-server.log</string>
+  <key>StandardErrorPath</key><string>/tmp/llama-server.err.log</string>
+</dict></plist>

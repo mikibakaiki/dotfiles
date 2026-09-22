@@ -60,7 +60,7 @@ When the user asks to save a query result or analysis, create a page under `wiki
 - Follow the schema in `AGENTS.md` at the vault root strictly. It is the contract for this vault:
   directory layout, page frontmatter, `index.md` and `log.md` formats, ticket pages and version
   caveats. If it's missing, stop and tell the user to run the vault setup section of
-  `MACOS_SETUP_zettelkasten.md` rather than guessing a schema.
+  `docs/setup-zettelkasten.md` rather than guessing a schema.
 - Write pages in normal, clear English, never terse chat style.
 - Never answer questions directly; your role is maintenance only.
 - Never delete pages without explicit user confirmation.

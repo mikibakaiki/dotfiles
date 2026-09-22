@@ -5,6 +5,25 @@ Each tool's config lives in this repo and gets symlinked into the correct locati
 
 ---
 
+## Start here
+
+Setting up a machine — new or existing — run these in order. Each is one sitting, and each states
+its own prerequisites.
+
+| # | Guide | Run it on | What you get |
+| --- | --- | --- | --- |
+| 1 | [docs/setup-local-llm.md](docs/setup-local-llm.md) | **every** machine | llama.cpp, the model, `llama-server` on `:8080` at login. Everything else depends on this. |
+| 2 | [docs/setup-zettelkasten.md](docs/setup-zettelkasten.md) | every machine that captures notes | The vault, the Librarian and Archivist agents, `/handoff`, the `zk-*` commands. |
+| 3 | [docs/setup-work-machine.md](docs/setup-work-machine.md) | **work MacBook only** | Jira/Confluence/Jenkins MCP servers, work agent instructions, work git identity — all in untracked files. |
+
+The Raspberry Pi runs none of these: it can't host the model, and a second personal vault would
+diverge from the desktop's with nothing to sync it.
+
+Everything employer-specific lives in gitignored override files, never in tracked config. Guide 3
+lists exactly which values you supply and where each one goes.
+
+---
+
 ## Structure
 
 ```
@@ -15,6 +34,11 @@ dotfiles/
 ├── bootstrap.sh              — fresh machine setup
 ├── README.md
 │
+├── docs/                     — setup guides, run in order (see "Start here")
+│   ├── setup-local-llm.md    — llama.cpp, model, llama-server
+│   ├── setup-zettelkasten.md — vault, agents, zk commands
+│   └── setup-work-machine.md — employer-specific overrides (work MacBook only)
+│
 ├── fish/                     ← stow package → ~/.config/fish/
 │   └── .config/fish/
 │       ├── config.fish       — XDG, homebrew, PATH, editor, pager, git, zoxide
@@ -22,6 +46,8 @@ dotfiles/
 │       ├── completions/
 │       │   ├── copilot.fish
 │       │   └── docker.fish
+│       ├── functions/
+│       │   └── llm-gpu-persist.fish     — installs the GPU wired-limit LaunchDaemon
 │       └── conf.d/
 │           ├── 20-env-public.fish       — non-sensitive env vars
 │           ├── 30-env-secrets.fish      — loader: reads .env.personal + .env.work
@@ -30,10 +56,18 @@ dotfiles/
 │           ├── fish_frozen_theme.fish   — theme
 │           ├── fnm.fish                 — Node version manager init
 │           ├── fzf.fish                 — fuzzy finder + key bindings
+│           ├── llm.fish                 — llm-up/-down/-status/-fast, llm-serve-persist
+│           ├── llm-gpu.fish             — startup warning if the GPU limit isn't set
 │           ├── prompt.fish              — starship init
 │           ├── pyenv.fish               — Python version manager init
+│           ├── zk.fish                  — zk, zk-status, zk-ingest, zk-lint
 │           ├── .env.personal.example    — template → copy to .env.personal
 │           └── .env.work.example        — template → copy to .env.work
+│
+├── llm/                      ← stow package → ~/.config/llm/
+│   └── .config/llm/
+│       ├── local.iogpu.wired-limit.plist  — LaunchDaemon: GPU wired limit (root)
+│       └── local.llama-server.plist       — LaunchAgent: llama-server at login (user)
 │
 ├── ghostty/                  ← stow package → ~/.config/ghostty/
 │   └── .config/ghostty/
@@ -71,7 +105,7 @@ dotfiles/
 │   ├── .stow-local-ignore
 │   ├── install.sh            — symlinks into ~/Library/Application Support/Code/User/
 │   ├── settings.json         — editor, terminal, extensions config
-│   ├── mcp.json              — MCP servers for GitHub Copilot
+│   ├── mcp.json.example      — template → copy to mcp.json (gitignored: names an org)
 │   └── settings.local.example — template for work-specific settings
 │
 ├── zed/                      ← stow package → ~/.config/zed/
@@ -86,7 +120,7 @@ dotfiles/
 The vault is its own git repo, so its schema is copied rather than symlinked — a symlink would
 make vault content depend on this repo being checked out. One vault per machine, at the same path
 on each: the machine decides whether it holds work or personal content. See
-`MACOS_SETUP_zettelkasten.md`.
+[docs/setup-zettelkasten.md](docs/setup-zettelkasten.md).
 
 ---
 
@@ -122,9 +156,13 @@ Or manually:
 ```bash
 git clone git@github-personal:mikibakaiki/dotfiles.git ~/dotfiles
 cd ~/dotfiles
-stow fish ghostty git opencode ssh starship zed
+git config user.email "your.personal@email.com"   # before the first commit — see Git identity
+stow fish ghostty git llm opencode ssh starship zed
 ~/dotfiles/vscode/install.sh
 ```
+
+Then work through the guides in [Start here](#start-here) — stowing puts the files in place, but
+the model, the vault and the launch agents still need setting up.
 
 ---
 
@@ -304,10 +342,10 @@ Work-specific MCP servers (Jira, Confluence, Jenkins, etc.) are **not** in the t
 `opencode.jsonc` — they were hardcoded to a different machine's local paths and have been
 removed. Add them back per-machine via an untracked, gitignored `~/.config/opencode/opencode.json`
 override (same pattern as `.env.work` below), which OpenCode merges on top at startup. See
-`MACOS_SETUP_zettelkasten.md` for the exact override format. Credentials still come from
+[docs/setup-work-machine.md](docs/setup-work-machine.md) for the exact override format. Credentials still come from
 `{env:JIRA_PAT}` etc., values from `.env.work`, never hardcoded.
 
-See `MACOS_SETUP_zettelkasten.md` for the Zettelkasten agent system
+See [docs/setup-zettelkasten.md](docs/setup-zettelkasten.md) for the Zettelkasten agent system
 (`zettelkasten.md`/`archivist.md`, `/handoff`, and the `zk-status`/`zk-ingest`/`zk`/`zk-lint` fish
 functions).
 
