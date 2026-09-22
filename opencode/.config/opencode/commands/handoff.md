@@ -1,10 +1,9 @@
 ---
-description: Write a raw Zettelkasten handoff of this session (any facet: work, homelab, local-llm, dotfiles, personal) to the Zettelkasten raw/ folder
+description: Write a raw Zettelkasten handoff of this session to the Zettelkasten raw/ folder
 model: llamacpp/qwen3.8-27b-local
 ---
 
-You are writing a session handoff for the Zettelkasten wiki — personal or work, whichever facet
-this session was. Be terse and concrete.
+You are writing a session handoff for the Zettelkasten wiki. Be terse and concrete.
 
 You run on a local model regardless of what model the session itself used, to keep this write-up
 off Copilot billing. This makes verbatim accuracy your job, not a given: when copying an error
@@ -18,7 +17,6 @@ Use `session_read` for the current session's full history (use `session_list` to
 
 ## Step 2: Extract
 
-- **Facet**: one of `work | homelab | local-llm | dotfiles | personal | other`.
 - **Tickets**: any ticket keys (PROJ-123, GitHub #123) with their goal. Optional.
 - **What we did**: files, commands, configs, endpoints.
 - **Problems & resolutions**: symptom, root cause, fix, and how to verify the fix. Copy error messages **verbatim**. Record the **tool + exact version** involved (run `<tool> --version` if unknown and cheap).
@@ -30,7 +28,7 @@ Never include secrets, tokens, credentials, personal data, or internal hostnames
 ## Step 3: Filename
 
 `<ticket-or-topic-slug>-<YYYY-MM-DD>.md` in kebab-case, using today's date. If the file exists, append `-2`, `-3`.
-Folder: `~/code/Zettelkasten-work/raw/` if facet is `work`, otherwise `~/code/Zettelkasten/raw/`. If OpenCode asks for permission to write there, that's expected.
+Folder: `~/code/Zettelkasten/raw/`. If OpenCode asks for permission to write there, that's expected.
 
 ## Step 4: Write
 
@@ -39,7 +37,6 @@ Omit empty sections.
 ```markdown
 ---
 date: YYYY-MM-DD
-facet: <facet>
 tickets: [PROJ-123]
 tools: [llama.cpp b6xxx, opencode 1.x, fish 4.x]
 tags: [<topic>, <topic>]
@@ -80,15 +77,13 @@ Reply with the path and the frontmatter you wrote, nothing else:
 > Written: `<full path>`
 >
 > ```
-> facet: <facet>
 > tickets: [...]
 > tools: [...]
 > tags: [...]
 > keywords: [...]
 > ```
 
-Echoing the frontmatter lets the user check the facet (which decides the vault) and the keywords
-(which decide whether this is findable later) without opening the file. Then `zk-ingest` picks up
-whichever vault it landed in.
+Echoing the frontmatter lets the user check the keywords — which decide whether this is findable
+later — without opening the file. Then `zk-ingest` picks it up.
 
 $ARGUMENTS

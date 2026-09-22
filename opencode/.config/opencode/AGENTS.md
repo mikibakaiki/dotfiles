@@ -29,5 +29,5 @@ Be terse. No preamble or recap. Don't restate code I can see; show diffs, not wh
 
 ## Memory
 
-Notes: ~/notes/agent (zk/ = atomic caveats, handoffs/ = sessions).
-Before debugging a tool or library issue: rg -il "<tool>|<error>" ~/notes/agent
+Knowledge wiki: ~/code/Zettelkasten (raw/ = handoffs from /handoff, wiki/ = ingested pages).
+Before debugging a tool or library issue: rg -il "<tool>|<error>" ~/code/Zettelkasten/wiki

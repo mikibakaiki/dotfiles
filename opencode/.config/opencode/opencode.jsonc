@@ -35,20 +35,16 @@
     }
   },
 
-  // Privacy wall for every session outside the vaults (e.g. Copilot agents in work repos).
-  // Last matching rule wins. Personal vault is off-limits, except raw/ so /handoff can write there
-  // (you get a prompt: approve "once", never "always") and tools/ (public-grade caveats).
-  // Both vaults' raw/ are "ask", deliberately: the work vault holds ticket keys and internal
-  // hostnames, so it has no business taking an unprompted write from an arbitrary session either.
-  // The prompt is also a signal that /handoff picked a facet — and so a vault — you didn't
-  // expect; /handoff echoing its frontmatter is the other.
+  // Privacy wall for every session outside the vault (e.g. Copilot agents in work repos).
+  // Last matching rule wins. The vault is off-limits, except raw/ so /handoff can write there —
+  // you get a prompt; approve "once", never "always". That prompt is also the signal that
+  // something wrote a handoff you didn't expect; /handoff echoing its frontmatter is the other.
+  // The zk-* functions run OpenCode from inside the vault, so this never gets in their way.
   "permission": {
     "external_directory": {
       "*": "ask",
       "~/code/Zettelkasten/**": "deny",
-      "~/code/Zettelkasten/raw/**": "ask",
-      "~/code/Zettelkasten/tools/**": "ask",
-      "~/code/Zettelkasten-work/raw/**": "ask"
+      "~/code/Zettelkasten/raw/**": "ask"
     }
   },
 

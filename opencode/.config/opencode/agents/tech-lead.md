@@ -683,9 +683,9 @@ The tech-lead handles all git operations. The only human step is opening a termi
 
 Before running the removal commands, if a handoff wasn't already written for this task (see Step 7
 and the review-close report), ask the user whether to run `/handoff` first. It writes a raw note
-to the correct vault — work or personal, based on the session — with the full frontmatter schema
-(`facet`, `tickets`, `tools`, `keywords`) the wiki's search and ticket rollups depend on. Don't
-write a handoff file yourself with a different structure; always go through `/handoff`.
+to `~/code/Zettelkasten/raw/` with the full frontmatter schema (`tickets`, `tools`, `tags`,
+`keywords`) the wiki's search and ticket rollups depend on. Don't write a handoff file yourself
+with a different structure; always go through `/handoff`.
 
 ## Operational Protocol
 

@@ -1,15 +1,15 @@
-# ~/.config/fish/conf.d/zk.fish (conf.d, not functions/: fish only autoloads one function per file). Each command starts OpenCode *inside* the right vault,
-# which is what makes the external_directory wall work.
+# ~/.config/fish/conf.d/zk.fish
+# conf.d, not functions/: fish only autoloads one function per file, and this file holds five.
 #
-# Never run zk-ingest-work and zk-ingest-personal at the same time. Both Librarians can write
-# tools/<tool>.md in the personal vault, there is no locking, and a concurrent write is a silent
-# last-writer-wins overwrite. Run one, let it finish, then run the other.
+# One vault per machine at ~/code/Zettelkasten. The machine decides what's in it — work content on
+# the work laptop, personal content on the personal desktop. Nothing routes by content and nothing
+# syncs: that is the whole privacy model. Each command runs OpenCode inside the vault, which is
+# what makes the external_directory deny in opencode.jsonc work without getting in the way.
 #
-# zk, zk-ingest-personal and zk-lint all need llama-server up on 127.0.0.1:8080. If it isn't,
-# you get a raw connection error from the openai-compatible provider rather than a useful message:
+# zk, zk-ingest and zk-lint all need llama-server up on 127.0.0.1:8080. If it's down you get a raw
+# connection error from the openai-compatible provider, not a useful message:
 #   curl -sf http://127.0.0.1:8080/v1/models >/dev/null; or echo "llama-server is down"
-# Note the pin is by endpoint, not by name: llama-server answers with whichever model is loaded,
-# so these run on the fast MoE model if that's what you have up.
+# The pin is by endpoint, not by name: llama-server answers with whichever model is loaded.
 
 function zk --description 'Archivist: query the wiki'
     pushd ~/code/Zettelkasten; or return 1
@@ -17,87 +17,47 @@ function zk --description 'Archivist: query the wiki'
     popd
 end
 
-function zk-ingest-work --description 'Work Librarian: ingest raw/ in the work vault'
-    pushd ~/code/Zettelkasten-work; or return 1
+function zk-status --description 'What is captured but not yet ingested?'
+    set -l pending (zk-_pending)
+    if test (count $pending) -gt 0
+        echo (count $pending)" pending:"
+        for f in $pending
+            echo "  "(basename $f)
+        end
+    else
+        echo "clear"
+    end
+end
+
+function zk-ingest --description 'Ingest pending raw files, then commit'
+    if test (count (zk-_pending)) -eq 0
+        echo "Nothing pending."
+        return 0
+    end
+    pushd ~/code/Zettelkasten; or return 1
     opencode run --agent zettelkasten "Ingest new files in raw/. $argv"
     set -l rc $status
     popd
-    test $rc -eq 0; and zk-sync
+    if test $rc -eq 0
+        git -C ~/code/Zettelkasten add -A
+        git -C ~/code/Zettelkasten diff --cached --quiet
+        or git -C ~/code/Zettelkasten commit -m "ingest: "(date +%Y-%m-%d)
+    end
     return $rc
 end
 
-function zk-ingest-personal --description 'Personal Librarian: ingest raw/ in the personal vault'
+function zk-lint --description 'Librarian: health-check the vault'
     pushd ~/code/Zettelkasten; or return 1
-    opencode run --agent zettelkasten-personal "Ingest new files in raw/. $argv"
-    set -l rc $status
-    popd
-    test $rc -eq 0; and zk-sync
-    return $rc
-end
-
-# Ingest whichever vaults actually have unprocessed files, so you don't have to know the facet.
-function zk-ingest --description 'Ingest any vault with pending raw files'
-    set -l did 0
-    if test (count (zk-_pending ~/code/Zettelkasten)) -gt 0
-        zk-ingest-personal $argv; or return $status
-        set did 1
-    end
-    if test (count (zk-_pending ~/code/Zettelkasten-work)) -gt 0
-        zk-ingest-work $argv; or return $status
-        set did 1
-    end
-    test $did -eq 1; or echo "Nothing pending. (zk-status)"
-end
-
-# Raw files with neither an `ingested:` nor a `refused:` stamp.
-# Only the leading `---` frontmatter block counts: a verbatim error string in the body that
-# happens to start with "ingested:" must not silently mark a file as done.
-function zk-_pending --description 'Internal: list unprocessed raw files in a vault'
-    test -d $argv[1]/raw; or return 0
-    for f in $argv[1]/raw/*.md
-        test -e $f; or continue
-        sed -n '1{/^---$/!q}; 1d; /^---$/q; p' $f | grep -qE '^(ingested|refused):'; or echo $f
-    end
-end
-
-function zk-status --description 'What is captured but not yet ingested?'
-    for vault in ~/code/Zettelkasten ~/code/Zettelkasten-work
-        set -l pending (zk-_pending $vault)
-        set -l name (basename $vault)
-        if test (count $pending) -gt 0
-            echo "$name: "(count $pending)" pending"
-            for f in $pending
-                echo "  "(basename $f)
-            end
-        else
-            echo "$name: clear"
-        end
-    end
-end
-
-function zk-lint --description 'Personal Librarian: health-check the personal vault'
-    pushd ~/code/Zettelkasten; or return 1
-    opencode run --agent zettelkasten-personal "Run a lint pass over this vault. $argv"
-    popd
-end
-
-function zk-lint-work --description 'Work Librarian: health-check the work vault'
-    pushd ~/code/Zettelkasten-work; or return 1
     opencode run --agent zettelkasten "Run a lint pass over this vault. $argv"
     popd
 end
 
-# The vaults are the only recovery path if an ingest clobbers something. Runs automatically after
-# each ingest; also safe to run by hand any time.
-function zk-sync --description 'Commit both vaults'
-    for vault in ~/code/Zettelkasten ~/code/Zettelkasten-work
-        if test -d $vault/.git
-            git -C $vault add -A
-            git -C $vault diff --cached --quiet; or git -C $vault commit -m "zk-sync: "(date +%Y-%m-%d)
-        end
+# Raw files with no `ingested:` stamp. Only the leading --- block counts, so a verbatim error
+# string in the body that starts with "ingested:" can't mark a file done.
+function zk-_pending --description 'Internal: list unprocessed raw files'
+    test -d ~/code/Zettelkasten/raw; or return 0
+    for f in ~/code/Zettelkasten/raw/*.md
+        test -e $f; or continue
+        sed -n '1{/^---$/!q}; 1d; /^---$/q; p' $f | grep -qE '^ingested:'; or echo $f
     end
 end
-
-# The external_directory wall check that used to live here as `zk-wall-test` is a one-time setup
-# step, not something to re-run, and it tested a boundary that was never meant to be a security
-# boundary. It's in step 5 of MACOS_SETUP_zettelkasten.md instead.
