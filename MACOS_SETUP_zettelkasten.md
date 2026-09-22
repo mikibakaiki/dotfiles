@@ -1,9 +1,9 @@
-# macOS setup guide — agent tooling, GPU limit, Zettelkasten vaults
+# macOS setup guide — agent tooling, GPU limit, the Zettelkasten vault
 
-Run this on the MacBook (work laptop), after pulling the dotfiles changes made in this session.
-Everything here needs macOS tools (launchd, sysctl, opencode CLI, fish) that don't exist on the
-machine the edits were made on, so none of it was run or verified for you. Go through it in order;
-stop and check output at each numbered step before moving on.
+Run this on the machine that will hold the vault, after pulling the dotfiles changes. Everything
+here needs macOS tools (launchd, sysctl, opencode CLI, fish) that don't exist on the machine the
+edits were made on, so none of it was run or verified for you. Go through it in order; stop and
+check output at each numbered step before moving on.
 
 ```bash
 cd ~/dotfiles   # or wherever this repo lives on the Mac
@@ -14,8 +14,8 @@ git pull
 
 ## 1. GPU LaunchDaemon (A1–A3)
 
-Files already in the repo, unchanged from the brief:
-- `llm/.config/llm/local.iogpu.wired-limit.plist` (just moved into the correct stow layout — was at the package root before, which would have symlinked to the wrong path)
+Files already in the repo:
+- `llm/.config/llm/local.iogpu.wired-limit.plist`
 - `fish/.config/fish/functions/llm-gpu-persist.fish`
 - `fish/.config/fish/conf.d/llm-gpu.fish`
 
@@ -49,38 +49,27 @@ sudo launchctl print system/local.iogpu.wired-limit
 
 ## 2. OpenCode files
 
-Changed/added in this session:
-- `opencode/.config/opencode/opencode.jsonc` — rewritten: adds `instructions: ["style.md"]`,
-  `small_model`, the `llamacpp` provider (both Qwen models), the `external_directory` privacy
-  wall, and pins DCP to `3.1.15`.
-- `opencode/.config/opencode/style.md` — new, replaces the old caveman-style instructions (no
-  `caveman.md` file existed in the repo to delete).
-- `opencode/.config/opencode/agents/zettelkasten.md` — new, Work Librarian.
-- `opencode/.config/opencode/agents/zettelkasten-personal.md` — new, Personal Librarian.
-- `opencode/.config/opencode/agents/archivist.md` — overwritten with the new dual-vault version.
-- `opencode/.config/opencode/agents/librarian.md`, `agents/wiki.md` — **deleted** (superseded by
-  the two new Librarians; old single-vault design).
-- `opencode/.config/opencode/commands/handoff.md` — rewritten: now facet-aware, routes to
-  `Zettelkasten-work/raw/` vs `Zettelkasten/raw/`, and pinned to run on the local Qwen model
-  regardless of what model the session itself used, so the write-up never hits Copilot billing.
-  This makes the handoff's verbatim-accuracy instruction (copy errors/versions/flags exactly,
-  never paraphrase) more load-bearing than usual — spot-check the first few real handoffs against
-  their sessions to confirm the local model is holding that line.
-- `fish/.config/fish/conf.d/zk.fish` — new: `zk`, `zk-status`, `zk-ingest`, `zk-ingest-work`,
-  `zk-ingest-personal`, `zk-lint`, `zk-lint-work`, `zk-sync`. Day to day you only need
-  `zk-status`, `zk-ingest` and `zk`; the rest are for when you want to be specific. Note the
-  header comment: never run the two ingests concurrently (both can write the shared `tools/`
-  folder, no locking), and the local-model commands need `llama-server` up on `127.0.0.1:8080`.
-- `zettelkasten/AGENTS.personal.md`, `zettelkasten/AGENTS.work.md` — new: the vault schema
-  templates, copied into each vault root as `AGENTS.md` in step 4. Not stowed (excluded in
-  `.stow-local-ignore`) — the vaults are separate git repos and own their copy.
-- `zettelkasten-personal.md` gained a "keep this vault portable" rule (never write work ticket
-  keys or employer/client/colleague names into `wiki/`) and a `refused:` stamp for misrouted
-  work-facet files. `zettelkasten.md`'s equivalent is the public-grade rule on `tools/`, the
-  only personal-vault path it can reach — see step 5.
-- All three agent files (`zettelkasten.md`, `zettelkasten-personal.md`, `archivist.md`) gained
-  ticket-rollup handling (`wiki/tickets/<KEY>.md`) — unrelated to the work/personal split, but
-  touched in the same working tree.
+What each tracked file does:
+
+- `opencode/.config/opencode/opencode.jsonc` — the main config: `instructions: ["style.md"]`,
+  `small_model`, the `llamacpp` provider (both Qwen models), the `external_directory` privacy wall,
+  and the DCP plugin pin.
+- `opencode/.config/opencode/style.md` — terse chat replies, normal English for anything written to
+  disk, and the `/handoff` capture nudge.
+- `opencode/.config/opencode/agents/zettelkasten.md` — the Librarian. Ingests `raw/` into `wiki/`
+  and runs lint passes. Local model, `bash` denied, `external_directory` denied.
+- `opencode/.config/opencode/agents/archivist.md` — read-only Q&A over the wiki. Local model.
+- `opencode/.config/opencode/commands/handoff.md` — writes a session handoff into the vault's
+  `raw/`. Pinned to the local Qwen model regardless of what model the session itself used, so the
+  write-up never hits Copilot billing. That makes its verbatim-accuracy instruction (copy errors,
+  versions and flags exactly, never paraphrase) more load-bearing than usual — spot-check the first
+  few real handoffs against their sessions to confirm the local model is holding that line.
+- `fish/.config/fish/conf.d/zk.fish` — `zk`, `zk-status`, `zk-ingest`, `zk-lint`, plus the internal
+  `zk-_pending`. All the local-model commands need `llama-server` up on `127.0.0.1:8080`; the
+  header comment has the one-liner that checks it.
+- `zettelkasten/AGENTS.md` — the vault schema template, copied into the vault root as `AGENTS.md`
+  in section 4. Not stowed (excluded in `.stow-local-ignore`) — the vault is its own git repo and
+  owns its copy.
 
 Stow:
 
@@ -95,7 +84,8 @@ The old `opencode.jsonc` had Jira/Confluence/Jenkins MCP servers hardcoded to
 of the brief. They were **removed** from the tracked file rather than guessed at. Likewise
 `opencode/.config/opencode/AGENTS.md` still has stale Bitbucket/`bb`/NuGet/.NET content from that
 same setup — left untouched in the tracked file (out of scope to edit blind), but you don't want it
-loaded as-is either.
+loaded as-is either. (Only its `## Memory` section has been updated, to point at the vault rather
+than a predecessor notes layout.)
 
 OpenCode merges config from multiple places, later ones winning: global
 `~/.config/opencode/opencode.jsonc` → a project-local `opencode.json`/`.jsonc` → `OPENCODE_CONFIG`
@@ -178,162 +168,102 @@ opencode --version
 Check against the OpenCode changelog/docs for:
 - `opencode.jsonc` (JSONC, not just `opencode.json`) support
 - `--agent` flag on both `opencode` (interactive) and `opencode run`
-- pattern maps (glob-style keys) for `permission.external_directory` and `permission.task`
+- pattern maps (glob-style keys) for `permission.external_directory`
 - `~` expansion inside those pattern keys (the config here relies on `~/code/Zettelkasten/**`
   resolving correctly)
 
 If any of these aren't supported by your installed version:
 - Upgrade OpenCode, **or**
 - Adjust the patterns (e.g. expand `~` to the literal home path yourself in `opencode.jsonc`) and
-  note the workaround in a handoff once the dry run (step 6) works.
+  note the workaround in a handoff once the dry run (section 5) works.
 
-If you did **not** set up the local `opencode.json` override in step 2 (no work MCP servers or
-work-specific `AGENTS.md` instructions needed), check whether a stray one exists from before this
-change and remove it so it can't shadow the new `opencode.jsonc`:
+If you did **not** set up the local `opencode.json` override in section 2, check whether a stray
+one exists from before this change and remove it so it can't shadow the new `opencode.jsonc`:
 
 ```bash
 cat ~/.config/opencode/opencode.json 2>/dev/null   # inspect first — don't blindly delete
 ```
 
-If step 2's override *is* what's there (your `mcp`/`instructions` block), leave it — that file is
-supposed to exist now. Only delete it if it's leftover cruft unrelated to what step 2 asked for.
+If section 2's override *is* what's there (your `mcp`/`instructions` block), leave it — that file
+is supposed to exist now. Only delete it if it's leftover cruft unrelated to what section 2 asked
+for.
 
 ---
 
-## 4. Set up the vaults
+## 4. Set up the vault
 
-Goal: two sibling vaults, separate git repos, no symlinks or nesting between them.
+**One vault per machine, always at `~/code/Zettelkasten`.** The machine decides what's in it: run
+this guide on the work MacBook and the vault holds work content; run it on the personal desktop and
+it holds personal content. Don't set one up on the Pi — it can't run the 27B, and a second personal
+vault would silently diverge from the desktop's with no sync story.
 
-Each vault gets an `AGENTS.md` at its root defining its structure — that's the schema both
-Librarians and the Archivist are told to follow strictly. The two templates are tracked in this
-repo at `zettelkasten/AGENTS.personal.md` and `zettelkasten/AGENTS.work.md`. They are **copied**
-into the vault roots, not stowed: the vaults are their own git repos, and a symlink would make
-their schema a dotfiles dependency. (`zettelkasten/` is excluded in `.stow-local-ignore` so a bare
-`stow` can't do this by accident.)
+That's the whole privacy model, and it's worth being clear about what it does and doesn't buy you:
 
-Read both templates before running this — they're short, and they're the actual contract the
-agents work to.
+- **It does** make leaving the job clean. The work machine's vault is work-only by construction, so
+  there's nothing personal in it to rescue before you hand the laptop back.
+- **It doesn't** survive a sync tool. If anything backs up or syncs `~/code` — Time Machine,
+  corporate backup, iCloud, Dropbox — vault content goes wherever that tool sends it. "Local" is an
+  assumption about this machine, not a mechanism. Check before you start.
+- **It isn't** defence against a hostile or misbehaving model. That's a different, heavier problem
+  (OS-level user separation, sandboxing) that isn't needed here and isn't set up.
+
+The vault gets an `AGENTS.md` at its root defining its structure — the schema both the Librarian
+and the Archivist are told to follow strictly. The template is tracked in this repo at
+`zettelkasten/AGENTS.md`. It is **copied** into the vault root, not stowed: the vault is its own
+git repo, and a symlink would make its schema a dotfiles dependency. (`zettelkasten/` is excluded
+in `.stow-local-ignore` so a bare `stow` can't do this by accident.)
+
+Read the template before running this — it's short, and it's the actual contract the agents work to.
 
 1. **Create the directories:**
    ```bash
-   mkdir -p ~/code/Zettelkasten/{raw,wiki/{sources,notes,tickets},tools}
-   mkdir -p ~/code/Zettelkasten-work/{raw,wiki/{sources,notes,tickets}}
+   mkdir -p ~/code/Zettelkasten/{raw,wiki/{sources,notes}}
    ```
-   Note the work vault has **no** `tools/` — tool caveats are shared, and live only in the
-   personal vault. See "The tools/ folder" in the personal template for why.
 
-2. **Install the schema into each vault root:**
+2. **Install the schema into the vault root:**
    ```bash
-   cp ~/dotfiles/zettelkasten/AGENTS.personal.md ~/code/Zettelkasten/AGENTS.md
-   cp ~/dotfiles/zettelkasten/AGENTS.work.md     ~/code/Zettelkasten-work/AGENTS.md
+   cp ~/dotfiles/zettelkasten/AGENTS.md ~/code/Zettelkasten/AGENTS.md
    ```
-   If you later change the schema, edit the tracked template and re-copy — don't diverge the
-   vault copy silently.
+   If you later change the schema, edit the tracked template and re-copy — don't diverge the vault
+   copy silently.
 
-3. **Seed the two index files** in each vault, so the Librarians have something to append to
-   rather than inventing structure on first run:
+3. **Seed the two index files**, so the Librarian has something to append to rather than inventing
+   structure on first run:
    ```bash
-   printf '# Index\n\n## Sources\n\n## Notes\n\n## Tickets\n' > ~/code/Zettelkasten/wiki/index.md
+   printf '# Index\n\n## Sources\n\n## Notes\n' > ~/code/Zettelkasten/wiki/index.md
    printf '# Log\n' > ~/code/Zettelkasten/wiki/log.md
-   printf '# Index\n\n## Sources\n\n## Notes\n\n## Tickets\n' > ~/code/Zettelkasten-work/wiki/index.md
-   printf '# Log\n' > ~/code/Zettelkasten-work/wiki/log.md
    ```
-   The personal `index.md` also grows a `## Tools` section, but only once `tools/` has a page in
-   it — leave it out for now.
 
-4. **Sort any existing content.** You mentioned the vault is near-blank, so this is likely a
-   no-op — but check:
+4. **If you already set up two vaults under the old design**, consolidate now. On the work MacBook
+   the work vault's content is the one to keep:
    ```bash
-   ls ~/code/Zettelkasten/raw ~/code/Zettelkasten/wiki 2>/dev/null
+   ls ~/code/Zettelkasten ~/code/Zettelkasten-work 2>/dev/null
    ```
-   Anything work-related moves to `~/code/Zettelkasten-work/`; anything already summarised into
-   `wiki/` gets `ingested: YYYY-MM-DD` added to its frontmatter in `raw/` so the Librarians skip
-   it. Move file by file — don't bulk-move.
+   Move `raw/` and `wiki/` content from `~/code/Zettelkasten-work` into `~/code/Zettelkasten`, file
+   by file — don't bulk-move. Ticket rollups move from `wiki/tickets/<KEY>.md` to
+   `wiki/notes/<KEY>.md`, and any `tools/<tool>.md` pages become ordinary notes at
+   `wiki/notes/<tool>.md`, keeping their `## Version caveats` section. Then remove the empty
+   `~/code/Zettelkasten-work` and the now-unused `tools/` and `wiki/tickets/` directories.
 
-5. **`tools/` starts empty, and that's correct.** Don't create placeholder pages. A tool page is
-   written the first time a Librarian has a real version-specific caveat to record — a verbatim
-   error, the version range it affects, the fix, and a command to verify. Until then an empty
-   directory is the honest state.
-
-   This folder is the one deliberately-shared surface between the two vaults, and the one rule
-   enforced only by prompt rather than by config, so it's worth knowing what you're opting into:
-   after any **work** ingest, `git diff` it and confirm nothing company-identifiable landed there.
-   If it's still nearly empty in six months, that's real evidence the shared-folder idea isn't
-   earning its complexity, and folding those pages into `wiki/notes/` would be a reasonable
-   simplification.
-
-6. **Initialise git in each vault**, if they aren't repos already:
+5. **Check for stale `refused:` stamps**, which no longer exist as a concept:
    ```bash
-   cd ~/code/Zettelkasten      && git init && git add -A && git commit -m "Initial vault structure"
-   cd ~/code/Zettelkasten-work && git init && git add -A && git commit -m "Initial vault structure"
+   grep -rl '^refused:' ~/code/Zettelkasten/raw/ 2>/dev/null
    ```
-   Separate repos, deliberately — the work vault can then be deleted or left behind wholesale
-   without touching anything you keep.
+   Anything listed becomes pending again and will be ingested on your next `zk-ingest`. That's the
+   intended behaviour — just don't be surprised by it. If you'd rather it stay skipped, replace the
+   stamp with `ingested: YYYY-MM-DD`.
 
-7. **Confirm the vaults are properly separated:**
+6. **Initialise git**, if it isn't a repo already:
    ```bash
-   # neither path should be inside the other
-   realpath ~/code/Zettelkasten
-   realpath ~/code/Zettelkasten-work
-   # each should be its own git repo, not nested
-   cd ~/code/Zettelkasten && git rev-parse --show-toplevel
-   cd ~/code/Zettelkasten-work && git rev-parse --show-toplevel
-   # confirm no symlinks between them
-   find ~/code/Zettelkasten ~/code/Zettelkasten-work -type l
+   cd ~/code/Zettelkasten && git init && git add -A && git commit -m "Initial vault structure"
    ```
+   Its own repo, deliberately — so it can be deleted or left behind wholesale.
 
 ---
 
-## 5. Privacy wall check
+## 5. Dry run
 
-The work/personal split here is about **organization, not a hard security boundary**: two vaults
-so it's easy to navigate day to day, and so the work vault can be cleanly left behind (or deleted)
-on your last day without touching or referencing your personal knowledge base. It is not defense
-against a hostile or misbehaving model — that's a different, heavier problem (OS-level user
-separation, sandboxing) that isn't needed here and isn't set up.
-
-```bash
-stow fish   # if not already done in steps 1–2
-```
-
-Open a new shell, then run this once — it's a setup check, not something to re-run later, which is
-why it isn't a `zk-*` command:
-
-```fish
-cd ~/code/Zettelkasten-work
-opencode run --agent zettelkasten "Read ~/code/Zettelkasten/wiki/index.md and grep ~/code/Zettelkasten/raw for 'the'. Report exactly what each tool returned."
-```
-
-This runs the Work Librarian (`zettelkasten.md`, Copilot model) **started correctly inside the work
-vault**, and asks it to read `~/code/Zettelkasten/wiki/index.md` and grep
-`~/code/Zettelkasten/raw` for `"the"` — both outside its cwd. This is mainly an accident-guard: it
-catches ordinary misconfiguration or a relative-path typo sending a work session into your personal
-notes, not deliberate circumvention.
-
-**Both the read and the grep must be denied** by the `external_directory` permission wall in
-`opencode.jsonc`. If either succeeds, check:
-- OpenCode version doesn't support pattern-map `external_directory` (see step 3)
-- `~` isn't expanding in the permission keys (see step 3 — you may need literal `/Users/<you>/...`
-  paths instead of `~/...`)
-- `zettelkasten.md`'s own `external_directory` override (`"~/code/Zettelkasten/tools/**": allow`)
-  is too broad and accidentally matches more than `tools/`
-
-The other side of "leaves cleanly" is content, not access. The Personal Librarian carries a
-portability rule: never write work ticket keys, employer/client/colleague names, or
-`Zettelkasten-work` references into `wiki/`. The Work Librarian carries the public-grade rule on
-`tools/`, which is the only personal-vault path it can reach at all. Spot-check both after a few
-real work ingests — grep the personal vault's `wiki/` for anything that looks work-identifiable
-and correct the agent's behavior if you find something:
-
-```bash
-grep -ril "ticket\|jira\|confluence" ~/code/Zettelkasten/wiki --include="*.md" | grep -v '/tools/'
-```
-
----
-
-## 6. Dry run
-
-In a scratch OpenCode session (any facet — this just needs to produce some conversation to hand off):
+In a scratch OpenCode session (this just needs to produce some conversation to hand off):
 
 ```fish
 opencode
@@ -342,22 +272,21 @@ opencode
 ```
 
 Note the path it reports (`Written: <path>`). Open that file and review/amend it — check the
-frontmatter (`facet`, `tickets`, `tools`, `tags`, `keywords`) and that no secrets/hostnames leaked
-in verbatim error strings. Also check any error message or version string against what actually
-appeared in the scratch session — `/handoff` runs on the local model now (for token cost), and a
-paraphrased "close enough" error string defeats the grep-based search this wiki relies on.
+frontmatter (`tickets`, `tools`, `tags`, `keywords`) and that no secrets or hostnames leaked into
+verbatim error strings. Also check any error message or version string against what actually
+appeared in the scratch session: `/handoff` runs on the local model, and a paraphrased "close
+enough" error string defeats the grep-based search this wiki relies on. **Check the first three
+handoffs this way, then stop** — you're confirming the model holds the line, not auditing forever.
 
-Then ingest it — `zk-ingest` picks whichever vault the file landed in, so you don't have to
-decide:
+Then ingest it:
 
 ```fish
-zk-status    # what's pending, in both vaults
-zk-ingest    # ingest it, then auto-commit via zk-sync
+zk-status    # what's pending
+zk-ingest    # ingest it, then auto-commit
 ```
 
 Check the Librarian's output: it should have written to `wiki/sources/`, updated `wiki/index.md`
-and `wiki/log.md`, possibly touched `tools/<tool>.md`, and added `ingested: YYYY-MM-DD` to the raw
-file's frontmatter.
+and `wiki/log.md`, and added `ingested: YYYY-MM-DD` to the raw file's frontmatter.
 
 Then ask a question about it:
 
@@ -370,15 +299,15 @@ Confirm the Archivist cites the page(s) the Librarian just created.
 Two things to watch on this first run:
 
 - `zk` passes the question positionally to interactive `opencode --agent archivist`, which is
-  unverified against your OpenCode version. If that build doesn't accept a free-text question
-  that way, you'll get an empty session with the question dropped. If so, change `zk` to use
-  `opencode run --agent archivist "$argv"` — at the cost of losing the interactive follow-up,
-  which is most of the point of the Archivist.
+  unverified against your OpenCode version. If that build doesn't accept a free-text question that
+  way, you'll get an empty session with the question dropped. If so, change `zk` to use
+  `opencode run --agent archivist "$argv"` — at the cost of losing the interactive follow-up, which
+  is most of the point of the Archivist.
 - Check the raw file's `ingested:` stamp landed. It's written last, after the log entry, so an
-  ingest that dies partway leaves the file unstamped and the next run redoes it — the dedupe
-  checks in steps 6 and 7 make that safe. The one narrow window left is a run that dies between
-  the log append and the stamp; `zk-lint` catches that as a file stamped `ingested:` with no
-  matching `wiki/log.md` entry.
+  ingest that dies partway leaves the file unstamped and the next run redoes it — the dedupe check
+  on ticket timelines makes that safe. The one narrow window left is a run that dies between the
+  log append and the stamp; `zk-lint` catches that as a file stamped `ingested:` with no matching
+  `wiki/log.md` entry.
 
 Finally, run a lint pass to confirm the health-check path works at all:
 
@@ -388,27 +317,21 @@ zk-lint
 
 ---
 
-## 7. Recurring maintenance
+## 6. Recurring maintenance
 
-Nothing in this system schedules itself. These are the jobs it silently assumes you'll do — if
-none of them ever happen, the vault degrades quietly rather than breaking loudly.
+Nothing in this system schedules itself. This is the one job it assumes you'll do — if it never
+happens, the vault degrades quietly rather than breaking loudly.
 
 | When | Do | Why |
 | ---- | -- | --- |
-| After any **work** ingest | `git -C ~/code/Zettelkasten log -p -1 tools/` | The public-grade rule on the shared folder is the one rule enforced only by prompt. This is the check. Use `log -p` rather than `diff`, because the ingest already committed via `zk-sync`. |
-| Monthly-ish | `zk-lint` and `zk-lint-work` | Finds orphan pages, contradictions, unprocessed `raw/` files, stamped-but-unlogged files from a died-late ingest, and caveats missing a "fixed in" status. `zk-lint` additionally surfaces refused files and unindexed tool pages, both of which are personal-vault-only. This is the system's only self-healing mechanism. |
-| ~6 months in | Look at `tools/` | If it's still nearly empty, the shared-folder idea isn't earning its complexity — fold those pages into `wiki/notes/` and drop the cross-vault sharing. That's a real, expected outcome, not a failure. |
+| Monthly-ish | `zk-lint` | Finds orphan pages, contradictions, unprocessed `raw/` files, stamped-but-unlogged files from a died-late ingest, and caveats missing a "fixed in" status. This is the system's only self-healing mechanism. |
 
-Committing is no longer on this list: `zk-ingest*` runs `zk-sync` itself on success, so the vaults
-commit after every ingest. Run `zk-sync` by hand only if you've edited vault files directly.
-
-If you'd rather not remember all of it: the `tools/` check after a work ingest is the floor, because
-it's the only enforcement the public-grade rule has. An occasional `zk-lint` is the next most
-valuable. The six-month `tools/` review is the only genuinely optional row.
+Committing isn't on this list: `zk-ingest` commits on success. Commit by hand only if you've edited
+vault files directly.
 
 ---
 
-## 8. Optional
+## 7. Optional
 
 ### omo-slim (oh-my-opencode-slim)
 
@@ -423,7 +346,7 @@ Install it, then:
 ### Headroom — trial only, not adopted
 
 Don't wire it into the main config. If you want to measure it:
-1. Pick a throwaway repo (not this dotfiles repo, not a vault).
+1. Pick a throwaway repo (not this dotfiles repo, not the vault).
 2. Install Headroom there only.
 3. Set `HEADROOM_BEACON=off` immediately — it phones home by default.
 4. Measure actual token savings for your coding-agent workload (expect ~20%, not the 60–95%
@@ -432,17 +355,20 @@ Don't wire it into the main config. If you want to measure it:
    which would be a net loss on the local models.
 6. It overlaps with DCP on conversation history — decide if it's additive or redundant once you
    have numbers.
-7. Write up the trial as a handoff (`facet: local-llm` or `dotfiles`) either way, so the decision
-   is recorded even if you don't adopt it.
+7. Write it up as a handoff either way, so the decision is recorded even if you don't adopt it.
 
 ---
 
 ## Notes on what this session could not verify
 
-Made on a Windows machine with no `fish`, `opencode` CLI, or `launchd` installed — every command
-above is written from the brief's spec but **none of it has been run**. Treat step numbers 1, 3, 5,
-and 6 as the ones most likely to surface a real problem (version mismatches, pattern-matching
-quirks, permission wall gaps) and go slowly through them.
+Written on Linux with no `fish`, `opencode` CLI, or `launchd` — every command above comes from the
+spec and **none of it has been run**. The fish file's structure, the frontmatter stamp detection
+and the JSONC parse were checked statically; nothing else was. Treat sections 1, 3 and 5 as the
+ones most likely to surface a real problem (version mismatches, pattern-matching quirks) and go
+slowly through them.
+
+Run `fish -n ~/.config/fish/conf.d/zk.fish` once after stowing — that's the real syntax check, and
+it couldn't be run here.
 
 Also: the brief mentions existing fish helpers `__llm_gpu_limit`, `__llm_serve`, `llm-up`,
 `llm-fast` from an earlier session — none of these exist in the dotfiles repo. If you still use

@@ -54,8 +54,8 @@ dotfiles/
 │       ├── dcp.jsonc         — DCP plugin config
 │       ├── style.md          — terse-chat / normal-English instructions
 │       ├── AGENTS.md         — agent usage guide
-│       ├── agents/           — agent definitions, incl. the Zettelkasten trio:
-│       │                       zettelkasten (work), zettelkasten-personal, archivist
+│       ├── agents/           — agent definitions, incl. the Zettelkasten pair:
+│       │                       zettelkasten (Librarian), archivist
 │       └── commands/         — slash commands, incl. /handoff
 │
 ├── ssh/                      ← stow package → ~/.ssh/
@@ -79,13 +79,13 @@ dotfiles/
 │   └── .config/zed/
 │       └── settings.json     — editor, terminal (fish), agent model
 │
-└── zettelkasten/             ← NOT stowed — copied into the vault roots
-    ├── AGENTS.personal.md    — schema for ~/code/Zettelkasten
-    └── AGENTS.work.md        — schema for ~/code/Zettelkasten-work
+└── zettelkasten/             ← NOT stowed — copied into the vault root
+    └── AGENTS.md             — schema for ~/code/Zettelkasten
 ```
 
-The vaults are their own git repos, so their schema is copied rather than symlinked — a symlink
-would make vault content depend on this repo being checked out. See
+The vault is its own git repo, so its schema is copied rather than symlinked — a symlink would
+make vault content depend on this repo being checked out. One vault per machine, at the same path
+on each: the machine decides whether it holds work or personal content. See
 `MACOS_SETUP_zettelkasten.md`.
 
 ---
@@ -270,9 +270,9 @@ override (same pattern as `.env.work` below), which OpenCode merges on top at st
 `MACOS_SETUP_zettelkasten.md` for the exact override format. Credentials still come from
 `{env:JIRA_PAT}` etc., values from `.env.work`, never hardcoded.
 
-See `MACOS_SETUP_zettelkasten.md` for the Zettelkasten dual-vault agent system
-(`zettelkasten.md`/`zettelkasten-personal.md`/`archivist.md`, `/handoff`, and the
-`zk-status`/`zk-ingest`/`zk` fish functions, plus `zk-lint` and `zk-sync`).
+See `MACOS_SETUP_zettelkasten.md` for the Zettelkasten agent system
+(`zettelkasten.md`/`archivist.md`, `/handoff`, and the `zk-status`/`zk-ingest`/`zk`/`zk-lint` fish
+functions).
 
 Runtime files (`node_modules/`, `skills/`, `tui.json`) excluded via
 `.stow-local-ignore` — opencode manages these itself.
