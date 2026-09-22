@@ -125,7 +125,7 @@ marked "no change"; they are where its own verification step was guaranteed to f
 ### 1. `zettelkasten/AGENTS.md` — new, replaces both schema files
 
 Delete `zettelkasten/AGENTS.personal.md` (156 lines) and `zettelkasten/AGENTS.work.md` (148 lines).
-Write one `zettelkasten/AGENTS.md`, target ~65 lines, containing exactly:
+Write one `zettelkasten/AGENTS.md`, ~115 lines, containing exactly:
 
 - A one-line statement that this is the schema, that the Librarian and Archivist follow it
   strictly, and that it is copied to the vault root as `AGENTS.md`.
