@@ -55,6 +55,9 @@ Body, with [[wikilinks]] to related pages.
 - `[[wikilinks]]` for every cross-reference. A page with no inbound links is a bug — link it from
   `index.md` at minimum.
 - Filenames: lowercase, hyphens for spaces, no dates in the name except in `sources/`.
+- A tool's page is named for the tool alone, with punctuation hyphenated and the version dropped:
+  `tools: [llama.cpp b6xxx]` gives `wiki/notes/llama-cpp.md`, never `llama.cpp-b6xxx.md`. There is
+  one page per tool, holding every version's caveats; the version belongs in the caveat entry.
 - `updated` changes whenever the page is edited.
 - One subject per page. When unsure whether to create a new page or extend an existing one, extend
   the existing one.
@@ -74,6 +77,10 @@ Grouped by kind, one line each. Two sections only — ticket and tool pages are 
 ## Notes
 - [[note-name]] — one-line description
 ```
+
+The date on a `## Sources` line is the handoff's own `date:` — when the session happened — not the
+day it was ingested. Every page under `wiki/` appears here exactly once; a page that is updated
+rather than created still needs its line, and must not get a second one.
 
 ## log.md
 
@@ -98,6 +105,10 @@ its `tickets:` frontmatter. Normal note frontmatter plus `ticket: <KEY>`, then:
 - YYYY-MM-DD: <what happened> — [[<source-page>]]
 ```
 
+The timeline date is the handoff's `date:`, so a backlog ingested in one run still reads in the
+order things actually happened, and re-running an ingest produces an identical line rather than a
+duplicate.
+
 ## Version caveats
 
 The highest-value content this vault holds. They live in a `## Version caveats` section inside the
@@ -105,9 +116,18 @@ relevant tool's note page (`wiki/notes/llama-cpp.md`), newest first:
 
 ```markdown
 ## Version caveats
-- **<version range>**: <symptom, with the verbatim error> → <fix>. Verify: <command>.
-  Source: [[sources/<page>]]
+- **<version>**: <symptom, with the verbatim error> → <fix>. Verify: <command>.
+  Source: [[<source-page>]]
 ```
+
+Write the version the handoff actually observed. If later sources show the same problem on more
+versions, widen it to a range then — but never guess a range from one observation, because the
+Archivist compares that range against the user's version and will confidently apply a caveat that
+was only ever seen somewhere else.
+
+Link the source as a bare `[[<source-page>]]`, the same form used everywhere else in this file.
+Not `[[sources/<page>]]` — wikilinks resolve against the vault root, so that path form points at
+nothing and the caveat loses its only route back to the evidence.
 
 Never paraphrase an error string — the point is that it stays greppable. When a later source shows
 an issue fixed, annotate the entry "fixed in <version>" rather than deleting it. A version change

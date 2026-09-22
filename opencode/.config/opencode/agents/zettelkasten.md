@@ -31,24 +31,39 @@ knowledge base so the Archivist can.
    and that is a complete ingest, not a lazy one. Don't create pages for passing mentions.
    Carry `tools`, `tags` and `keywords` through from the raw frontmatter, so exact error strings
    and versions stay greppable. Extend the raw file's `tags` rather than inventing a fresh set.
-   Version-specific caveats are the highest-value content here: record the version range, the
-   verbatim error, the fix, and a command that verifies it. Never paraphrase an error string.
-3. If the raw file has `tickets:` keys, create or update `wiki/notes/<KEY>.md` for each: append
-   `- YYYY-MM-DD: <what happened> — [[<source-page>]]` to its `## Timeline`, skipping the append if
-   a line for that date and source page is already there.
-4. Add a `[[wikilink]]` and one-line description to `wiki/index.md` for every page you created, and
-   append to `wiki/log.md`: `## [YYYY-MM-DD] ingest | <title>` plus a `Pages touched:` line.
-5. Last, add `ingested: YYYY-MM-DD` to the raw file's frontmatter. Change nothing else in it.
-   This is last on purpose: an ingest that dies partway leaves the file unstamped and the next run
-   redoes it, which step 3's dedupe check makes safe.
+   Set `sources:` to the raw filename without its extension, and `updated:` to today.
+   Version-specific caveats are the highest-value content here: record the version the handoff
+   actually observed, the verbatim error, the fix, and a command that verifies it. Never paraphrase
+   an error string, and never widen a single observed version into a range you are guessing at —
+   write the one version you have.
+3. If the raw file has `tickets:` keys, create or update `wiki/notes/<KEY>.md` for each, with
+   `ticket: <KEY>` in its frontmatter. Append to its `## Timeline`:
+   `- <the raw file's date:>: <what happened> — [[<source-page>]]`
+   Use the raw file's `date:`, **not** today's — that keeps a backlog in the order things actually
+   happened, and it keeps this line identical if the ingest is re-run on another day. Skip the
+   append if a line with that same date and source page is already there.
+4. Make sure `wiki/index.md` links every page you created **or updated** in steps 2 and 3 — ticket
+   and tool pages included, since those are updated far more often than they are created. Check
+   first: if a line already links that page, leave it alone rather than adding a second one.
+   Then append to `wiki/log.md`: `## [<today>] ingest | <title>` plus a `Pages touched:` line —
+   skipping that append if a block with the same date and title is already there.
+5. Last, add `ingested: <today>` to the raw file's frontmatter. Change nothing else in it.
+   This is last on purpose: an ingest that dies partway leaves the file unstamped, so the next run
+   redoes it. That is only safe because steps 3 and 4 check before they append — never append an
+   index line, a log block or a timeline entry without first checking whether it is already there.
    Then report what you touched and anything that contradicts an existing page.
 
 ## On lint
 When asked to health-check:
 - Raw files with no `ingested:` stamp — the backlog.
-- Raw files stamped `ingested:` with no matching `## [date] ingest | <title>` entry in
-  `wiki/log.md` — a run that died at the last step, so its pages may be incomplete.
-- Orphan pages with no inbound links.
+- Raw files with no `ingested:` stamp that nonetheless already have a `wiki/sources/` page or a
+  `wiki/log.md` entry naming them. Because the stamp is written last, this — not the reverse — is
+  what a died-mid-ingest run leaves behind, and it otherwise looks like ordinary backlog. Re-running
+  is safe, but say so, because those pages may be half-written.
+- Duplicate lines in `wiki/index.md`, or two `## [date] ingest | <title>` blocks for the same
+  ingest — the signature of a re-run that appended instead of checking.
+- Pages under `wiki/` not linked from `wiki/index.md` — orphans. Ticket and tool pages are the
+  usual culprits.
 - Contradictions between pages. A version change is not a contradiction.
 - Caveats with no "fixed in" status on tools that have had newer sources since.
 
