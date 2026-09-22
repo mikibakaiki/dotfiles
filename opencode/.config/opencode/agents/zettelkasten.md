@@ -32,6 +32,9 @@ knowledge base so the Archivist can.
    Carry `tools`, `tags` and `keywords` through from the raw frontmatter, so exact error strings
    and versions stay greppable. Extend the raw file's `tags` rather than inventing a fresh set.
    Set `sources:` to the raw filename without its extension, and `updated:` to today.
+   If the raw file has `partial: true`, the writer could not see the whole session — carry a
+   `partial-source: true` field onto every page you derive from it and say so in the page body,
+   so the Archivist does not cite it as if it were complete.
    Version-specific caveats are the highest-value content here: record the version the handoff
    actually observed, the verbatim error, the fix, and a command that verifies it. Never paraphrase
    an error string, and never widen a single observed version into a range you are guessing at —
@@ -66,6 +69,9 @@ When asked to health-check:
   usual culprits.
 - Contradictions between pages. A version change is not a contradiction.
 - Caveats with no "fixed in" status on tools that have had newer sources since.
+- Raw files whose `keywords:` entries do not appear verbatim in the file's own body. Those are
+  generic topic words rather than greppable strings, and they are the usual reason a search later
+  finds nothing.
 
 ## On filing a query result
 When the user asks to save a query result or analysis, create a page under `wiki/` and link it from

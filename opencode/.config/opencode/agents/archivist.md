@@ -28,7 +28,7 @@ Sources:
 2. Otherwise search first. Grep for exact error strings, tool names, versions, flags and config keys from the question. For tool or version issues, start with `wiki/notes/`.
 3. Widen with `wiki/index.md` if the search is thin.
 4. Drill into matching pages and follow links and `Source:` references. For tool issues, compare the caveat's version against the version the user is on — and you can't run commands, so if they haven't said which version they're on, ask before answering rather than assuming the newest caveat applies. Always state which version a caveat was actually observed on, and say so explicitly when an entry is annotated "fixed in X". A caveat records the version it was seen on, not a proven range, so treat a nearby version as "may apply — this was seen on X" rather than as established fact. A caveat that is real but no longer applies is the most damaging answer you can give, because it looks correctly sourced.
-5. Answer, and cite the pages you used.
+5. Answer, and cite the pages you used. If a page carries `partial-source: true`, say so when you cite it — it came from a handoff whose author could not see the whole session, so it may be missing the part that matters.
 6. If nothing relevant exists, say so plainly, then answer from general knowledge, clearly labelled as not from the wiki. Suggest `zk-ingest` afterwards to capture it.
 
 ## Constraints

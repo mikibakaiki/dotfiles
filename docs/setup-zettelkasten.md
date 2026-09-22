@@ -10,9 +10,12 @@ starting.
 Takes about 20 minutes including the dry run.
 
 ```bash
-cd ~/dotfiles   # or wherever this repo lives
+cd ~/dotfiles
 git pull
 ```
+
+Run the `zk-*` and `llm-*` commands below from a **fish** shell — they're fish functions, loaded
+from `conf.d/` at shell start, so a shell opened before stowing won't have them.
 
 ---
 
@@ -44,13 +47,20 @@ Stow:
 
 ```bash
 stow opencode fish
+exec fish          # picks up the newly stowed conf.d/ functions
 ```
 
-## 2. Verify your OpenCode version supports what the config needs
+## 2. Install OpenCode and verify its version
 
 ```bash
+brew install opencode      # skip if bootstrap.sh already did
 opencode --version
+opencode auth login        # the top-level agent runs on Copilot; the zk agents are local
 ```
+
+`opencode auth login` is easy to skip and hard to diagnose: without it the dry run in section 4
+fails on its first message with an auth error, even though every Zettelkasten agent itself runs
+locally.
 
 Check against the OpenCode changelog/docs for:
 - `opencode.jsonc` (JSONC, not just `opencode.json`) support
@@ -139,10 +149,16 @@ Read the template before running this — it's short, and it's the actual contra
    intended behaviour — just don't be surprised by it. If you'd rather it stay skipped, replace the
    stamp with `ingested: YYYY-MM-DD`.
 
-6. **Initialise git**, if it isn't a repo already:
+6. **Initialise git**, if it isn't a repo already. Guard it, so re-running this guide on an
+   existing vault doesn't commit work-in-progress under a misleading message:
    ```bash
-   cd ~/code/Zettelkasten && git init && git add -A && git commit -m "Initial vault structure"
+   cd ~/code/Zettelkasten
+   test -d .git || git init
+   git config user.email    # must print something — see "Git identity" in the README
+   git add -A && git commit -m "Vault structure"
    ```
+   The identity check matters: a fresh machine has no repo-local identity, so this commit would be
+   authored with whatever global identity is configured — on a work machine, the work address.
    Its own repo, deliberately — so it can be deleted or left behind wholesale.
 
 ---
@@ -157,12 +173,22 @@ opencode
 /handoff
 ```
 
-Note the path it reports (`Written: <path>`). Open that file and review/amend it — check the
-frontmatter (`tickets`, `tools`, `tags`, `keywords`) and that no secrets or hostnames leaked into
-verbatim error strings. Also check any error message or version string against what actually
-appeared in the scratch session: `/handoff` runs on the local model, and a paraphrased "close
-enough" error string defeats the grep-based search this wiki relies on. **Check the first three
-handoffs this way, then stop** — you're confirming the model holds the line, not auditing forever.
+Note the path it reports (`Written: <path>`). Open that file and review it. Two things to look at:
+
+- **`keywords:`** should be literal strings you could paste into a terminal — error fragments,
+  flags, config keys. If it reads `[docker, networking, timeout]`, the model gave you topic words,
+  and a search six months from now will match nothing.
+- **Error strings and versions** should match the session character-for-character. `/handoff` runs
+  on the local model, and a paraphrased "close enough" error defeats the grep-based search this
+  whole wiki relies on.
+
+Note that only **credentials** should be redacted. Hostnames, paths and ticket keys belong in the
+vault — it never leaves this machine — and redacting them out of an error string is what makes it
+unsearchable.
+
+**Check the first three handoffs that actually contain an error string**, then spot-check whenever
+a session involved a multi-line error or a stack trace. A clean session proves nothing, and this
+dry run in particular has no error strings in it at all — so it doesn't count as one of the three.
 
 Then ingest it:
 

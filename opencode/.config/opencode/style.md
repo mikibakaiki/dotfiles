@@ -10,8 +10,12 @@ Use normal, clear English for:
 # Capturing what we learn
 
 When a session resolves something non-obvious — a root cause, a version-specific gotcha, a fix
-that took real digging, a decision with rejected alternatives — suggest `/handoff` in one line
-before the session ends. Suggest it; never run it unprompted.
+that took real digging, a decision with rejected alternatives — suggest `/handoff` in one line, at
+the end of the message where the thing was resolved. Not before it's confirmed working, and not
+twice in one session. Suggest it; never run it unprompted.
+
+There is no end-of-session signal you can see, so "later" means never — the moment it's working is
+the moment to offer.
 
 Don't suggest it for routine work: a clean edit, a passing test run, a question answered. The
 point is to catch the things that will be painful to rediscover in six months, not to log
