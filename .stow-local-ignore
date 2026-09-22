@@ -1,7 +1,16 @@
-# vscode is managed via vscode/install.sh, not stow
+# NOTE: this file is INERT and kept only as a pointer.
+#
+# Stow reads .stow-local-ignore from inside a *package* directory, where it filters files
+# within that package. This copy sits in the stow directory (the repo root), which is not
+# a package, so Stow never consults it — it does NOT exclude anything from `stow */`.
+#
+# The real exclusions live where Stow actually looks:
+#   docs/.stow-local-ignore          — documentation, not a package
+#   zettelkasten/.stow-local-ignore  — schema is copied into the vault, not symlinked
+#   vscode/.stow-local-ignore        — managed via vscode/install.sh
+# and bootstrap.sh skips the same three by name.
+#
+# Patterns below are left for documentation only.
 ^vscode$
-
-# zettelkasten/ holds the vault schema template that gets *copied* into the vault root
-# (~/code/Zettelkasten), not symlinked into $HOME.
-# The vault is its own git repo; a symlink would make its schema a dotfiles dependency.
 ^zettelkasten$
+^docs$

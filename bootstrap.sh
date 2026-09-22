@@ -3,7 +3,11 @@
 # Usage: bash <(curl -fsSL https://raw.githubusercontent.com/mikibakaiki/dotfiles/main/bootstrap.sh)
 set -euo pipefail
 
-DOTFILES_REPO="git@github.com:mikibakaiki/dotfiles.git"
+# HTTPS, not SSH: on a fresh machine no key exists yet, and `git@github.com:` resolves
+# to the WORK key per ssh/.ssh/config. The remote is switched to the personal SSH alias
+# after stowing, once ssh/config is in place. If the repo is private, this prompts for
+# credentials (or use a PAT) — that is expected.
+DOTFILES_REPO="https://github.com/mikibakaiki/dotfiles.git"
 DOTFILES_DIR="$HOME/dotfiles"
 
 info()  { printf "\033[0;34m→\033[0m  %s\n" "$*"; }
@@ -95,10 +99,20 @@ info "Stowing packages..."
 cd "$DOTFILES_DIR"
 for pkg in */; do
     pkg="${pkg%/}"
-    # vscode uses install.sh, not stow
-    [[ "$pkg" == "vscode" ]] && continue
+    # vscode uses install.sh; docs/ is documentation; zettelkasten/ is copied, not linked.
+    # Each of these also carries its own .stow-local-ignore, so this is belt and braces.
+    case "$pkg" in
+        vscode|docs|zettelkasten) continue ;;
+    esac
     stow --restow "$pkg" && ok "stowed: $pkg" || warn "conflicts in $pkg — fix manually then: stow -R $pkg"
 done
+
+# ── 7b. Switch the remote to the personal SSH alias ────────────────────────────
+# ssh/config is stowed by now, so github-personal resolves to the personal key.
+if git -C "$DOTFILES_DIR" remote get-url origin | grep -q '^https://'; then
+    git -C "$DOTFILES_DIR" remote set-url origin "git@github-personal:mikibakaiki/dotfiles.git" \
+        && ok "origin switched to github-personal"
+fi
 
 # ── 8. VS Code settings ────────────────────────────────────────────────────────
 if [ -d "/Applications/Visual Studio Code.app" ]; then

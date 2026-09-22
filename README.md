@@ -29,7 +29,7 @@ lists exactly which values you supply and where each one goes.
 ```
 dotfiles/
 ├── .gitignore
-├── .stow-local-ignore        — excludes vscode and zettelkasten from stow */
+├── .stow-local-ignore        — inert; real exclusions are per-package (see How stow works)
 ├── .stowrc                   — stow defaults: target=$HOME, verbose
 ├── bootstrap.sh              — fresh machine setup
 ├── README.md
@@ -51,7 +51,6 @@ dotfiles/
 │       └── conf.d/
 │           ├── 20-env-public.fish       — non-sensitive env vars
 │           ├── 30-env-secrets.fish      — loader: reads .env.personal + .env.work
-│           ├── 90-path-dedupe.fish      — deduplicates PATH, runs last
 │           ├── aliases.fish             — abbreviations
 │           ├── fish_frozen_theme.fish   — theme
 │           ├── fnm.fish                 — Node version manager init
@@ -61,6 +60,7 @@ dotfiles/
 │           ├── prompt.fish              — starship init
 │           ├── pyenv.fish               — Python version manager init
 │           ├── zk.fish                  — zk, zk-status, zk-ingest, zk-lint
+│           ├── zz-path-dedupe.fish      — deduplicates PATH; zz- so it sources last
 │           ├── .env.personal.example    — template → copy to .env.personal
 │           └── .env.work.example        — template → copy to .env.work
 │
@@ -154,11 +154,20 @@ bash <(curl -fsSL https://raw.githubusercontent.com/mikibakaiki/dotfiles/main/bo
 Or manually:
 
 ```bash
-git clone git@github-personal:mikibakaiki/dotfiles.git ~/dotfiles
+brew install stow fish opencode
+
+# HTTPS, not the github-personal alias: that alias is defined in ssh/config, which only
+# exists after this clone. Plain git@github.com: would use the WORK key (see ssh/config).
+git clone https://github.com/mikibakaiki/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 git config user.email "your.personal@email.com"   # before the first commit — see Git identity
 stow fish ghostty git llm opencode ssh starship zed
+
+# ssh/config is in place now, so switch to the personal key for future pushes
+git remote set-url origin git@github-personal:mikibakaiki/dotfiles.git
+
 ~/dotfiles/vscode/install.sh
+exec fish        # the conf.d/ functions (llm-*, zk-*) only load in a new fish shell
 ```
 
 Then work through the guides in [Start here](#start-here) — stowing puts the files in place, but
@@ -175,7 +184,7 @@ stow fish           # symlink the fish package
 stow -R fish        # restow (use after adding or moving files)
 stow -D fish        # remove symlinks for one package
 stow --simulate */  # dry run — shows what would happen
-stow */             # stow all packages (vscode, zettelkasten excluded via .stow-local-ignore)
+stow */             # stow all packages (docs, vscode, zettelkasten are no-ops — see below)
 ```
 
 If stow reports a conflict, a real file already exists at the target.
@@ -412,4 +421,6 @@ git commit -m "feat(fish): add mymodule"
 ```
 
 Prefix with a number only if load order matters.
-Fish sources `conf.d/` alphabetically — `90-path-dedupe.fish` must run last.
+Fish sources `conf.d/` alphabetically, and digits sort before letters — so a `90-` prefix
+does **not** run last. `zz-path-dedupe.fish` is named that way so it genuinely sources after
+`fnm.fish` and `pyenv.fish`, both of which prepend to PATH.

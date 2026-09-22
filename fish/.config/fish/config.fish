@@ -33,7 +33,12 @@ set -gx GPG_TTY (tty)
 set -gx STARSHIP_CONFIG "$XDG_CONFIG_HOME/starship.toml"
 
 # ── opencode ───────────────────────────────────────────────────────────────────
-set -gx OPENCODE_CONFIG "$XDG_CONFIG_HOME/opencode/config.json"
+# Deliberately does NOT set OPENCODE_CONFIG. That variable overrides config discovery
+# entirely, which would (a) point at a file that doesn't exist — this repo ships
+# opencode.jsonc, not config.json — and (b) suppress the untracked
+# ~/.config/opencode/opencode.json override that work MCP servers rely on.
+# Let opencode discover opencode.jsonc and merge opencode.json on top.
+# See docs/setup-work-machine.md.
 
 # ── zoxide ─────────────────────────────────────────────────────────────────────
 if command -q zoxide
@@ -43,5 +48,5 @@ end
 # ── conf.d/ is auto-sourced by fish after this file, alphabetically ────────────
 # 20-env-public.fish   — non-sensitive env vars
 # 30-env-secrets.fish  — loads .env.personal and .env.work (gitignored)
-# 90-path-dedupe.fish  — deduplicates PATH last
+# zz-path-dedupe.fish  — deduplicates PATH; zz- prefix so it really does source last
 # aliases.fish, fzf.fish, fnm.fish, prompt.fish, etc.
