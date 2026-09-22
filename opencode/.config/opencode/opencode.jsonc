@@ -61,6 +61,6 @@
   // NOTE: work-specific MCP servers (Jira/Confluence/Jenkins) used to live in this file,
   // hardcoded to a work machine's local paths. Removed — they don't belong in tracked
   // dotfiles. Re-add them on the work machine via a local, gitignored override instead.
-  // See the "Work MCP servers" section of the macOS setup guide for the exact mechanism,
+  // See docs/setup-work-machine.md for the exact mechanism,
   // following the same pattern as fish/.config/fish/conf.d/.env.work (untracked, machine-local).
 }

@@ -15,6 +15,10 @@ machine.
 raw/            Immutable source documents — handoffs written by /handoff. Never edit the body of
                 a file here; the only permitted change is adding `ingested: YYYY-MM-DD` to its
                 frontmatter. To re-ingest a file after amending it, delete its `ingested:` line.
+                Frontmatter MUST open on line 1. The tooling reads only the leading `---` block,
+                so a file starting with anything else — a stray "Here is the handoff:" line — has
+                no frontmatter it can see, can never be marked done, and would be re-ingested on
+                every run. Repairing that is the one other permitted edit; see the Librarian.
 wiki/
   index.md      The catalog. Every page in the vault is reachable from here.
   log.md        Append-only record of what was ingested when.
@@ -116,9 +120,13 @@ relevant tool's note page (`wiki/notes/llama-cpp.md`), newest first:
 
 ```markdown
 ## Version caveats
-- **<version>**: <symptom, with the verbatim error> → <fix>. Verify: <command>.
-  Source: [[<source-page>]]
+- **<version>** on <OS / relevant config>: <symptom, with the verbatim error> → <fix>.
+  Verify: <command>. Source: [[<source-page>]]
 ```
+
+Carry the environment from the handoff's `Env:` line. Without it a macOS-only, Metal-only or
+config-specific problem reads as universal, and the Archivist will apply it to a machine it never
+affected.
 
 Write the version the handoff actually observed. If later sources show the same problem on more
 versions, widen it to a range then — but never guess a range from one observation, because the

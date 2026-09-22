@@ -15,6 +15,17 @@ reworded error message is useless for the grep-based search this wiki depends on
 An honest gap is useful; a plausible-looking invented error string is worse than nothing, because
 it will be trusted and it will never match a search.
 
+## Step 0: Check you can run
+
+You run on the local model. If it is unreachable you will fail with a raw connection error from the
+provider — at the exact moment the user finally decided to capture something, which is how people
+stop trusting this. If that happens, say only:
+
+> Local model unreachable — run `llm-status`, then `llm-up`, and try `/handoff` again.
+
+Don't retry, and don't fall back to writing the handoff from a different model: the whole point of
+pinning this to the local one is that the write-up never leaves the machine.
+
 ## Step 1: Read the session
 
 Use `session_read` for the current session's full history (use `session_list` to find it if

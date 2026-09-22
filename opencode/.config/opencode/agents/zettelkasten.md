@@ -51,6 +51,10 @@ knowledge base so the Archivist can.
    Then append to `wiki/log.md`: `## [<today>] ingest | <title>` plus a `Pages touched:` line —
    skipping that append if a block with the same date and title is already there.
 5. Last, add `ingested: <today>` to the raw file's frontmatter. Change nothing else in it.
+   If the file has no frontmatter, or its `---` does not open on line 1, fix that first: create the
+   block, or move whatever precedes it down into the body. The stamp is only read from a leading
+   `---` block, so without this the file can never be marked done and every future `zk-ingest`
+   re-processes it. This is the only edit to `raw/` permitted besides the stamp itself.
    This is last on purpose: an ingest that dies partway leaves the file unstamped, so the next run
    redoes it. That is only safe because steps 3 and 4 check before they append — never append an
    index line, a log block or a timeline entry without first checking whether it is already there.
@@ -69,6 +73,8 @@ When asked to health-check:
   usual culprits.
 - Contradictions between pages. A version change is not a contradiction.
 - Caveats with no "fixed in" status on tools that have had newer sources since.
+- Raw files whose first line is not `---`. Their stamp can never be read, so they re-ingest on
+  every run; repair the frontmatter as in ingest step 5.
 - Raw files whose `keywords:` entries do not appear verbatim in the file's own body. Those are
   generic topic words rather than greppable strings, and they are the usual reason a search later
   finds nothing.
@@ -80,8 +86,9 @@ When the user asks to save a query result or analysis, create a page under `wiki
 ## Constraints
 - Follow the schema in `AGENTS.md` at the vault root strictly. It is the contract for this vault:
   directory layout, page frontmatter, `index.md` and `log.md` formats, ticket pages and version
-  caveats. If it's missing, stop and tell the user to run the vault setup section of
-  `docs/setup-zettelkasten.md` rather than guessing a schema.
+  caveats. If it's missing, stop and tell the user to copy it from the dotfiles repo
+  (`zettelkasten/AGENTS.md`) rather than guessing a schema — you cannot read that repo from here,
+  so say it rather than trying.
 - Write pages in normal, clear English, never terse chat style.
 - Never answer questions directly; your role is maintenance only.
 - Never delete pages without explicit user confirmation.
