@@ -79,13 +79,14 @@ stow opencode fish
 
 ### Work MCP servers and AGENTS.md — local, untracked overrides
 
-The old `opencode.jsonc` had Jira/Confluence/Jenkins MCP servers hardcoded to
-`/Users/joao.campos/...` paths — clearly leftover from a different setup, not yours, and not part
-of the brief. They were **removed** from the tracked file rather than guessed at. Likewise
-`opencode/.config/opencode/AGENTS.md` still has stale Bitbucket/`bb`/NuGet/.NET content from that
-same setup — left untouched in the tracked file (out of scope to edit blind), but you don't want it
-loaded as-is either. (Only its `## Memory` section has been updated, to point at the vault rather
-than a predecessor notes layout.)
+The old `opencode.jsonc` had Jira/Confluence/Jenkins MCP servers hardcoded to absolute paths under
+a previous owner's home directory. They were **removed** from the tracked file rather than guessed
+at. `opencode/.config/opencode/AGENTS.md` has likewise been stripped of employer-specific content
+(SCM host, CLI conventions, ticket types, runtime policies) — that belongs in an untracked
+override, and the tracked file now says so and nothing more.
+
+Nothing tracked in this repo should name an employer, an internal hostname, or a real person. The
+gitignored slots below are where that content lives.
 
 OpenCode merges config from multiple places, later ones winning: global
 `~/.config/opencode/opencode.jsonc` → a project-local `opencode.json`/`.jsonc` → `OPENCODE_CONFIG`

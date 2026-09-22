@@ -56,7 +56,7 @@ permission:
     "git checkout *": allow
     "git branch -d *": allow
   question: allow
-  dna-ai-lab-jira_*: allow
+  jira-mcp_*: allow
   task:
     "*": deny
     "requirements-clarifier": allow
@@ -508,7 +508,7 @@ When the user requests a code review, **first gather context** before invoking t
 
 1. Run `git log --oneline upstream/develop..HEAD` to list all commits on the current branch.
 2. Extract the Jira ticket slug from the commit messages (e.g. `PROJ-123`). It is typically the first token in the commit subject or appears in brackets.
-3. Fetch the Jira ticket using the `dna-ai-lab-jira_jira_get_issue` tool with that slug to retrieve the original requirements and acceptance criteria.
+3. Fetch the Jira ticket using the `jira-mcp_jira_get_issue` tool with that slug to retrieve the original requirements and acceptance criteria.
 4. Run `git diff upstream/develop...HEAD` to capture the full branch diff against `develop`.
 
 Then invoke `@review-a` and `@review-b` **in parallel** (a single message with two Task tool calls), passing each the full context you gathered:

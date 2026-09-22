@@ -20,5 +20,10 @@ link() {
 }
 
 link "settings.json"
-[ -f "$DOTFILES/mcp.json" ] && link mcp.json
+
+# mcp.json is gitignored (its package scope names an employer). Copy
+# mcp.json.example → mcp.json and fill it in; this links it if present.
+[ -f "$DOTFILES_VSCODE/mcp.json" ] && link "mcp.json"
+
+exit 0
 

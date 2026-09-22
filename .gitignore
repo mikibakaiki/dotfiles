@@ -24,3 +24,7 @@ node_modules/
 *.log
 
 **/vscode/settings.local.json
+
+# ── Work MCP servers (package scope / paths name an employer) ──────────────────
+# Copy vscode/mcp.json.example → vscode/mcp.json and fill in locally.
+**/vscode/mcp.json
