@@ -14,15 +14,23 @@ set -g __llm_agent ~/Library/LaunchAgents/local.llama-server.plist
 set -g __llm_url http://127.0.0.1:8080
 
 # The MoE. Faster for reading many pages (the Archivist), weaker for careful writing.
-# NOT the MTP build: self-MTP is ~13x slower than baseline on Apple Metal (llama.cpp #23011).
+# NOT the MTP build: self-MTP measures ~13x slower than baseline on Apple Metal
+# (llama.cpp #23011, still reproduced in #23752).
+#
+# Sizing: this quant is ~22.3 GB against a 24576 MB wired limit, so it will NOT fit at
+# the 27B's 65536 context. It runs at 32768 with a q8_0 KV cache, which is what
+# opencode.jsonc declares for this model. If it still OOMs on your machine, drop to a
+# smaller quant rather than raising the context.
 set -g __llm_fast_repo bartowski/Qwen_Qwen3.6-35B-A3B-GGUF:Q4_K_M
+set -g __llm_fast_ctx 32768
 
 function llm-status --description 'Is llama-server up, and which model is loaded?'
-    if not curl -sf --max-time 2 $__llm_url/v1/models >/dev/null 2>&1
-        echo "down"
+    # 5s, not 2: a cold start has to map ~17 GB off disk before it answers.
+    if not curl -sf --max-time 5 $__llm_url/v1/models >/dev/null 2>&1
+        echo "down  (if you just started it, give it a minute — the model has to load)"
         return 1
     end
-    set -l id (curl -sf --max-time 2 $__llm_url/v1/models \
+    set -l id (curl -sf --max-time 5 $__llm_url/v1/models \
         | string match -gr '"id"\s*:\s*"([^"]+)"' | head -n1)
     if test -n "$id"
         echo "up — $id"
@@ -50,11 +58,15 @@ function llm-down --description 'Stop llama-server'
 end
 
 # Swaps the loaded model without touching OpenCode config, since the provider pins the endpoint.
-function llm-fast --description 'Swap to the faster MoE model on the same port'
+# Runs in the FOREGROUND and holds the terminal: Ctrl-C stops it and leaves you with no
+# server at all, so run `llm-up` afterwards to get the default back.
+function llm-fast --description 'Swap to the faster MoE model (foreground; Ctrl-C then llm-up)'
     llm-down >/dev/null
-    echo "Loading $__llm_fast_repo on :8080 — llm-up returns you to the default."
+    echo "Loading $__llm_fast_repo at ctx $__llm_fast_ctx on :8080."
+    echo "Holds this terminal. Ctrl-C to stop, then run llm-up for the default model."
     llama-server -hf $__llm_fast_repo \
-        -c 65536 -ngl all --host 127.0.0.1 --port 8080 -np 1 $argv
+        -c $__llm_fast_ctx -ngl all --host 127.0.0.1 --port 8080 -np 1 \
+        -ctk q8_0 -ctv q8_0 -a qwen3.6-35b-a3b-local $argv
 end
 
 function llm-serve-persist --description 'Install the llama-server LaunchAgent'
