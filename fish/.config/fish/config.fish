@@ -33,12 +33,15 @@ set -gx GPG_TTY (tty)
 set -gx STARSHIP_CONFIG "$XDG_CONFIG_HOME/starship.toml"
 
 # ── opencode ───────────────────────────────────────────────────────────────────
-# Deliberately does NOT set OPENCODE_CONFIG. That variable overrides config discovery
-# entirely, which would (a) point at a file that doesn't exist — this repo ships
-# opencode.jsonc, not config.json — and (b) suppress the untracked
-# ~/.config/opencode/opencode.json override that work MCP servers rely on.
-# Let opencode discover opencode.jsonc and merge opencode.json on top.
+# Machine-local override layer, used on the work Mac for MCP servers and work rules.
+# OPENCODE_CONFIG adds a config layer AFTER the global files, merged with array
+# concatenation — so work.jsonc can add to `instructions` rather than being overwritten.
+# (An override named ~/.config/opencode/opencode.json would NOT work: OpenCode loads it
+# before opencode.jsonc with a plain deep merge, so the tracked file's `instructions`
+# replaces it.) Set only when the file exists, so machines without one are unaffected.
 # See docs/setup-work-machine.md.
+test -f ~/.config/opencode/work.jsonc
+and set -gx OPENCODE_CONFIG ~/.config/opencode/work.jsonc
 
 # ── zoxide ─────────────────────────────────────────────────────────────────────
 if command -q zoxide

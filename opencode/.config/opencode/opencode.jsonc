@@ -3,7 +3,9 @@
 
   // Terse chat replies; anything written to disk stays in normal English, plus the /handoff
   // nudge. Replaces the opencode-caveman plugin.
-  "instructions": ["style.md"],
+  // Must be ~/-anchored: OpenCode resolves a RELATIVE instructions entry against the project
+  // you're working in, not this directory — a bare "style.md" silently loads nothing.
+  "instructions": ["~/.config/opencode/style.md"],
 
   // Model — via GitHub Copilot subscription (no separate Anthropic billing)
   "model": "github-copilot/claude-sonnet-5",

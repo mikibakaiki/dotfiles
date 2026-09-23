@@ -18,26 +18,35 @@ Gather these before you start — they're the only employer-specific values invo
 
 | Value | Example shape | Goes in |
 | --- | --- | --- |
-| Jira MCP server path | `~/.local/share/mcp/jira-mcp/.../server.js` | `~/.config/opencode/opencode.json` |
+| Jira MCP server path | `~/.local/share/mcp/jira-mcp/.../server.js` | `~/.config/opencode/work.jsonc` |
 | Confluence MCP server path | same shape | same |
 | Jenkins MCP URL | `https://<jenkins-host>/mcp-server/mcp` | same |
 | Private npm scope | `@<org>/jira-mcp` | `vscode/mcp.json` |
 | Bitbucket / SCM host | `<host>/projects/<KEY>/repos/<SLUG>` | `~/.config/opencode/AGENTS.work.local.md` |
 | Jira ticket types | e.g. `PCA story` / `PCA Bug` | same |
-| Work git identity | `you@employer.example` | `~/.config/git/config.work` |
+| Work git identity | `you@employer.example` | `~/.config/git/config.local` |
+| Where your *personal* repos live | `~/dotfiles/` | `~/.config/git/config.local` |
 
 ---
 
 ## 1. OpenCode MCP servers
 
-OpenCode merges config from several places, later winning: global
-`~/.config/opencode/opencode.jsonc` → a project-local `opencode.json`/`.jsonc` → `OPENCODE_CONFIG`
-if set. Because stow runs with `--no-folding`, `~/.config/opencode` is a real directory on this machine,
-so files you create there stay here and never enter the repo. `.gitignore` also lists
-`**/opencode/opencode.json` (no `c`) and `**/opencode/AGENTS.*.local.md`, as a safety net for a
-machine still on the old folded layout (see *Machines stowed before `--no-folding`* in the README).
+The work settings live in one untracked file, `~/.config/opencode/work.jsonc`, loaded as an extra
+config layer through `OPENCODE_CONFIG`. `config.fish` sets that variable automatically whenever the
+file exists, so creating the file is all it takes, and a machine without one is unaffected.
 
-Create `~/.config/opencode/opencode.json`:
+Why this file and not `~/.config/opencode/opencode.json`, which older notes suggested: verified
+against OpenCode's source, it loads `config.json` → `opencode.json` → `opencode.jsonc` from that
+directory with a plain deep merge, where later files win and **arrays are replaced**. The tracked
+`opencode.jsonc` loads last, so its `instructions` would overwrite yours and your work rules would
+never load, silently. `OPENCODE_CONFIG` is a separate layer that loads *after* those files and
+merges arrays by concatenating them, so your entries add to the tracked ones instead of losing to
+them.
+
+Because stow runs with `--no-folding`, `~/.config/opencode` is a real directory on this machine and
+`work.jsonc` never enters the repo. `.gitignore` lists it anyway, as a safety net.
+
+Create `~/.config/opencode/work.jsonc`:
 
 ```json
 {
@@ -111,19 +120,28 @@ Create `~/.config/opencode/AGENTS.work.local.md`:
 - Ticket issue type is always **PCA story** or **PCA Bug**, never generic Story/Bug.
 ```
 
-Then point `instructions` at it — merge into the **same** `opencode.json` as the `mcp` block above,
-one file, one JSON object:
+Then add this key to the **same** `work.jsonc`, next to `mcp` (one file, one JSON object):
 
 ```json
-{ "instructions": ["style.md", "AGENTS.work.local.md"] }
+"instructions": ["~/.config/opencode/AGENTS.work.local.md"]
 ```
 
-Verify it merged, and that git still can't see it:
+Two details that matter. Use the `~/` path: OpenCode resolves a relative `instructions` entry against
+the *project you're working in*, not the config directory, so a bare filename loads nothing. And
+don't repeat `style.md`: this layer's array is added to the tracked one rather than replacing it.
+
+Verify, in a **new** fish shell so `OPENCODE_CONFIG` is set:
 
 ```bash
-cd ~/dotfiles && git status --short    # nothing for opencode.json / AGENTS.*.local.md
-opencode run --agent zettelkasten "list your available mcp tools"
+echo $OPENCODE_CONFIG                              # → ~/.config/opencode/work.jsonc, expanded
+opencode debug config | grep -A3 '"instructions"'  # both style.md and AGENTS.work.local.md
+opencode debug config | grep -c jira-mcp           # non-zero: the MCP servers merged in
+cd ~/dotfiles && git status --short                # nothing for work.jsonc or AGENTS.*.local.md
 ```
+
+(Don't verify by asking the Zettelkasten agent to list its MCP tools. The config above deliberately
+disables them for every agent except `requirements-clarifier` and `explore`, so it would honestly
+report none even when everything works.)
 
 ---
 
@@ -146,32 +164,40 @@ it just skips that step.
 
 ## 4. Work git identity
 
-The failure this prevents: a fresh clone has no repo-local identity, so the global one applies —
-and on a work machine that's the work address. Author metadata is part of the commit, so it can't
-be edited out afterwards without rewriting history.
+The failure this prevents: a fresh clone has no repo-local identity, so the global one applies.
+Author metadata is part of the commit, so a wrong address can't be removed afterwards without
+rewriting history. This repo's first commit was authored with a work address exactly that way.
 
-Scope the work identity to work directories, and let personal be the default:
+**On the work Mac, make work the default and scope *personal* to where your personal repos live.**
+That's the opposite of the personal desktop, and deliberately so. Work repos here are many and live
+wherever a project puts them (`~/code/`, worktrees, clones of clones), so a rule like "work only
+inside `~/work/`" misses some and they'd commit as you personally. Your personal repos on this
+machine are few and in known places, starting with this one.
 
 ```ini
 # ~/.config/git/config.local  (gitignored)
 [user]
     name  = Your Name
-    email = your.personal@email.com
+    email = you@employer.example
 
-[includeIf "gitdir:~/work/"]
-    path = config.work
+[includeIf "gitdir:~/dotfiles/"]
+    path = config.personal
 ```
 
 ```ini
-# ~/.config/git/config.work  (gitignored)
+# ~/.config/git/config.personal  (gitignored)
 [user]
-    email = your.work@email.com
+    email = your.personal@email.com
 ```
 
-Check before your first commit in any clone:
+Add one `includeIf` per personal repo location. The trailing `/` matters: `gitdir:~/dotfiles/`
+matches that repo and everything under it.
+
+Check both sides:
 
 ```bash
-cd ~/dotfiles && git config user.email    # must be the personal address
+cd ~/dotfiles && git config user.email                  # personal
+cd <any work repo> && git config user.email             # work
 ```
 
 ---

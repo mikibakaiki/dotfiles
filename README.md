@@ -224,15 +224,19 @@ All operations aborted.
 Nothing is lost at that point. Pick one:
 
 ```bash
-# 1. Keep the repo's version, set the machine's aside (safest)
-mv ~/.config/sometool ~/.config/sometool.bak
-stow sometool
+# 1. Keep the repo's version: move aside only the file stow named (safest)
+mv ~/.config/opencode/opencode.jsonc ~/.config/opencode/opencode.jsonc.bak
+stow opencode
 
 # 2. Keep the MACHINE's version and pull it into the repo
 git status                  # must be clean first — see below
 stow --adopt sometool
 git diff                    # this is the machine's file overwriting yours; keep or revert
 ```
+
+Move the file stow names, not its directory. With `--no-folding` that directory also holds
+machine-local files (`.env.work`, `work.jsonc`, `fish_variables`) that have nothing to do with the
+conflict, and moving the directory would take them with it.
 
 `--adopt` runs in the direction most people don't expect. Stow's own help calls it
 *"(Use with care!) Import existing files into stow package from target"* — the target file wins and
@@ -313,7 +317,9 @@ Clone personal repos using the alias:
 git clone git@github-personal:mikibakaiki/reponame.git
 ```
 
-Private keys are excluded via `ssh/.stow-local-ignore` and never committed.
+Private keys never enter the repo. `~/.ssh` is a real directory (stow `--no-folding`), so keys
+generated there stay on the machine, and `.gitignore` allowlists only `ssh/.ssh/config` in case one
+ever lands in the package anyway.
 
 ---
 
@@ -322,13 +328,14 @@ Private keys are excluded via `ssh/.stow-local-ignore` and never committed.
 The `git/` package puts everything under `~/.config/git/` (XDG-compliant).
 `GIT_CONFIG_GLOBAL` is set in `config.fish` to ensure git always finds it.
 
-No `[user]` block in the tracked config — identity is per-machine via `config.local`:
+No `[user]` block in the tracked config — identity is per-machine via `config.local`
+(gitignored, like every `config.*` file here except the `.example` template):
 
 ```ini
-# ~/.config/git/config.local  (gitignored)
+# ~/.config/git/config.local
 [user]
     name  = Your Name
-    email = your.work@email.com
+    email = you@example.com
 ```
 
 For the dotfiles repo itself, a personal identity is set repo-locally:
@@ -357,27 +364,17 @@ cd ~/dotfiles && git config user.email    # must be the personal address
 
 ### A durable guard
 
-Rather than remembering per repo, scope the work identity to work directories with a conditional
-include, and make personal the default:
+Rather than remembering per repo, make the right identity the default for the machine:
 
-```ini
-# ~/.config/git/config.local  (gitignored)
-[user]
-    name  = Your Name
-    email = your.personal@email.com
+- **Personal machines:** `config.local` holds only your personal identity. There's no work
+  identity on the machine to leak.
+- **Work Mac:** work is the default, and personal is scoped to `~/dotfiles/` (and any other
+  personal repo) with an `includeIf`. It's that way round because work repos there are many and
+  scattered, while personal ones are few and in known places; a rule like "work only inside
+  `~/work/`" misses repos and commits them under your personal address. The exact config is in
+  [docs/setup-work-machine.md](docs/setup-work-machine.md#4-work-git-identity).
 
-[includeIf "gitdir:~/work/"]
-    path = config.work
-```
-
-```ini
-# ~/.config/git/config.work  (gitignored)
-[user]
-    email = your.work@email.com
-```
-
-Now the work address is only ever used inside `~/work/`, and anything outside it — this repo
-included — defaults to personal. Failing safe beats remembering.
+Either way, failing safe beats remembering.
 
 ---
 
@@ -409,15 +406,18 @@ Plugins:
 Pinned to an exact version in `opencode.jsonc` (bumped deliberately, recorded in a handoff)
 rather than tracking `@latest`.
 
-`instructions: ["style.md"]` in `opencode.jsonc` replaces the old `opencode-caveman` plugin —
-terse chat replies, normal English for anything written to disk. The `./plugins/graphify.js`
-local plugin referenced here previously was never actually committed to the repo; dropped.
+`instructions: ["~/.config/opencode/style.md"]` in `opencode.jsonc` replaces the old
+`opencode-caveman` plugin: terse chat replies, normal English for anything written to disk, and the
+`/handoff` capture nudge. The `~/` matters. OpenCode resolves a *relative* `instructions` entry
+against the project you're working in, so the bare `"style.md"` this used to say loaded nothing in
+normal use. The `./plugins/graphify.js` local plugin referenced here previously was never actually
+committed to the repo; dropped.
 
-Work-specific MCP servers (Jira, Confluence, Jenkins, etc.) are **not** in the tracked
-`opencode.jsonc` — they were hardcoded to a different machine's local paths and have been
-removed. Add them back per-machine via an untracked, gitignored `~/.config/opencode/opencode.json`
-override (same pattern as `.env.work` below), which OpenCode merges on top at startup. See
-[docs/setup-work-machine.md](docs/setup-work-machine.md) for the exact override format. Credentials still come from
+Work-specific MCP servers (Jira, Confluence, Jenkins) and work rules are **not** in tracked config.
+On the work Mac they go in an untracked `~/.config/opencode/work.jsonc`, which `config.fish` loads
+as an extra layer via `OPENCODE_CONFIG` whenever the file exists. That layer loads after the global
+config and adds to its `instructions` rather than replacing them. See
+[docs/setup-work-machine.md](docs/setup-work-machine.md). Credentials still come from
 `{env:JIRA_PAT}` etc., values from `.env.work`, never hardcoded.
 
 See [docs/setup-zettelkasten.md](docs/setup-zettelkasten.md) for the Zettelkasten agent system
@@ -459,14 +459,16 @@ Runtime files (`node_modules/`, `skills/`, `tui.json`) excluded via
 # 1. Create the package directory
 mkdir -p ~/dotfiles/TOOL/.config/TOOL
 
-# 2. Move existing config in (stow refuses to overwrite real files)
-mv ~/.config/TOOL ~/dotfiles/TOOL/.config/TOOL
+# 2. Move in only the files you want tracked — not the whole directory. It also holds caches,
+#    state and sometimes credentials, which belong on this machine.
+mv ~/.config/TOOL/config.toml ~/dotfiles/TOOL/.config/TOOL/
 
-# 3. Stow it
+# 3. Stow it (with --no-folding this links that one file back into the real directory)
 cd ~/dotfiles && stow TOOL
 
-# 4. Commit
-git add TOOL
+# 4. Review, then add the file by name — `git add TOOL` would take everything in the package
+git status --short TOOL
+git add TOOL/.config/TOOL/config.toml
 git commit -m "feat: add TOOL"
 ```
 

@@ -10,7 +10,10 @@ ssh/.ssh/*
 !ssh/.ssh/config
 
 # ── Git per-machine identity ───────────────────────────────────────────────────
-**/git/config.local
+# Any config.* variant (config.local, config.work, config.personal, ...) holds an identity;
+# default-deny it, and allow back only the tracked template.
+**/git/config.*
+!**/git/config.local.example
 
 # ── opencode runtime (managed by opencode itself) ──────────────────────────────
 **/opencode/node_modules/
@@ -20,6 +23,7 @@ ssh/.ssh/*
 **/opencode/package-lock.json
 **/opencode/tui.json
 **/opencode/opencode.json
+**/opencode/work.jsonc
 **/opencode/AGENTS.*.local.md
 
 # ── macOS ──────────────────────────────────────────────────────────────────────
