@@ -19,9 +19,10 @@ its own prerequisites.
 The Raspberry Pi runs none of these: it can't host the model, and a second personal vault would
 diverge from the desktop's with nothing to sync it.
 
-**Existing machine that was stowed before?** Run `./migrate-to-no-folding.sh` first — it's a
-one-time fix, lists before it changes anything, and is explained under
-[Machines stowed before `--no-folding`](#machines-stowed-before---no-folding).
+**Existing machine set up under the old two-vault system** (the work MacBook)? Do
+[docs/migrate-existing-machine.md](docs/migrate-existing-machine.md) first. It's one ordered pass
+covering the stow layout, the work override, the vault consolidation and the retired commands,
+and it sends you into the guides above at the right point.
 
 Everything employer-specific lives in gitignored override files, never in tracked config. Guide 3
 lists exactly which values you supply and where each one goes.
@@ -42,7 +43,8 @@ dotfiles/
 ├── docs/                     — setup guides, run in order (see "Start here")
 │   ├── setup-local-llm.md    — llama.cpp, model, llama-server
 │   ├── setup-zettelkasten.md — vault, agents, zk commands
-│   └── setup-work-machine.md — employer-specific overrides (work MacBook only)
+│   ├── setup-work-machine.md — employer-specific overrides (work MacBook only)
+│   └── migrate-existing-machine.md — one-time move off the old two-vault system
 │
 ├── fish/                     ← stow package → ~/.config/fish/
 │   └── .config/fish/
@@ -87,7 +89,7 @@ dotfiles/
 ├── opencode/                 ← stow package → ~/.config/opencode/
 │   ├── .stow-local-ignore    — excludes runtime files opencode manages itself
 │   │                           (node_modules, skills, tui.json, package*.json)
-│   │                           and opencode.json, the untracked local-override slot
+│   │                           and opencode.json (a pre-work.jsonc override name)
 │   └── .config/opencode/
 │       ├── opencode.jsonc    — model, small_model, provider, privacy wall, plugins
 │       ├── dcp.jsonc         — DCP plugin config
@@ -156,7 +158,7 @@ files this repo tracks are symlinks inside them.
 
 That matters because apps write into their own config directories. Without `--no-folding`, stow
 would make `~/.config/opencode` a symlink to the repo, so everything written there — SSH keys,
-`fish_variables`, your work `opencode.json`, runtime caches — would physically land inside
+`fish_variables`, your `work.jsonc`, runtime caches — would physically land inside
 `~/dotfiles`, one `git add -A` from being committed. With it, those stay on the machine.
 
 (The explanation lives here because `.stowrc` can't hold comments — stow splits every line into
@@ -261,7 +263,9 @@ cd ~/dotfiles
 
 It simulates the restow before touching anything and stops if that would conflict, and it never
 overwrites a file that already exists in `$HOME` — it skips it and tells you to compare.
-`bootstrap.sh` refuses to run on a folded machine until this has been done.
+`bootstrap.sh` refuses to run on a folded machine until this has been done. It's step 2 of
+[docs/migrate-existing-machine.md](docs/migrate-existing-machine.md), which covers the rest of
+moving an old machine over.
 
 ---
 

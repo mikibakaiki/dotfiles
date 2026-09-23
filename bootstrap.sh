@@ -45,7 +45,8 @@ brew install \
     zoxide \
     lazygit \
     pyenv \
-    fnm
+    fnm \
+    llama.cpp
 
 brew install --cask ghostty      2>/dev/null || warn "ghostty not in brew — install from https://ghostty.org"
 brew install --cask zed          2>/dev/null || warn "zed not in brew — install from https://zed.dev"
@@ -78,34 +79,44 @@ else
     ok "dotfiles already present at $DOTFILES_DIR"
 fi
 
-# ── 6. Backup conflicting real files ───────────────────────────────────────────
-BACKUP="$HOME/.dotfiles-backup-$(date +%Y%m%d-%H%M%S)"
-mkdir -p "$BACKUP"
-
-backup_if_real() {
-    [ -e "$1" ] && [ ! -L "$1" ] && mv "$1" "$BACKUP/" && warn "Backed up: $1"
-}
-
-backup_if_real "$HOME/.config/fish"
-backup_if_real "$HOME/.config/ghostty"
-backup_if_real "$HOME/.config/git"
-backup_if_real "$HOME/.config/opencode"
-backup_if_real "$HOME/.config/starship.toml"
-backup_if_real "$HOME/.config/zed"
-backup_if_real "$HOME/.gitconfig"
-
-# ── 7. Stow packages (all except vscode) ───────────────────────────────────────
-info "Stowing packages..."
+# ── 6. Refuse the old folded layout ───────────────────────────────────────────
 cd "$DOTFILES_DIR"
 # A machine stowed before .stowrc gained --no-folding has app-written files (keys,
-# .env.work, opencode.json) physically inside the repo. Restowing over them would strand
-# them where the apps no longer look. Refuse, and point at the one-time migration.
+# .env.work, work.jsonc) physically inside the repo. Restowing over them would strand
+# them where the apps no longer look. Checked before anything is moved or stowed.
 if ! bash "$DOTFILES_DIR/migrate-to-no-folding.sh" >/dev/null; then
     warn "This machine uses the old folded stow layout. Run this first, then re-run bootstrap:"
     warn "  $DOTFILES_DIR/migrate-to-no-folding.sh          # see what would move"
     warn "  $DOTFILES_DIR/migrate-to-no-folding.sh --apply  # move it and restow"
     exit 1
 fi
+
+# ── 7. Stow packages, backing up only what actually conflicts ──────────────────
+BACKUP="$HOME/.dotfiles-backup-$(date +%Y%m%d-%H%M%S)"
+
+# ~/.gitconfig isn't a stow target, but git reads it alongside the XDG config.
+if [ -f "$HOME/.gitconfig" ] && [ ! -L "$HOME/.gitconfig" ]; then
+    mkdir -p "$BACKUP" && mv "$HOME/.gitconfig" "$BACKUP/" && warn "Backed up: ~/.gitconfig"
+fi
+
+# Move aside only the files stow says would block this package. Never whole directories:
+# with --no-folding, ~/.config/fish, ~/.config/git and ~/.config/opencode are real and hold
+# machine-local files (.env.work, config.local, work.jsonc) that aren't part of any conflict.
+#
+# `stow -n` exits 1 exactly when there are conflicts, so under `set -euo pipefail` it must
+# not sit bare in a pipeline — that would abort bootstrap in the one case this exists for.
+backup_conflicts() {
+    local conflicts
+    conflicts=$(stow -n "$1" 2>&1 \
+        | sed -n -e 's/.*neither a link nor a directory: //p' -e 's/.*not owned by stow: //p') || true
+    [ -n "$conflicts" ] || return 0
+    while IFS= read -r rel; do
+        mkdir -p "$BACKUP/$(dirname "$rel")"
+        mv "$HOME/$rel" "$BACKUP/$rel" && warn "Backed up: ~/$rel"
+    done <<< "$conflicts"
+}
+
+info "Stowing packages..."
 for pkg in */; do
     pkg="${pkg%/}"
     # vscode uses install.sh; docs/ is documentation; zettelkasten/ is copied, not linked.
@@ -113,7 +124,8 @@ for pkg in */; do
     case "$pkg" in
         vscode|docs|zettelkasten) continue ;;
     esac
-    stow --restow "$pkg" && ok "stowed: $pkg" || warn "conflicts in $pkg — fix manually then: stow -R $pkg"
+    backup_conflicts "$pkg"
+    stow --restow "$pkg" && ok "stowed: $pkg" || warn "conflicts in $pkg — see Conflicts in the README, then: stow -R $pkg"
 done
 
 # ── 7b. Switch the remote to the personal SSH alias ────────────────────────────
@@ -182,3 +194,6 @@ echo "  3. Edit ~/.config/fish/conf.d/.env.work     → work URLs and tokens"
 echo "  4. For work-specific VS Code settings, see ~/dotfiles/vscode/settings.local.example"
 echo "  5. opencode plugins install automatically on first run"
 echo "  6. Tag this state: cd ~/dotfiles && git tag fresh-$(date +%Y%m%d) && git push origin --tags"
+echo ""
+echo "  Then follow the setup guides in order — see 'Start here' in ~/dotfiles/README.md:"
+echo "    docs/setup-local-llm.md → docs/setup-zettelkasten.md → docs/setup-work-machine.md (work Mac only)"

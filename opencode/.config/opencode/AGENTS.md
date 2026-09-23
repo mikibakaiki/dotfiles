@@ -15,12 +15,6 @@ Before debugging a tool or library issue: rg -il "<tool>|<error>" ~/code/Zettelk
 ## Work-specific instructions
 
 Anything tied to an employer — SCM host, CLI conventions, ticket types, runtime and package
-policies — belongs in an untracked override, not here. Create
-`~/.config/opencode/AGENTS.work.local.md` (gitignored) and add it to `instructions` in
-`~/.config/opencode/opencode.json`:
-
-```json
-{ "instructions": ["style.md", "AGENTS.work.local.md"] }
-```
-
-See `docs/setup-work-machine.md`.
+policies — lives in untracked files on the work machine, not here: `~/.config/opencode/work.jsonc`
+(loaded via `OPENCODE_CONFIG`) and the `AGENTS.work.local.md` it lists. See
+`docs/setup-work-machine.md`.

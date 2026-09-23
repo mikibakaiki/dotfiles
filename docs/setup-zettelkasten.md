@@ -9,17 +9,20 @@ starting.
 
 Takes about 20 minutes including the dry run.
 
+**Machine set up under the old two-vault system?** Do
+[migrate-existing-machine.md](migrate-existing-machine.md) first. It covers the stow layout, the
+vault consolidation and the retired commands, in an order that doesn't lose anything. This guide
+assumes a machine that's either new or already migrated.
+
 ```bash
 cd ~/dotfiles
 git pull
 stow -R opencode fish    # --no-folding: files added by the pull aren't linked until you restow
+exec fish                # conf.d/ functions (zk-*, llm-*) only load in a new fish shell
 ```
 
-On a machine set up before `.stowrc` gained `--no-folding`, run `./migrate-to-no-folding.sh` once
-first — see the README. Otherwise your work `opencode.json` can end up stranded in the repo.
-
-Run the `zk-*` and `llm-*` commands below from a **fish** shell — they're fish functions, loaded
-from `conf.d/` at shell start, so a shell opened before stowing won't have them.
+If stow reports conflicts it has changed nothing. See **Conflicts** in the README, and don't reach
+for `--adopt` without reading what it does.
 
 ---
 
@@ -27,7 +30,7 @@ from `conf.d/` at shell start, so a shell opened before stowing won't have them.
 
 What each tracked file does:
 
-- `opencode/.config/opencode/opencode.jsonc` — the main config: `instructions: ["style.md"]`,
+- `opencode/.config/opencode/opencode.jsonc` — the main config: `instructions` (loads `style.md`),
   `small_model`, the `llamacpp` provider (both Qwen models), the `external_directory` privacy wall,
   and the DCP plugin pin.
 - `opencode/.config/opencode/style.md` — terse chat replies, normal English for anything written to
@@ -44,18 +47,8 @@ What each tracked file does:
   `zk-_pending`. All the local-model commands need `llama-server` up on `127.0.0.1:8080`; the
   header comment has the one-liner that checks it.
 - `zettelkasten/AGENTS.md` — the vault schema template, copied into the vault root as `AGENTS.md`
-  in section 3. Not stowed (excluded in `.stow-local-ignore`) — the vault is its own git repo and
-  owns its copy.
-
-Stow:
-
-```bash
-stow opencode fish
-exec fish          # picks up the newly stowed conf.d/ functions
-```
-
-If stow reports conflicts it has changed nothing — an existing `~/.config/opencode` is the usual
-cause. See **Conflicts** in the README; don't reach for `--adopt` without reading what it does.
+  in section 3. Not stowed (`zettelkasten/.stow-local-ignore` excludes everything) — the vault is its
+  own git repo and owns its copy.
 
 ## 2. Install OpenCode and verify its version
 
@@ -81,15 +74,13 @@ If any of these aren't supported by your installed version:
 - Adjust the patterns (e.g. expand `~` to the literal home path yourself in `opencode.jsonc`) and
   note the workaround in a handoff once the dry run (section 4) works.
 
-If you did **not** set up the local `opencode.json` override in setup-work-machine.md, check whether a stray
-one exists from before this change and remove it so it can't shadow the new `opencode.jsonc`:
+Then confirm the tracked instructions actually load. This check is for real:
+`instructions` used to name a bare `style.md`, which OpenCode resolved against the current
+project and so never loaded.
 
 ```bash
-cat ~/.config/opencode/opencode.json 2>/dev/null   # inspect first — don't blindly delete
+opencode debug config | grep -A3 '"instructions"'   # → "~/.config/opencode/style.md"
 ```
-
-If that override *is* what's there (your `mcp`/`instructions` block), leave it — that file
-is supposed to exist now. Only delete it if it's leftover cruft unrelated to that.
 
 ---
 
@@ -130,33 +121,15 @@ Read the template before running this — it's short, and it's the actual contra
    If you later change the schema, edit the tracked template and re-copy — don't diverge the vault
    copy silently.
 
-3. **Seed the two index files**, so the Librarian has something to append to rather than inventing
-   structure on first run:
+3. **Seed the two index files** if they don't exist yet, so the Librarian has something to append
+   to rather than inventing structure on first run. Guarded, because on an existing vault these
+   files *are* the catalog and the ingest history, and overwriting them loses both:
    ```bash
-   printf '# Index\n\n## Sources\n\n## Notes\n' > ~/code/Zettelkasten/wiki/index.md
-   printf '# Log\n' > ~/code/Zettelkasten/wiki/log.md
+   test -f ~/code/Zettelkasten/wiki/index.md || printf '# Index\n\n## Sources\n\n## Notes\n' > ~/code/Zettelkasten/wiki/index.md
+   test -f ~/code/Zettelkasten/wiki/log.md   || printf '# Log\n' > ~/code/Zettelkasten/wiki/log.md
    ```
 
-4. **If you already set up two vaults under the old design**, consolidate now. On the work MacBook
-   the work vault's content is the one to keep:
-   ```bash
-   ls ~/code/Zettelkasten ~/code/Zettelkasten-work 2>/dev/null
-   ```
-   Move `raw/` and `wiki/` content from `~/code/Zettelkasten-work` into `~/code/Zettelkasten`, file
-   by file — don't bulk-move. Ticket rollups move from `wiki/tickets/<KEY>.md` to
-   `wiki/notes/<KEY>.md`, and any `tools/<tool>.md` pages become ordinary notes at
-   `wiki/notes/<tool>.md`, keeping their `## Version caveats` section. Then remove the empty
-   `~/code/Zettelkasten-work` and the now-unused `tools/` and `wiki/tickets/` directories.
-
-5. **Check for stale `refused:` stamps**, which no longer exist as a concept:
-   ```bash
-   grep -rl '^refused:' ~/code/Zettelkasten/raw/ 2>/dev/null
-   ```
-   Anything listed becomes pending again and will be ingested on your next `zk-ingest`. That's the
-   intended behaviour — just don't be surprised by it. If you'd rather it stay skipped, replace the
-   stamp with `ingested: YYYY-MM-DD`.
-
-6. **Initialise git**, if it isn't a repo already. Guard it, so re-running this guide on an
+4. **Initialise git**, if it isn't a repo already. Guard it, so re-running this guide on an
    existing vault doesn't commit work-in-progress under a misleading message:
    ```bash
    cd ~/code/Zettelkasten
@@ -222,11 +195,11 @@ Two things to watch on this first run:
   way, you'll get an empty session with the question dropped. If so, change `zk` to use
   `opencode run --agent archivist "$argv"` — at the cost of losing the interactive follow-up, which
   is most of the point of the Archivist.
-- Check the raw file's `ingested:` stamp landed. It's written last, after the log entry, so an
-  ingest that dies partway leaves the file unstamped and the next run redoes it — the dedupe check
-  on ticket timelines makes that safe. The one narrow window left is a run that dies between the
-  log append and the stamp; `zk-lint` catches that as a file stamped `ingested:` with no matching
-  `wiki/log.md` entry.
+- Check the raw file's `ingested:` stamp landed. It's written last, so an ingest that dies partway
+  leaves the file unstamped and the next run redoes it. That's safe because every append (index
+  line, log block, timeline entry) checks first whether it's already there. A run that died after
+  logging but before stamping leaves a file that is *unstamped yet already logged*, and `zk-lint`
+  reports exactly that.
 
 Finally, run a lint pass to confirm the health-check path works at all:
 
@@ -243,7 +216,7 @@ happens, the vault degrades quietly rather than breaking loudly.
 
 | When | Do | Why |
 | ---- | -- | --- |
-| Monthly-ish | `zk-lint` | Finds orphan pages, contradictions, unprocessed `raw/` files, stamped-but-unlogged files from a died-late ingest, and caveats missing a "fixed in" status. This is the system's only self-healing mechanism. |
+| Monthly-ish | `zk-lint` | Finds the backlog of unprocessed `raw/` files; files left half-ingested by a crashed run (unstamped but already logged); duplicate index or log entries; orphan pages; raw files whose frontmatter doesn't start on line 1 (they'd re-ingest forever); `keywords:` that aren't literal strings from the file; contradictions; and caveats missing a "fixed in" status. It's the system's only self-healing mechanism. |
 
 Committing isn't on this list: `zk-ingest` commits on success. Commit by hand only if you've edited
 vault files directly.
