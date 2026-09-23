@@ -3,6 +3,12 @@
 **/conf.d/.env.work
 **/fish_variables
 
+# ── SSH: allowlist — only ssh/.ssh/config is ever tracked ─────────────────────────
+# Default-deny rather than listing key names: a key with an unexpected name (work.pem,
+# id_rsa_old, a stray known_hosts.old) is ignored by default instead of by luck.
+ssh/.ssh/*
+!ssh/.ssh/config
+
 # ── Git per-machine identity ───────────────────────────────────────────────────
 **/git/config.local
 

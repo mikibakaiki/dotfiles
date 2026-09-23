@@ -1,5 +1,14 @@
-# Never track private keys
-id_*
-!*.pub
-known_hosts
+# Stow ignore patterns are Perl regular expressions, anchored, and matched against each
+# file's basename — NOT gitignore syntax. (The previous version used gitignore syntax:
+# `id_*` meant "id followed by underscores" and `!*.pub` meant nothing, so it excluded
+# no key at all.)
+#
+# This is belt and braces. The real guards are:
+#   - `--no-folding` in .stowrc, so ~/.ssh is a real directory and keys generated there
+#     never enter this repo in the first place;
+#   - the ssh/.ssh/* allowlist in .gitignore, so even a stray key here can't be committed.
+id_.*
+known_hosts.*
 authorized_keys
+.*\.pem
+.*\.key
