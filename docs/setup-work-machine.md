@@ -32,9 +32,10 @@ Gather these before you start — they're the only employer-specific values invo
 
 OpenCode merges config from several places, later winning: global
 `~/.config/opencode/opencode.jsonc` → a project-local `opencode.json`/`.jsonc` → `OPENCODE_CONFIG`
-if set. `.gitignore` already reserves `**/opencode/opencode.json` (no `c`) and
-`**/opencode/AGENTS.*.local.md` as override slots that sit beside the tracked files but never
-appear in `git status`.
+if set. Because stow runs with `--no-folding`, `~/.config/opencode` is a real directory on this machine,
+so files you create there stay here and never enter the repo. `.gitignore` also lists
+`**/opencode/opencode.json` (no `c`) and `**/opencode/AGENTS.*.local.md`, as a safety net for a
+machine still on the old folded layout (see *Machines stowed before `--no-folding`* in the README).
 
 Create `~/.config/opencode/opencode.json`:
 

@@ -26,6 +26,13 @@ HTTPS rather than the `github-personal` SSH alias: that alias lives in `ssh/conf
 exist until this repo is cloned and stowed. The README's *Fresh machine setup* switches the remote
 afterwards.
 
+**Already had this repo stowed on this machine?** Check it isn't on the old folded layout before
+stowing anything below:
+
+```bash
+./migrate-to-no-folding.sh    # "Nothing stranded" means carry on; otherwise follow its instructions
+```
+
 Every command below that starts with a `zk-` or `llm-` name is a **fish function**, so run them
 from a fish shell:
 

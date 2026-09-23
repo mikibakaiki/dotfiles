@@ -19,6 +19,10 @@ its own prerequisites.
 The Raspberry Pi runs none of these: it can't host the model, and a second personal vault would
 diverge from the desktop's with nothing to sync it.
 
+**Existing machine that was stowed before?** Run `./migrate-to-no-folding.sh` first — it's a
+one-time fix, lists before it changes anything, and is explained under
+[Machines stowed before `--no-folding`](#machines-stowed-before---no-folding).
+
 Everything employer-specific lives in gitignored override files, never in tracked config. Guide 3
 lists exactly which values you supply and where each one goes.
 
@@ -30,7 +34,8 @@ lists exactly which values you supply and where each one goes.
 dotfiles/
 ├── .gitignore
 ├── .stow-local-ignore        — inert; real exclusions are per-package (see How stow works)
-├── .stowrc                   — stow defaults: target=$HOME, verbose
+├── .stowrc                   — stow defaults: target=$HOME, --no-folding, verbose
+├── migrate-to-no-folding.sh  — one-time fix for machines stowed before --no-folding
 ├── bootstrap.sh              — fresh machine setup
 ├── README.md
 │
@@ -143,6 +148,23 @@ Note: `ssh/` is an exception — it targets `~/.ssh/` directly, not `~/.config/`
 ~/.ssh/config  →  ~/dotfiles/ssh/.ssh/config
 ```
 
+### This repo uses `--no-folding`
+
+`.stowrc` passes `--no-folding`, so stow links **individual files** and never whole directories.
+`~/.config/fish`, `~/.config/opencode` and `~/.ssh` are real directories on your machine; only the
+files this repo tracks are symlinks inside them.
+
+That matters because apps write into their own config directories. Without `--no-folding`, stow
+would make `~/.config/opencode` a symlink to the repo, so everything written there — SSH keys,
+`fish_variables`, your work `opencode.json`, runtime caches — would physically land inside
+`~/dotfiles`, one `git add -A` from being committed. With it, those stay on the machine.
+
+(The explanation lives here because `.stowrc` can't hold comments — stow splits every line into
+options, and a comment line becomes a string of unknown options that breaks every `stow` command.)
+
+The one cost: **a file newly added to a package isn't linked until you restow it.** After a
+`git pull` that adds files — a new agent, a new fish function — run `stow -R <package>`.
+
 ---
 
 ## Fresh machine setup
@@ -181,7 +203,7 @@ Run from `~/dotfiles`. The `.stowrc` sets `--target=$HOME` automatically.
 
 ```bash
 stow fish           # symlink the fish package
-stow -R fish        # restow (use after adding or moving files)
+stow -R fish        # restow — REQUIRED after adding files (see --no-folding)
 stow -D fish        # remove symlinks for one package
 stow --simulate */  # dry run — shows what would happen
 stow */             # stow all packages (docs, vscode, zettelkasten are no-ops — see below)
@@ -218,18 +240,24 @@ git diff                    # this is the machine's file overwriting yours; keep
 exactly what changed; on a dirty tree you can't tell your edits from the machine's. Never run it
 without checking `git status` first.
 
-### Folding — why deleting a "copy" deletes the original
+### Machines stowed before `--no-folding`
 
-Stow links as high up the tree as it can:
+If this machine was set up before `.stowrc` gained `--no-folding`, its directories are still
+folded — and files your apps wrote there (keys, `.env.work`, a work `opencode.json`) are sitting
+*inside* `~/dotfiles`. Restowing alone would leave them stranded in the repo, where the apps no
+longer look: your settings would silently disappear.
 
-| Before | Result |
-| --- | --- |
-| `~/.config` doesn't exist | the **whole** `.config` tree becomes one symlink into the repo |
-| `~/.config` exists as a real directory | stow descends, and `~/.config/sometool` becomes the symlink |
+Run the migration once. It lists first and changes nothing:
 
-Either way, the per-tool directory under `~/.config` *is* the repo directory. So
-`rm ~/.config/opencode/opencode.json` deletes that file from `~/dotfiles`, not a copy of it.
-Inspect before deleting anything that appears to live under `~/.config`.
+```bash
+cd ~/dotfiles
+./migrate-to-no-folding.sh           # what would move, and where to
+./migrate-to-no-folding.sh --apply   # move those files out to $HOME, then restow
+```
+
+It simulates the restow before touching anything and stops if that would conflict, and it never
+overwrites a file that already exists in `$HOME` — it skips it and tells you to compare.
+`bootstrap.sh` refuses to run on a folded machine until this has been done.
 
 ---
 
@@ -257,7 +285,9 @@ cp ~/.config/fish/conf.d/.env.work.example \
 cp ~/.config/git/config.local.example \
    ~/.config/git/config.local
 
-# SSH key — generate fresh, never copy private keys between machines
+# SSH key — generate fresh, never copy private keys between machines.
+# ~/.ssh is a real directory (stow --no-folding), so the key stays on this machine.
+chmod 700 ~/.ssh
 ssh-keygen -t ed25519 -C "your.personal@email.com" -f ~/.ssh/id_ed25519_github_personal
 ssh-add --apple-use-keychain ~/.ssh/id_ed25519_github_personal
 # then add the public key to github.com/settings/ssh/new

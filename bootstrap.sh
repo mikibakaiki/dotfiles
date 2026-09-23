@@ -97,6 +97,15 @@ backup_if_real "$HOME/.gitconfig"
 # ── 7. Stow packages (all except vscode) ───────────────────────────────────────
 info "Stowing packages..."
 cd "$DOTFILES_DIR"
+# A machine stowed before .stowrc gained --no-folding has app-written files (keys,
+# .env.work, opencode.json) physically inside the repo. Restowing over them would strand
+# them where the apps no longer look. Refuse, and point at the one-time migration.
+if ! bash "$DOTFILES_DIR/migrate-to-no-folding.sh" >/dev/null; then
+    warn "This machine uses the old folded stow layout. Run this first, then re-run bootstrap:"
+    warn "  $DOTFILES_DIR/migrate-to-no-folding.sh          # see what would move"
+    warn "  $DOTFILES_DIR/migrate-to-no-folding.sh --apply  # move it and restow"
+    exit 1
+fi
 for pkg in */; do
     pkg="${pkg%/}"
     # vscode uses install.sh; docs/ is documentation; zettelkasten/ is copied, not linked.

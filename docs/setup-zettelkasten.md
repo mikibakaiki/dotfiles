@@ -12,7 +12,11 @@ Takes about 20 minutes including the dry run.
 ```bash
 cd ~/dotfiles
 git pull
+stow -R opencode fish    # --no-folding: files added by the pull aren't linked until you restow
 ```
+
+On a machine set up before `.stowrc` gained `--no-folding`, run `./migrate-to-no-folding.sh` once
+first — see the README. Otherwise your work `opencode.json` can end up stranded in the repo.
 
 Run the `zk-*` and `llm-*` commands below from a **fish** shell — they're fish functions, loaded
 from `conf.d/` at shell start, so a shell opened before stowing won't have them.
