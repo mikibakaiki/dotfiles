@@ -54,6 +54,10 @@ stow llm fish
 exec fish          # conf.d/ functions only load in a NEW fish shell
 ```
 
+On a machine that already had fish configured, stow may refuse with a conflict list and change
+nothing — that's it protecting your existing files, not a failure. See **Conflicts** in the
+README before reaching for `--adopt`, which overwrites the repo's copy with the machine's.
+
 ```fish
 llm-gpu-persist
 ```

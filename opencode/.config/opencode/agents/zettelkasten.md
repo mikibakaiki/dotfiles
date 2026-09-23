@@ -35,10 +35,11 @@ knowledge base so the Archivist can.
    If the raw file has `partial: true`, the writer could not see the whole session — carry a
    `partial-source: true` field onto every page you derive from it and say so in the page body,
    so the Archivist does not cite it as if it were complete.
-   Version-specific caveats are the highest-value content here: record the version the handoff
-   actually observed, the verbatim error, the fix, and a command that verifies it. Never paraphrase
-   an error string, and never widen a single observed version into a range you are guessing at —
-   write the one version you have.
+   Version-specific caveats are the highest-value content here: record the verbatim error, the fix,
+   and a command that verifies it. Take the version and the environment from that problem's
+   `Seen on:` line — not from the file's `tools:` frontmatter, which lists everything the session
+   touched and may name a version this problem was never seen on. Never paraphrase an error string,
+   and never widen a single observed version into a range you are guessing at.
 3. If the raw file has `tickets:` keys, create or update `wiki/notes/<KEY>.md` for each, with
    `ticket: <KEY>` in its frontmatter. Append to its `## Timeline`:
    `- <the raw file's date:>: <what happened> — [[<source-page>]]`

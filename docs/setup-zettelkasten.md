@@ -50,6 +50,9 @@ stow opencode fish
 exec fish          # picks up the newly stowed conf.d/ functions
 ```
 
+If stow reports conflicts it has changed nothing — an existing `~/.config/opencode` is the usual
+cause. See **Conflicts** in the README; don't reach for `--adopt` without reading what it does.
+
 ## 2. Install OpenCode and verify its version
 
 ```bash

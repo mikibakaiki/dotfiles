@@ -187,13 +187,49 @@ stow --simulate */  # dry run — shows what would happen
 stow */             # stow all packages (docs, vscode, zettelkasten are no-ops — see below)
 ```
 
-If stow reports a conflict, a real file already exists at the target.
-Move it into the repo first, then restow:
+### Conflicts
+
+A conflict means a **real file** already sits where stow wants to put a symlink — the usual case on
+a machine that was configured before it was stowed. Stow refuses the whole package, changes
+nothing, and exits 1:
+
+```
+WARNING! stowing opencode would cause conflicts:
+  * existing target is neither a link nor a directory: .config/opencode/opencode.jsonc
+All operations aborted.
+```
+
+Nothing is lost at that point. Pick one:
 
 ```bash
-mv ~/.config/sometool ~/dotfiles/sometool/.config/sometool
-cd ~/dotfiles && stow sometool
+# 1. Keep the repo's version, set the machine's aside (safest)
+mv ~/.config/sometool ~/.config/sometool.bak
+stow sometool
+
+# 2. Keep the MACHINE's version and pull it into the repo
+git status                  # must be clean first — see below
+stow --adopt sometool
+git diff                    # this is the machine's file overwriting yours; keep or revert
 ```
+
+`--adopt` runs in the direction most people don't expect. Stow's own help calls it
+*"(Use with care!) Import existing files into stow package from target"* — the target file wins and
+**your tracked version is overwritten**. On a clean tree that's recoverable and `git diff` shows
+exactly what changed; on a dirty tree you can't tell your edits from the machine's. Never run it
+without checking `git status` first.
+
+### Folding — why deleting a "copy" deletes the original
+
+Stow links as high up the tree as it can:
+
+| Before | Result |
+| --- | --- |
+| `~/.config` doesn't exist | the **whole** `.config` tree becomes one symlink into the repo |
+| `~/.config` exists as a real directory | stow descends, and `~/.config/sometool` becomes the symlink |
+
+Either way, the per-tool directory under `~/.config` *is* the repo directory. So
+`rm ~/.config/opencode/opencode.json` deletes that file from `~/dotfiles`, not a copy of it.
+Inspect before deleting anything that appears to live under `~/.config`.
 
 ---
 

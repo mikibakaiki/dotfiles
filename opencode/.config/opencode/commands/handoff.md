@@ -70,8 +70,8 @@ Folder: `~/code/Zettelkasten/raw/`. If OpenCode asks for permission to write the
 
 Omit empty sections.
 
-Before writing each `Symptom`, `Env`, and `keywords` entry, find the exact string in the session
-history and copy it. If it isn't there, write `<not captured>`.
+Before writing each `Symptom`, `Seen on`, and `keywords` entry, find the exact string in the
+session history and copy it. If it isn't there, write `<not captured>`.
 
 ```markdown
 ---
@@ -96,7 +96,7 @@ keywords: [<literal strings copied from the body — see below>]
 ```
 <verbatim error output>
 ```
-**Env:** <tool + version, OS, relevant config>
+**Seen on:** <the exact version THIS problem occurred on, plus OS and any config that scopes it>
 **Tried and rejected:** <what didn't work, and the error it gave — omit if nothing was tried>
 **Root cause:** <why — or `not established` if the session never actually determined it>
 **Fix:** <what was done>
@@ -118,6 +118,14 @@ this file's body: error fragments, flag spellings (`--no-cache`), config keys, v
 symbol names. No topic words and no categories — those go in `tags:`. If an entry wouldn't appear
 verbatim in a terminal, it belongs in `tags:`, not here. A keyword list of generic words looks
 populated and matches nothing.
+
+**`tools:` and `Seen on:` are not the same thing.** `tools:` is a session-level index — every tool
+that was in play, with its version, so the handoff is findable by tool name. `Seen on:` is
+per-problem and narrower: the one version *that specific problem* happened on, plus the OS and
+config that scope it. They differ whenever a session upgraded something mid-way, which is exactly
+the kind of session worth capturing. When they disagree, `Seen on:` is the authoritative one — it
+is what becomes the version caveat, and a caveat filed against the wrong version is worse than no
+caveat at all.
 
 **Don't invent `Root cause` or `Verify`.** These are the two fields most likely to be filled in
 with something plausible that never happened. A handoff that says `not established` is honest and

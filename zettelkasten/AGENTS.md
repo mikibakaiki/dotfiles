@@ -124,9 +124,10 @@ relevant tool's note page (`wiki/notes/llama-cpp.md`), newest first:
   Verify: <command>. Source: [[<source-page>]]
 ```
 
-Carry the environment from the handoff's `Env:` line. Without it a macOS-only, Metal-only or
-config-specific problem reads as universal, and the Archivist will apply it to a machine it never
-affected.
+Both the version and the environment come from the handoff's `Seen on:` line for that problem —
+never from its `tools:` frontmatter, which is a session-level index and may name a version the
+problem was not observed on. Without the environment, a macOS-only, Metal-only or config-specific
+problem reads as universal and the Archivist applies it to a machine it never affected.
 
 Write the version the handoff actually observed. If later sources show the same problem on more
 versions, widen it to a range then — but never guess a range from one observation, because the
