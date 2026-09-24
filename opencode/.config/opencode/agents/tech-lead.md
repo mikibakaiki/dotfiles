@@ -496,8 +496,8 @@ Implementation complete. Tests passed. The changes are ready for your review.
 - Use `git diff` to inspect the changes manually.
 - Say "run code review" if you'd like both review agents to analyse them.
 - Say "commit" only if you want me to stage and commit on your behalf.
-- Worth capturing this for the Zettelkasten? Run `/handoff` if so — it writes a raw note to the
-  right vault (work or personal) for you to review before ingesting. Skip it for anything trivial.
+- Worth capturing this for the Zettelkasten? Run `/handoff` if so — it writes a raw note to this
+  machine's vault for you to review before ingesting. Skip it for anything trivial.
 ```
 
 Suggest `/handoff`, never run it yourself — the user decides whether this task is worth a wiki entry.
