@@ -33,7 +33,15 @@ set -gx GPG_TTY (tty)
 set -gx STARSHIP_CONFIG "$XDG_CONFIG_HOME/starship.toml"
 
 # ── opencode ───────────────────────────────────────────────────────────────────
-set -gx OPENCODE_CONFIG "$XDG_CONFIG_HOME/opencode/config.json"
+# Machine-local override layer, used on the work Mac for MCP servers and work rules.
+# OPENCODE_CONFIG adds a config layer AFTER the global files, merged with array
+# concatenation — so work.jsonc can add to `instructions` rather than being overwritten.
+# (An override named ~/.config/opencode/opencode.json would NOT work: OpenCode loads it
+# before opencode.jsonc with a plain deep merge, so the tracked file's `instructions`
+# replaces it.) Set only when the file exists, so machines without one are unaffected.
+# See docs/setup-work-machine.md.
+test -f ~/.config/opencode/work.jsonc
+and set -gx OPENCODE_CONFIG ~/.config/opencode/work.jsonc
 
 # ── zoxide ─────────────────────────────────────────────────────────────────────
 if command -q zoxide
@@ -43,5 +51,5 @@ end
 # ── conf.d/ is auto-sourced by fish after this file, alphabetically ────────────
 # 20-env-public.fish   — non-sensitive env vars
 # 30-env-secrets.fish  — loads .env.personal and .env.work (gitignored)
-# 90-path-dedupe.fish  — deduplicates PATH last
+# zz-path-dedupe.fish  — deduplicates PATH; zz- prefix so it really does source last
 # aliases.fish, fzf.fish, fnm.fish, prompt.fish, etc.

@@ -5,15 +5,46 @@ Each tool's config lives in this repo and gets symlinked into the correct locati
 
 ---
 
+## Start here
+
+Setting up a machine — new or existing — run these in order. Each is one sitting, and each states
+its own prerequisites.
+
+| # | Guide | Run it on | What you get |
+| --- | --- | --- | --- |
+| 1 | [docs/setup-local-llm.md](docs/setup-local-llm.md) | **every** machine | llama.cpp, the model, `llama-server` on `:8080` at login. Everything else depends on this. |
+| 2 | [docs/setup-zettelkasten.md](docs/setup-zettelkasten.md) | every machine that captures notes | The vault, the Librarian and Archivist agents, `/handoff`, the `zk-*` commands. |
+| 3 | [docs/setup-work-machine.md](docs/setup-work-machine.md) | **work MacBook only** | Jira/Confluence/Jenkins MCP servers, work agent instructions, work git identity — all in untracked files. |
+
+The Raspberry Pi runs none of these: it can't host the model, and a second personal vault would
+diverge from the desktop's with nothing to sync it.
+
+**Existing machine set up under the old two-vault system** (the work MacBook)? Do
+[docs/migrate-existing-machine.md](docs/migrate-existing-machine.md) first. It's one ordered pass
+covering the stow layout, the work override, the vault consolidation and the retired commands,
+and it sends you into the guides above at the right point.
+
+Everything employer-specific lives in gitignored override files, never in tracked config. Guide 3
+lists exactly which values you supply and where each one goes.
+
+---
+
 ## Structure
 
 ```
 dotfiles/
 ├── .gitignore
-├── .stow-local-ignore        — excludes vscode and zettelkasten from stow */
-├── .stowrc                   — stow defaults: target=$HOME, verbose
+├── .stow-local-ignore        — inert; real exclusions are per-package (see How stow works)
+├── .stowrc                   — stow defaults: target=$HOME, --no-folding, verbose
+├── migrate-to-no-folding.sh  — one-time fix for machines stowed before --no-folding
 ├── bootstrap.sh              — fresh machine setup
 ├── README.md
+│
+├── docs/                     — setup guides, run in order (see "Start here")
+│   ├── setup-local-llm.md    — llama.cpp, model, llama-server
+│   ├── setup-zettelkasten.md — vault, agents, zk commands
+│   ├── setup-work-machine.md — employer-specific overrides (work MacBook only)
+│   └── migrate-existing-machine.md — one-time move off the old two-vault system
 │
 ├── fish/                     ← stow package → ~/.config/fish/
 │   └── .config/fish/
@@ -22,18 +53,28 @@ dotfiles/
 │       ├── completions/
 │       │   ├── copilot.fish
 │       │   └── docker.fish
+│       ├── functions/
+│       │   └── llm-gpu-persist.fish     — installs the GPU wired-limit LaunchDaemon
 │       └── conf.d/
 │           ├── 20-env-public.fish       — non-sensitive env vars
 │           ├── 30-env-secrets.fish      — loader: reads .env.personal + .env.work
-│           ├── 90-path-dedupe.fish      — deduplicates PATH, runs last
 │           ├── aliases.fish             — abbreviations
 │           ├── fish_frozen_theme.fish   — theme
 │           ├── fnm.fish                 — Node version manager init
 │           ├── fzf.fish                 — fuzzy finder + key bindings
+│           ├── llm.fish                 — llm-up/-down/-status/-fast, llm-serve-persist
+│           ├── llm-gpu.fish             — startup warning if the GPU limit isn't set
 │           ├── prompt.fish              — starship init
 │           ├── pyenv.fish               — Python version manager init
+│           ├── zk.fish                  — zk, zk-status, zk-ingest, zk-lint
+│           ├── zz-path-dedupe.fish      — deduplicates PATH; zz- so it sources last
 │           ├── .env.personal.example    — template → copy to .env.personal
 │           └── .env.work.example        — template → copy to .env.work
+│
+├── llm/                      ← stow package → ~/.config/llm/
+│   └── .config/llm/
+│       ├── local.iogpu.wired-limit.plist  — LaunchDaemon: GPU wired limit (root)
+│       └── local.llama-server.plist       — LaunchAgent: llama-server at login (user)
 │
 ├── ghostty/                  ← stow package → ~/.config/ghostty/
 │   └── .config/ghostty/
@@ -48,14 +89,14 @@ dotfiles/
 ├── opencode/                 ← stow package → ~/.config/opencode/
 │   ├── .stow-local-ignore    — excludes runtime files opencode manages itself
 │   │                           (node_modules, skills, tui.json, package*.json)
-│   │                           and opencode.json, the untracked local-override slot
+│   │                           and opencode.json (a pre-work.jsonc override name)
 │   └── .config/opencode/
 │       ├── opencode.jsonc    — model, small_model, provider, privacy wall, plugins
 │       ├── dcp.jsonc         — DCP plugin config
 │       ├── style.md          — terse-chat / normal-English instructions
 │       ├── AGENTS.md         — agent usage guide
-│       ├── agents/           — agent definitions, incl. the Zettelkasten trio:
-│       │                       zettelkasten (work), zettelkasten-personal, archivist
+│       ├── agents/           — agent definitions, incl. the Zettelkasten pair:
+│       │                       zettelkasten (Librarian), archivist
 │       └── commands/         — slash commands, incl. /handoff
 │
 ├── ssh/                      ← stow package → ~/.ssh/
@@ -71,7 +112,7 @@ dotfiles/
 │   ├── .stow-local-ignore
 │   ├── install.sh            — symlinks into ~/Library/Application Support/Code/User/
 │   ├── settings.json         — editor, terminal, extensions config
-│   ├── mcp.json              — MCP servers for GitHub Copilot
+│   ├── mcp.json.example      — template → copy to mcp.json (gitignored: names an org)
 │   └── settings.local.example — template for work-specific settings
 │
 ├── zed/                      ← stow package → ~/.config/zed/
@@ -79,14 +120,14 @@ dotfiles/
 │   └── .config/zed/
 │       └── settings.json     — editor, terminal (fish), agent model
 │
-└── zettelkasten/             ← NOT stowed — copied into the vault roots
-    ├── AGENTS.personal.md    — schema for ~/code/Zettelkasten
-    └── AGENTS.work.md        — schema for ~/code/Zettelkasten-work
+└── zettelkasten/             ← NOT stowed — copied into the vault root
+    └── AGENTS.md             — schema for ~/code/Zettelkasten
 ```
 
-The vaults are their own git repos, so their schema is copied rather than symlinked — a symlink
-would make vault content depend on this repo being checked out. See
-`MACOS_SETUP_zettelkasten.md`.
+The vault is its own git repo, so its schema is copied rather than symlinked — a symlink would
+make vault content depend on this repo being checked out. One vault per machine, at the same path
+on each: the machine decides whether it holds work or personal content. See
+[docs/setup-zettelkasten.md](docs/setup-zettelkasten.md).
 
 ---
 
@@ -109,6 +150,23 @@ Note: `ssh/` is an exception — it targets `~/.ssh/` directly, not `~/.config/`
 ~/.ssh/config  →  ~/dotfiles/ssh/.ssh/config
 ```
 
+### This repo uses `--no-folding`
+
+`.stowrc` passes `--no-folding`, so stow links **individual files** and never whole directories.
+`~/.config/fish`, `~/.config/opencode` and `~/.ssh` are real directories on your machine; only the
+files this repo tracks are symlinks inside them.
+
+That matters because apps write into their own config directories. Without `--no-folding`, stow
+would make `~/.config/opencode` a symlink to the repo, so everything written there — SSH keys,
+`fish_variables`, your `work.jsonc`, runtime caches — would physically land inside
+`~/dotfiles`, one `git add -A` from being committed. With it, those stay on the machine.
+
+(The explanation lives here because `.stowrc` can't hold comments — stow splits every line into
+options, and a comment line becomes a string of unknown options that breaks every `stow` command.)
+
+The one cost: **a file newly added to a package isn't linked until you restow it.** After a
+`git pull` that adds files — a new agent, a new fish function — run `stow -R <package>`.
+
 ---
 
 ## Fresh machine setup
@@ -120,11 +178,24 @@ bash <(curl -fsSL https://raw.githubusercontent.com/mikibakaiki/dotfiles/main/bo
 Or manually:
 
 ```bash
-git clone git@github-personal:mikibakaiki/dotfiles.git ~/dotfiles
+brew install stow fish opencode
+
+# HTTPS, not the github-personal alias: that alias is defined in ssh/config, which only
+# exists after this clone. Plain git@github.com: would use the WORK key (see ssh/config).
+git clone https://github.com/mikibakaiki/dotfiles.git ~/dotfiles
 cd ~/dotfiles
-stow fish ghostty git opencode ssh starship zed
+git config user.email "your.personal@email.com"   # before the first commit — see Git identity
+stow fish ghostty git llm opencode ssh starship zed
+
+# ssh/config is in place now, so switch to the personal key for future pushes
+git remote set-url origin git@github-personal:mikibakaiki/dotfiles.git
+
 ~/dotfiles/vscode/install.sh
+exec fish        # the conf.d/ functions (llm-*, zk-*) only load in a new fish shell
 ```
+
+Then work through the guides in [Start here](#start-here) — stowing puts the files in place, but
+the model, the vault and the launch agents still need setting up.
 
 ---
 
@@ -134,19 +205,67 @@ Run from `~/dotfiles`. The `.stowrc` sets `--target=$HOME` automatically.
 
 ```bash
 stow fish           # symlink the fish package
-stow -R fish        # restow (use after adding or moving files)
+stow -R fish        # restow — REQUIRED after adding files (see --no-folding)
 stow -D fish        # remove symlinks for one package
 stow --simulate */  # dry run — shows what would happen
-stow */             # stow all packages (vscode, zettelkasten excluded via .stow-local-ignore)
+stow */             # stow all packages (docs, vscode, zettelkasten are no-ops — see below)
 ```
 
-If stow reports a conflict, a real file already exists at the target.
-Move it into the repo first, then restow:
+### Conflicts
+
+A conflict means a **real file** already sits where stow wants to put a symlink — the usual case on
+a machine that was configured before it was stowed. Stow refuses the whole package, changes
+nothing, and exits 1:
+
+```
+WARNING! stowing opencode would cause conflicts:
+  * existing target is neither a link nor a directory: .config/opencode/opencode.jsonc
+All operations aborted.
+```
+
+Nothing is lost at that point. Pick one:
 
 ```bash
-mv ~/.config/sometool ~/dotfiles/sometool/.config/sometool
-cd ~/dotfiles && stow sometool
+# 1. Keep the repo's version: move aside only the file stow named (safest)
+mv ~/.config/opencode/opencode.jsonc ~/.config/opencode/opencode.jsonc.bak
+stow opencode
+
+# 2. Keep the MACHINE's version and pull it into the repo
+git status                  # must be clean first — see below
+stow --adopt sometool
+git diff                    # this is the machine's file overwriting yours; keep or revert
 ```
+
+Move the file stow names, not its directory. With `--no-folding` that directory also holds
+machine-local files (`.env.work`, `work.jsonc`, `fish_variables`) that have nothing to do with the
+conflict, and moving the directory would take them with it.
+
+`--adopt` runs in the direction most people don't expect. Stow's own help calls it
+*"(Use with care!) Import existing files into stow package from target"* — the target file wins and
+**your tracked version is overwritten**. On a clean tree that's recoverable and `git diff` shows
+exactly what changed; on a dirty tree you can't tell your edits from the machine's. Never run it
+without checking `git status` first.
+
+### Machines stowed before `--no-folding`
+
+If this machine was set up before `.stowrc` gained `--no-folding`, its directories are still
+folded — and files your apps wrote there (keys, `.env.work`, a work `opencode.json`) are sitting
+*inside* `~/dotfiles`. Restowing alone would leave them stranded in the repo, where the apps no
+longer look: your settings would silently disappear.
+
+Run the migration once. It lists first and changes nothing:
+
+```bash
+cd ~/dotfiles
+./migrate-to-no-folding.sh           # what would move, and where to
+./migrate-to-no-folding.sh --apply   # move those files out to $HOME, then restow
+```
+
+It simulates the restow before touching anything and stops if that would conflict, and it never
+overwrites a file that already exists in `$HOME` — it skips it and tells you to compare.
+`bootstrap.sh` refuses to run on a folded machine until this has been done. It's step 2 of
+[docs/migrate-existing-machine.md](docs/migrate-existing-machine.md), which covers the rest of
+moving an old machine over.
 
 ---
 
@@ -174,7 +293,9 @@ cp ~/.config/fish/conf.d/.env.work.example \
 cp ~/.config/git/config.local.example \
    ~/.config/git/config.local
 
-# SSH key — generate fresh, never copy private keys between machines
+# SSH key — generate fresh, never copy private keys between machines.
+# ~/.ssh is a real directory (stow --no-folding), so the key stays on this machine.
+chmod 700 ~/.ssh
 ssh-keygen -t ed25519 -C "your.personal@email.com" -f ~/.ssh/id_ed25519_github_personal
 ssh-add --apple-use-keychain ~/.ssh/id_ed25519_github_personal
 # then add the public key to github.com/settings/ssh/new
@@ -200,7 +321,9 @@ Clone personal repos using the alias:
 git clone git@github-personal:mikibakaiki/reponame.git
 ```
 
-Private keys are excluded via `ssh/.stow-local-ignore` and never committed.
+Private keys never enter the repo. `~/.ssh` is a real directory (stow `--no-folding`), so keys
+generated there stay on the machine, and `.gitignore` allowlists only `ssh/.ssh/config` in case one
+ever lands in the package anyway.
 
 ---
 
@@ -209,13 +332,14 @@ Private keys are excluded via `ssh/.stow-local-ignore` and never committed.
 The `git/` package puts everything under `~/.config/git/` (XDG-compliant).
 `GIT_CONFIG_GLOBAL` is set in `config.fish` to ensure git always finds it.
 
-No `[user]` block in the tracked config — identity is per-machine via `config.local`:
+No `[user]` block in the tracked config — identity is per-machine via `config.local`
+(gitignored, like every `config.*` file here except the `.example` template):
 
 ```ini
-# ~/.config/git/config.local  (gitignored)
+# ~/.config/git/config.local
 [user]
     name  = Your Name
-    email = your.work@email.com
+    email = you@example.com
 ```
 
 For the dotfiles repo itself, a personal identity is set repo-locally:
@@ -228,6 +352,33 @@ git config user.email "your.personal@email.com"
 
 This writes to `~/dotfiles/.git/config` and overrides the global identity
 only for this repo.
+
+### Do this immediately after cloning
+
+A fresh clone has **no** repo-local identity, so the global one — which on a work machine is the
+work identity — applies until you override it. Any commit made in that window is authored with a
+work name and address, and since author metadata is part of the commit, it cannot be edited out
+later without rewriting history. This repo's first commit went in that way.
+
+Check before the first commit, every time you clone:
+
+```bash
+cd ~/dotfiles && git config user.email    # must be the personal address
+```
+
+### A durable guard
+
+Rather than remembering per repo, make the right identity the default for the machine:
+
+- **Personal machines:** `config.local` holds only your personal identity. There's no work
+  identity on the machine to leak.
+- **Work Mac:** work is the default, and personal is scoped to `~/dotfiles/` (and any other
+  personal repo) with an `includeIf`. It's that way round because work repos there are many and
+  scattered, while personal ones are few and in known places; a rule like "work only inside
+  `~/work/`" misses repos and commits them under your personal address. The exact config is in
+  [docs/setup-work-machine.md](docs/setup-work-machine.md#4-work-git-identity).
+
+Either way, failing safe beats remembering.
 
 ---
 
@@ -259,20 +410,23 @@ Plugins:
 Pinned to an exact version in `opencode.jsonc` (bumped deliberately, recorded in a handoff)
 rather than tracking `@latest`.
 
-`instructions: ["style.md"]` in `opencode.jsonc` replaces the old `opencode-caveman` plugin —
-terse chat replies, normal English for anything written to disk. The `./plugins/graphify.js`
-local plugin referenced here previously was never actually committed to the repo; dropped.
+`instructions: ["~/.config/opencode/style.md"]` in `opencode.jsonc` replaces the old
+`opencode-caveman` plugin: terse chat replies, normal English for anything written to disk, and the
+`/handoff` capture nudge. The `~/` matters. OpenCode resolves a *relative* `instructions` entry
+against the project you're working in, so the bare `"style.md"` this used to say loaded nothing in
+normal use. The `./plugins/graphify.js` local plugin referenced here previously was never actually
+committed to the repo; dropped.
 
-Work-specific MCP servers (Jira, Confluence, Jenkins, etc.) are **not** in the tracked
-`opencode.jsonc` — they were hardcoded to a different machine's local paths and have been
-removed. Add them back per-machine via an untracked, gitignored `~/.config/opencode/opencode.json`
-override (same pattern as `.env.work` below), which OpenCode merges on top at startup. See
-`MACOS_SETUP_zettelkasten.md` for the exact override format. Credentials still come from
+Work-specific MCP servers (Jira, Confluence, Jenkins) and work rules are **not** in tracked config.
+On the work Mac they go in an untracked `~/.config/opencode/work.jsonc`, which `config.fish` loads
+as an extra layer via `OPENCODE_CONFIG` whenever the file exists. That layer loads after the global
+config and adds to its `instructions` rather than replacing them. See
+[docs/setup-work-machine.md](docs/setup-work-machine.md). Credentials still come from
 `{env:JIRA_PAT}` etc., values from `.env.work`, never hardcoded.
 
-See `MACOS_SETUP_zettelkasten.md` for the Zettelkasten dual-vault agent system
-(`zettelkasten.md`/`zettelkasten-personal.md`/`archivist.md`, `/handoff`, and the
-`zk-status`/`zk-ingest`/`zk` fish functions, plus `zk-lint` and `zk-sync`).
+See [docs/setup-zettelkasten.md](docs/setup-zettelkasten.md) for the Zettelkasten agent system
+(`zettelkasten.md`/`archivist.md`, `/handoff`, and the `zk-status`/`zk-ingest`/`zk`/`zk-lint` fish
+functions).
 
 Runtime files (`node_modules/`, `skills/`, `tui.json`) excluded via
 `.stow-local-ignore` — opencode manages these itself.
@@ -309,14 +463,16 @@ Runtime files (`node_modules/`, `skills/`, `tui.json`) excluded via
 # 1. Create the package directory
 mkdir -p ~/dotfiles/TOOL/.config/TOOL
 
-# 2. Move existing config in (stow refuses to overwrite real files)
-mv ~/.config/TOOL ~/dotfiles/TOOL/.config/TOOL
+# 2. Move in only the files you want tracked — not the whole directory. It also holds caches,
+#    state and sometimes credentials, which belong on this machine.
+mv ~/.config/TOOL/config.toml ~/dotfiles/TOOL/.config/TOOL/
 
-# 3. Stow it
+# 3. Stow it (with --no-folding this links that one file back into the real directory)
 cd ~/dotfiles && stow TOOL
 
-# 4. Commit
-git add TOOL
+# 4. Review, then add the file by name — `git add TOOL` would take everything in the package
+git status --short TOOL
+git add TOOL/.config/TOOL/config.toml
 git commit -m "feat: add TOOL"
 ```
 
@@ -337,4 +493,6 @@ git commit -m "feat(fish): add mymodule"
 ```
 
 Prefix with a number only if load order matters.
-Fish sources `conf.d/` alphabetically — `90-path-dedupe.fish` must run last.
+Fish sources `conf.d/` alphabetically, and digits sort before letters — so a `90-` prefix
+does **not** run last. `zz-path-dedupe.fish` is named that way so it genuinely sources after
+`fnm.fish` and `pyenv.fish`, both of which prepend to PATH.

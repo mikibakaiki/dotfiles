@@ -3,7 +3,9 @@
 
   // Terse chat replies; anything written to disk stays in normal English, plus the /handoff
   // nudge. Replaces the opencode-caveman plugin.
-  "instructions": ["style.md"],
+  // Must be ~/-anchored: OpenCode resolves a RELATIVE instructions entry against the project
+  // you're working in, not this directory — a bare "style.md" silently loads nothing.
+  "instructions": ["~/.config/opencode/style.md"],
 
   // Model — via GitHub Copilot subscription (no separate Anthropic billing)
   "model": "github-copilot/claude-sonnet-5",
@@ -26,29 +28,28 @@
           // context must match llama-server's -c flag; 16384 output leaves room for thinking
           "limit": { "context": 65536, "output": 16384 }
         },
+        // Lower context than the 27B on purpose: this quant is ~22.3GB against a 24576MB
+        // wired limit, so a 64K KV cache does not fit. llm-fast starts it at 32768 with a
+        // q8_0 KV cache; these two numbers must stay in step or requests fail with HTTP 400.
         "qwen3.6-35b-a3b-local": {
           "name": "Qwen3.6 35B-A3B (local, fast)",
           "tool_call": true,
-          "limit": { "context": 65536, "output": 16384 }
+          "limit": { "context": 32768, "output": 16384 }
         }
       }
     }
   },
 
-  // Privacy wall for every session outside the vaults (e.g. Copilot agents in work repos).
-  // Last matching rule wins. Personal vault is off-limits, except raw/ so /handoff can write there
-  // (you get a prompt: approve "once", never "always") and tools/ (public-grade caveats).
-  // Both vaults' raw/ are "ask", deliberately: the work vault holds ticket keys and internal
-  // hostnames, so it has no business taking an unprompted write from an arbitrary session either.
-  // The prompt is also a signal that /handoff picked a facet — and so a vault — you didn't
-  // expect; /handoff echoing its frontmatter is the other.
+  // Privacy wall for every session outside the vault (e.g. Copilot agents in work repos).
+  // Last matching rule wins. The vault is off-limits, except raw/ so /handoff can write there —
+  // you get a prompt; approve "once", never "always". That prompt is also the signal that
+  // something wrote a handoff you didn't expect; /handoff echoing its frontmatter is the other.
+  // The zk-* functions run OpenCode from inside the vault, so this never gets in their way.
   "permission": {
     "external_directory": {
       "*": "ask",
       "~/code/Zettelkasten/**": "deny",
-      "~/code/Zettelkasten/raw/**": "ask",
-      "~/code/Zettelkasten/tools/**": "ask",
-      "~/code/Zettelkasten-work/raw/**": "ask"
+      "~/code/Zettelkasten/raw/**": "ask"
     }
   },
 
@@ -62,6 +63,6 @@
   // NOTE: work-specific MCP servers (Jira/Confluence/Jenkins) used to live in this file,
   // hardcoded to a work machine's local paths. Removed — they don't belong in tracked
   // dotfiles. Re-add them on the work machine via a local, gitignored override instead.
-  // See the "Work MCP servers" section of the macOS setup guide for the exact mechanism,
+  // See docs/setup-work-machine.md for the exact mechanism,
   // following the same pattern as fish/.config/fish/conf.d/.env.work (untracked, machine-local).
 }

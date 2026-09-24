@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  LaunchAgent (user, not root) that keeps llama-server up on 127.0.0.1:8080.
+  Install with `llm-serve-persist`. See docs/setup-local-llm.md.
+
+  Two arguments are load-bearing and must not be changed casually:
+    -c 65536   must match `limit.context` in opencode/.config/opencode/opencode.jsonc.
+               If the server window is smaller, an over-long request fails with HTTP 400
+               ("the request exceeds the available context size") — context shift is off
+               by default, so it errors loudly rather than truncating.
+    -np 1      -c sizes one shared KV pool split across slots, so a single slot is what
+               gives the full 65536 tokens. Also avoids the Metal OOM seen under default
+               parallelism.
+    -a         reports a short model name on /v1/models instead of the cache path.
+
+  The quant in -hf must be a file that actually exists in the repo: when it does not,
+  -hf silently falls back to the FIRST file there, which may be a different quant
+  entirely. Unsloth ships UD-Q4_K_M / UD-Q4_K_XL, not a plain Q4_K_M.
+-->
+<plist version="1.0"><dict>
+  <key>Label</key><string>local.llama-server</string>
+  <key>ProgramArguments</key><array>
+    <string>/opt/homebrew/bin/llama-server</string>
+    <string>-hf</string><string>unsloth/Qwen3.8-27B-GGUF:UD-Q4_K_M</string>
+    <string>-c</string><string>65536</string>
+    <string>-ngl</string><string>all</string>
+    <string>--host</string><string>127.0.0.1</string>
+    <string>--port</string><string>8080</string>
+    <string>-np</string><string>1</string>
+    <string>-a</string><string>qwen3.8-27b-local</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><dict>
+    <key>SuccessfulExit</key><false/>
+  </dict>
+  <key>StandardOutPath</key><string>/tmp/llama-server.log</string>
+  <key>StandardErrorPath</key><string>/tmp/llama-server.err.log</string>
+</dict></plist>

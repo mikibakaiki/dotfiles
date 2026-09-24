@@ -3,7 +3,11 @@
 # Usage: bash <(curl -fsSL https://raw.githubusercontent.com/mikibakaiki/dotfiles/main/bootstrap.sh)
 set -euo pipefail
 
-DOTFILES_REPO="git@github.com:mikibakaiki/dotfiles.git"
+# HTTPS, not SSH: on a fresh machine no key exists yet, and `git@github.com:` resolves
+# to the WORK key per ssh/.ssh/config. The remote is switched to the personal SSH alias
+# after stowing, once ssh/config is in place. If the repo is private, this prompts for
+# credentials (or use a PAT) — that is expected.
+DOTFILES_REPO="https://github.com/mikibakaiki/dotfiles.git"
 DOTFILES_DIR="$HOME/dotfiles"
 
 info()  { printf "\033[0;34m→\033[0m  %s\n" "$*"; }
@@ -41,7 +45,8 @@ brew install \
     zoxide \
     lazygit \
     pyenv \
-    fnm
+    fnm \
+    llama.cpp
 
 brew install --cask ghostty      2>/dev/null || warn "ghostty not in brew — install from https://ghostty.org"
 brew install --cask zed          2>/dev/null || warn "zed not in brew — install from https://zed.dev"
@@ -74,31 +79,61 @@ else
     ok "dotfiles already present at $DOTFILES_DIR"
 fi
 
-# ── 6. Backup conflicting real files ───────────────────────────────────────────
-BACKUP="$HOME/.dotfiles-backup-$(date +%Y%m%d-%H%M%S)"
-mkdir -p "$BACKUP"
+# ── 6. Refuse the old folded layout ───────────────────────────────────────────
+cd "$DOTFILES_DIR"
+# A machine stowed before .stowrc gained --no-folding has app-written files (keys,
+# .env.work, work.jsonc) physically inside the repo. Restowing over them would strand
+# them where the apps no longer look. Checked before anything is moved or stowed.
+if ! bash "$DOTFILES_DIR/migrate-to-no-folding.sh" >/dev/null; then
+    warn "This machine uses the old folded stow layout. Run this first, then re-run bootstrap:"
+    warn "  $DOTFILES_DIR/migrate-to-no-folding.sh          # see what would move"
+    warn "  $DOTFILES_DIR/migrate-to-no-folding.sh --apply  # move it and restow"
+    exit 1
+fi
 
-backup_if_real() {
-    [ -e "$1" ] && [ ! -L "$1" ] && mv "$1" "$BACKUP/" && warn "Backed up: $1"
+# ── 7. Stow packages, backing up only what actually conflicts ──────────────────
+BACKUP="$HOME/.dotfiles-backup-$(date +%Y%m%d-%H%M%S)"
+
+# ~/.gitconfig isn't a stow target, but git reads it alongside the XDG config.
+if [ -f "$HOME/.gitconfig" ] && [ ! -L "$HOME/.gitconfig" ]; then
+    mkdir -p "$BACKUP" && mv "$HOME/.gitconfig" "$BACKUP/" && warn "Backed up: ~/.gitconfig"
+fi
+
+# Move aside only the files stow says would block this package. Never whole directories:
+# with --no-folding, ~/.config/fish, ~/.config/git and ~/.config/opencode are real and hold
+# machine-local files (.env.work, config.local, work.jsonc) that aren't part of any conflict.
+#
+# `stow -n` exits 1 exactly when there are conflicts, so under `set -euo pipefail` it must
+# not sit bare in a pipeline — that would abort bootstrap in the one case this exists for.
+backup_conflicts() {
+    local conflicts
+    conflicts=$(stow -n "$1" 2>&1 \
+        | sed -n -e 's/.*neither a link nor a directory: //p' -e 's/.*not owned by stow: //p') || true
+    [ -n "$conflicts" ] || return 0
+    while IFS= read -r rel; do
+        mkdir -p "$BACKUP/$(dirname "$rel")"
+        mv "$HOME/$rel" "$BACKUP/$rel" && warn "Backed up: ~/$rel"
+    done <<< "$conflicts"
 }
 
-backup_if_real "$HOME/.config/fish"
-backup_if_real "$HOME/.config/ghostty"
-backup_if_real "$HOME/.config/git"
-backup_if_real "$HOME/.config/opencode"
-backup_if_real "$HOME/.config/starship.toml"
-backup_if_real "$HOME/.config/zed"
-backup_if_real "$HOME/.gitconfig"
-
-# ── 7. Stow packages (all except vscode) ───────────────────────────────────────
 info "Stowing packages..."
-cd "$DOTFILES_DIR"
 for pkg in */; do
     pkg="${pkg%/}"
-    # vscode uses install.sh, not stow
-    [[ "$pkg" == "vscode" ]] && continue
-    stow --restow "$pkg" && ok "stowed: $pkg" || warn "conflicts in $pkg — fix manually then: stow -R $pkg"
+    # vscode uses install.sh; docs/ is documentation; zettelkasten/ is copied, not linked.
+    # Each of these also carries its own .stow-local-ignore, so this is belt and braces.
+    case "$pkg" in
+        vscode|docs|zettelkasten) continue ;;
+    esac
+    backup_conflicts "$pkg"
+    stow --restow "$pkg" && ok "stowed: $pkg" || warn "conflicts in $pkg — see Conflicts in the README, then: stow -R $pkg"
 done
+
+# ── 7b. Switch the remote to the personal SSH alias ────────────────────────────
+# ssh/config is stowed by now, so github-personal resolves to the personal key.
+if git -C "$DOTFILES_DIR" remote get-url origin | grep -q '^https://'; then
+    git -C "$DOTFILES_DIR" remote set-url origin "git@github-personal:mikibakaiki/dotfiles.git" \
+        && ok "origin switched to github-personal"
+fi
 
 # ── 8. VS Code settings ────────────────────────────────────────────────────────
 if [ -d "/Applications/Visual Studio Code.app" ]; then
@@ -159,3 +194,6 @@ echo "  3. Edit ~/.config/fish/conf.d/.env.work     → work URLs and tokens"
 echo "  4. For work-specific VS Code settings, see ~/dotfiles/vscode/settings.local.example"
 echo "  5. opencode plugins install automatically on first run"
 echo "  6. Tag this state: cd ~/dotfiles && git tag fresh-$(date +%Y%m%d) && git push origin --tags"
+echo ""
+echo "  Then follow the setup guides in order — see 'Start here' in ~/dotfiles/README.md:"
+echo "    docs/setup-local-llm.md → docs/setup-zettelkasten.md → docs/setup-work-machine.md (work Mac only)"

@@ -56,7 +56,7 @@ permission:
     "git checkout *": allow
     "git branch -d *": allow
   question: allow
-  dna-ai-lab-jira_*: allow
+  jira-mcp_*: allow
   task:
     "*": deny
     "requirements-clarifier": allow
@@ -496,8 +496,8 @@ Implementation complete. Tests passed. The changes are ready for your review.
 - Use `git diff` to inspect the changes manually.
 - Say "run code review" if you'd like both review agents to analyse them.
 - Say "commit" only if you want me to stage and commit on your behalf.
-- Worth capturing this for the Zettelkasten? Run `/handoff` if so — it writes a raw note to the
-  right vault (work or personal) for you to review before ingesting. Skip it for anything trivial.
+- Worth capturing this for the Zettelkasten? Run `/handoff` if so — it writes a raw note to this
+  machine's vault for you to review before ingesting. Skip it for anything trivial.
 ```
 
 Suggest `/handoff`, never run it yourself — the user decides whether this task is worth a wiki entry.
@@ -508,7 +508,7 @@ When the user requests a code review, **first gather context** before invoking t
 
 1. Run `git log --oneline upstream/develop..HEAD` to list all commits on the current branch.
 2. Extract the Jira ticket slug from the commit messages (e.g. `PROJ-123`). It is typically the first token in the commit subject or appears in brackets.
-3. Fetch the Jira ticket using the `dna-ai-lab-jira_jira_get_issue` tool with that slug to retrieve the original requirements and acceptance criteria.
+3. Fetch the Jira ticket using the `jira-mcp_jira_get_issue` tool with that slug to retrieve the original requirements and acceptance criteria.
 4. Run `git diff upstream/develop...HEAD` to capture the full branch diff against `develop`.
 
 Then invoke `@review-a` and `@review-b` **in parallel** (a single message with two Task tool calls), passing each the full context you gathered:
@@ -683,9 +683,9 @@ The tech-lead handles all git operations. The only human step is opening a termi
 
 Before running the removal commands, if a handoff wasn't already written for this task (see Step 7
 and the review-close report), ask the user whether to run `/handoff` first. It writes a raw note
-to the correct vault — work or personal, based on the session — with the full frontmatter schema
-(`facet`, `tickets`, `tools`, `keywords`) the wiki's search and ticket rollups depend on. Don't
-write a handoff file yourself with a different structure; always go through `/handoff`.
+to `~/code/Zettelkasten/raw/` with the full frontmatter schema (`tickets`, `tools`, `tags`,
+`keywords`) the wiki's search and ticket rollups depend on. Don't write a handoff file yourself
+with a different structure; always go through `/handoff`.
 
 ## Operational Protocol
 

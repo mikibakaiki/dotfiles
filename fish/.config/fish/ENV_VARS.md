@@ -39,7 +39,7 @@ cp ~/.config/fish/conf.d/.env.work.example     ~/.config/fish/conf.d/.env.work
 | `conf.d/.env.work`             | ✗              | Work keys + URLs — create per machine   |
 | `conf.d/.env.personal.example` | ✓              | Template showing expected personal keys |
 | `conf.d/.env.work.example`     | ✓              | Template showing expected work keys     |
-| `conf.d/90-path-dedupe.fish`   | ✓              | Deduplicates PATH entries, runs last    |
+| `conf.d/zz-path-dedupe.fish`   | ✓              | Deduplicates PATH entries; zz- so it sources last |
 | `conf.d/aliases.fish`          | ✓              | Abbreviations and aliases               |
 | `conf.d/fnm.fish`              | ✓              | fnm (Node version manager) init         |
 | `conf.d/fzf.fish`              | ✓              | fzf config and key bindings             |

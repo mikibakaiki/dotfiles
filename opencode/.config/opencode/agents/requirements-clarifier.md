@@ -48,8 +48,8 @@ permission:
   task: deny
   # MCP tools disabled — uncomment to re-enable Jira integration
   # permission:
-  #   dna-ai-lab-jira_jira_get_issue: allow
-  #   dna-ai-lab-jira_jira_search_issues: allow
+  #   jira-mcp_jira_get_issue: allow
+  #   jira-mcp_jira_search_issues: allow
   jenkins_getBuild: allow
   jenkins_getBuildLog: allow
   jenkins_searchBuildLog: allow
@@ -71,7 +71,7 @@ You will receive a task in one of these forms:
 
 If given a ticket ID or URL:
 
-- If the `dna-ai-lab-jira_jira_get_issue` tool is available, use it to fetch the full ticket details before proceeding. Do not use webfetch.
+- If the `jira-mcp_jira_get_issue` tool is available, use it to fetch the full ticket details before proceeding. Do not use webfetch.
 - If the tool is not available (Jira MCP integration is disabled), do not attempt to call it. Instead, respond: "Jira integration is currently disabled. Please paste the ticket text (title, description, acceptance criteria) directly into the chat so I can produce the brief." Then stop and wait — do not proceed until the user provides the ticket content.
 
 **Only look at the ticket you were given.** Do not fetch parent tickets, sibling sub-tasks, epics, or linked issues unless the ticket description is literally unreadable without them.

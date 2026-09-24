@@ -1,0 +1,10 @@
+# zettelkasten/ holds the vault schema template, which is *copied* into the vault root
+# (~/code/Zettelkasten/AGENTS.md), never symlinked. The vault is its own git repo; a
+# symlink would make its schema a dotfiles dependency.
+#
+# Stow only reads .stow-local-ignore from inside a package directory — the one at the
+# repo root is NOT consulted when selecting packages, so `stow */` would otherwise
+# symlink AGENTS.md straight into $HOME.
+#
+# Ignoring everything makes `stow zettelkasten` a harmless no-op.
+.*
