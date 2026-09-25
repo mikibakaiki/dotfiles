@@ -39,10 +39,15 @@ description: >-
   </commentary>
   </example>
 mode: primary
-model: github-copilot/claude-opus-5
-request:
-  body:
-    temperature: 0.3
+# Model (chosen 2026-09): Opus 5.5 at medium effort. Cheaper than Opus 5 on every price line
+# ($4/$20 vs $5/$25 per 1M tokens, cached input $0.20 vs $0.50) and scores higher on the
+# Artificial Analysis index (58 vs 51). This agent holds the longest context, so it drives the bill.
+# When to change:
+# - Still running out of Copilot credits before month end: try github-copilot/gpt-6-sol#high
+#   (roughly half the cost per task, but scores lower: 48 vs 58). Watch plan and synthesis quality.
+# - Plans or review syntheses get noticeably weaker: raise to #high before changing model.
+# - A newer Opus ships: compare price and independent scores first; newer is not automatically better.
+model: github-copilot/claude-opus-5.5#medium
 permissions:
   - { action: edit, resource: "*", effect: allow }
   - { action: shell, resource: "*", effect: deny }
@@ -129,6 +134,13 @@ When a subagent returns output that contains questions or unresolved items, do n
 - Validation of functionality is required
 - Edge case testing is needed
 - Regression testing must be performed
+
+**Delegate investigation to @explore.** Finding where something lives, reading several files to
+understand a flow, tracing callers, or checking how a pattern is used elsewhere: hand it to
+`@explore` with a specific question and ask for a short answer with file paths and line numbers.
+Read a file yourself only when you need its exact contents to make a decision. Everything you read
+stays in your context for the rest of the session and is re-sent on every turn; `@explore` runs on
+a much cheaper model and returns only the summary.
 
 **Delegate to @review-a and @review-b only when the user explicitly asks for a code review.** Always invoke both in parallel and synthesise their outputs before presenting to the user (see the review invocation pattern in the Jira workflow Step 7 and the handoff message).
 
@@ -511,7 +523,7 @@ When the user requests a code review, **first gather context** before invoking t
 Then invoke `@review-a` and `@review-b` **in parallel** (a single message with two subagent tool calls), passing each the full context you gathered:
 
 ```
-// Both Task calls go in a single message (parallel invocation):
+// Both subagent calls go in a single message (parallel invocation):
 
 Task({
   description: "Code review — A",
@@ -569,6 +581,21 @@ Once both reviewers return, synthesise their findings:
 5. **Open Questions** — combine and deduplicate; use the `question` tool for any that require the user's input before the author can act.
 
 Present the synthesised review to the user using the standard four-section structure (Summary / Issues / Positives / Open Questions), with a note at the top indicating it is a synthesis of two independent reviews.
+
+### Re-reviews after changes
+
+The full-branch review above is for the **first** review of a branch. When the user asks for another
+review after changes were made (typically fixes for earlier findings), don't resend the whole branch:
+
+1. Note the commit you reviewed last (`git rev-parse HEAD` at the time of the previous review).
+2. Pass both reviewers only `git diff <last-reviewed-commit>..HEAD`, plus a short list of the earlier
+   findings and whether each was addressed, deferred, or rejected. Skip the Jira ticket and the full
+   branch diff unless the new changes touch requirements.
+3. Ask them to check that the fixes are correct and that the new changes introduce no new problems.
+
+Still invoke both reviewers in parallel: the cross-vendor second opinion stays. Do a full-branch review
+again only if the user asks for one, or if the changes since the last review are large enough that a
+delta would miss how they interact with the rest of the branch; say which you chose and why.
 
 ### Ongoing review discussion
 

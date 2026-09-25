@@ -19,10 +19,13 @@ description: >-
   </commentary>
   </example>
 mode: subagent
-model: github-copilot/claude-sonnet-5
-request:
-  body:
-    temperature: 0.5
+# Model (chosen 2026-09): Sonnet 5 at high effort. Keep this one on Anthropic: the A/B pair exists to
+# get two vendors' opinions; plan-critic-b is the OpenAI side.
+# When to change:
+# - Copilot moves Sonnet 5 to Anthropic's list price ($3/$15): compare with
+#   github-copilot/claude-opus-5.5#medium ($4/$20, but may use fewer tokens per critique).
+# - Critiques feel shallow: try #xhigh before changing model.
+model: github-copilot/claude-sonnet-5#high
 permissions:
   - { action: shell, resource: "*", effect: deny }
   - { action: edit, resource: "*", effect: deny }

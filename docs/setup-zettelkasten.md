@@ -92,10 +92,12 @@ effect on anything else. When a V2-compatible release appears (`npm view @tarqui
 peerDependencies` naming `@opencode/plugin`), bump the pin and record it in a handoff.
 
 Two more things to check once, on the first real sessions:
-- **Temperature on the GPT agents.** Agent `temperature` now travels as `request.body.temperature`,
-  a raw request-body field. If Copilot rejects it for `gpt-5.4`, `gpt-5.4-mini` or `gpt-5-mini`,
-  those agents' requests fail outright: run one request each through `review-b` and
-  `test-automation-engineer`, and delete the `request:` block from any that errors.
+- **Reasoning-effort variants.** Every Copilot agent picks its effort with a `#variant` suffix
+  (`github-copilot/gpt-6-sol#high`). Variant names come from OpenCode's model catalog, and an unknown
+  one is a model-resolution error for that agent. Run `opencode models github-copilot` and check the
+  variants exist for `claude-opus-5.5`, `claude-sonnet-5`, `gpt-6-sol` and `gpt-6-luna`; if one is
+  missing, drop the suffix on the affected agents. No agent sets `temperature` any more: the newer
+  Claude models reject it, and the OpenAI reasoning models ignore or reject it.
 - **The raw/ exception.** V2 matches `external_directory` against the directory boundary it
   computes (normally ending in `/*`). The dry run in section 4 must show `/handoff` *prompting* for
   `~/code/Zettelkasten/raw/`; a flat denial means the reported boundary was the vault root and the

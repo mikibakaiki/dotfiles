@@ -37,10 +37,14 @@ description: >-
   </commentary>
   </example>
 mode: subagent
-model: github-copilot/claude-sonnet-5
-request:
-  body:
-    temperature: 0.3
+# Model (chosen 2026-09): GPT-6 Sol at medium effort. Same per-token price as Sonnet 5 ($2/$10) but
+# about half the cost per task on the Artificial Analysis index ($1.06 vs $2.29, max effort), because
+# Sonnet 5 uses far more tokens. Tasks arrive narrow and well specified, and both reviewers check the result.
+# When to change:
+# - Reviewers find more real bugs or rework than before: switch to github-copilot/claude-sonnet-5#medium.
+# - Copilot moves Sonnet 5 to Anthropic's list price ($3/$15): that strengthens the case for Sol.
+# - Don't go cheaper: GPT-6 Luna scores 13% on Terminal-Bench 4.0 against Sol's 44%.
+model: github-copilot/gpt-6-sol#medium
 permissions:
   - { action: edit, resource: "*", effect: allow }
   - { action: shell, resource: "*", effect: allow }

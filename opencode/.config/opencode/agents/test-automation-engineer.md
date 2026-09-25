@@ -3,10 +3,13 @@ description: >-
   Use this agent when you need to run tests after implementation, diagnose
   failures, and verify that code changes work correctly.
 mode: subagent
-model: github-copilot/gpt-5.4-mini
-request:
-  body:
-    temperature: 0.1
+# Model (chosen 2026-09): GPT-6 Luna at high effort. Replaces GPT-5.4 mini (retired 2026-10-19); the
+# lightweight tier already handled this job fine. Luna is $0.10/$0.50 per 1M tokens.
+# When to change:
+# - At the first misread test failure or wrong diagnosis: switch to github-copilot/gpt-6-sol#low.
+#   Luna is weak on Terminal-Bench 4.0 (13% vs Sol's 44%), though that benchmark is much harder
+#   than running a test suite and reading its output.
+model: github-copilot/gpt-6-luna#high
 permissions:
   - { action: edit, resource: "*", effect: allow }
   - { action: shell, resource: "*", effect: allow }

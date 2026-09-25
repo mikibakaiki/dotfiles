@@ -49,7 +49,11 @@ description: >-
   </commentary>
   </example>
 mode: subagent
-model: github-copilot/claude-opus-5
+# Model (chosen 2026-09): Opus 5.5 at high effort. Rarely invoked, so quality matters more than cost.
+# When to change:
+# - Designs come back longer or slower than useful: drop to #medium.
+# - Not an upgrade: GPT-6 Astra costs more ($10/$50) and scores lower (53 vs 58).
+model: github-copilot/claude-opus-5.5#high
 permissions:
   - { action: shell, resource: "*", effect: deny }
   - { action: edit, resource: "*", effect: deny }

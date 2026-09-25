@@ -40,10 +40,13 @@ description: >-
   </commentary>
   </example>
 mode: subagent
-model: github-copilot/claude-haiku-4.5
-request:
-  body:
-    temperature: 0.2
+# Model (chosen 2026-09): GPT-6 Luna at medium effort. A tenth of Claude Haiku 4.5's price and scores
+# much higher on the Artificial Analysis index (37 vs 17).
+# When to change:
+# - A brief contains a requirement that isn't in the ticket: switch to github-copilot/gpt-6-sol#low.
+#   Haiku 4.5 rated safer than Luna on AA-Omniscience (made-up facts), and an invented
+#   requirement here spreads to everything downstream.
+model: github-copilot/gpt-6-luna#medium
 permissions:
   - { action: edit, resource: "*", effect: deny }
   - { action: shell, resource: "*", effect: deny }

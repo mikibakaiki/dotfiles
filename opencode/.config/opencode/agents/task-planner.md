@@ -23,7 +23,11 @@ description: >-
   </commentary>
   </example>
 mode: subagent
-model: github-copilot/claude-haiku-4.5
+# Model (chosen 2026-09): GPT-6 Luna at medium effort. A tenth of Claude Haiku 4.5's price and scores
+# much higher on the Artificial Analysis index (37 vs 17).
+# When to change:
+# - Plans miss steps or order them wrongly: switch to github-copilot/gpt-6-sol#low.
+model: github-copilot/gpt-6-luna#medium
 permissions:
   - { action: shell, resource: "*", effect: deny }
   - { action: edit, resource: "*", effect: deny }

@@ -23,9 +23,17 @@
     "summary": {
       "model": "llamacpp/qwen3.8-27b-local"
     },
-    // The built-in explore agent ships its own policy that allows web search. The docs don't say
-    // whether that lands before or after these rules, so deny it here explicitly as well.
+    // Built-in read-only agent that tech-lead and implementation-specialist hand investigation
+    // to. Model (chosen 2026-09): GPT-6 Luna at medium effort. Reading and summarising code is
+    // where a lightweight model is enough, and every file it reads stays out of the expensive
+    // tech-lead context. At $0.10 per 1M input tokens it is 1/40th of Opus 5.5.
+    // When to change: if its summaries mislead tech-lead (wrong file, missed caller, invented
+    // behaviour), switch to github-copilot/gpt-6-sol#low.
+    //
+    // It also ships its own policy that allows web search. The docs don't say whether that lands
+    // before or after these rules, so deny it here explicitly as well.
     "explore": {
+      "model": "github-copilot/gpt-6-luna#medium",
       "permissions": [{ "action": "websearch", "resource": "*", "effect": "deny" }]
     }
   },
