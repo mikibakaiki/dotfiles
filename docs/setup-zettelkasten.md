@@ -94,8 +94,8 @@ peerDependencies` naming `@opencode/plugin`), bump the pin and record it in a ha
 Two more things to check once, on the first real sessions:
 - **Temperature on the GPT agents.** Agent `temperature` now travels as `request.body.temperature`,
   a raw request-body field. If Copilot rejects it for `gpt-5.4`, `gpt-5.4-mini` or `gpt-5-mini`,
-  those agents' requests fail outright: run one request each through `review-b`,
-  `test-automation-engineer` and `update-agents`, and delete the `request:` block from any that errors.
+  those agents' requests fail outright: run one request each through `review-b` and
+  `test-automation-engineer`, and delete the `request:` block from any that errors.
 - **The raw/ exception.** V2 matches `external_directory` against the directory boundary it
   computes (normally ending in `/*`). The dry run in section 4 must show `/handoff` *prompting* for
   `~/code/Zettelkasten/raw/`; a flat denial means the reported boundary was the vault root and the

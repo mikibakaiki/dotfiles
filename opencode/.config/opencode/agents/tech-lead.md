@@ -65,7 +65,6 @@ permissions:
   - { action: subagent, resource: "review-b", effect: allow }
   - { action: subagent, resource: "task-planner", effect: allow }
   - { action: subagent, resource: "explore", effect: allow }
-  - { action: subagent, resource: "update-agents", effect: allow }
   - { action: subagent, resource: "plan-critic-a", effect: allow }
   - { action: subagent, resource: "plan-critic-b", effect: allow }
 ---
