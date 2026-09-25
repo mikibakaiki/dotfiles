@@ -18,7 +18,7 @@ Gather these before you start — they're the only employer-specific values invo
 
 | Value | Example shape | Goes in |
 | --- | --- | --- |
-| Jira MCP server path | `~/.local/share/mcp/jira-mcp/.../server.js` | `~/.config/opencode/work.jsonc` |
+| Jira MCP server path (absolute) | `/Users/<you>/.fnm/global/lib/node_modules/@<org>/jira-mcp/build/server.js` | `~/.config/opencode/work.jsonc` |
 | Confluence MCP server path | same shape | same |
 | Jenkins MCP URL | `https://<jenkins-host>/mcp-server/mcp` | same |
 | Private npm scope | `@<org>/jira-mcp` | `vscode/mcp.json` |
@@ -53,12 +53,18 @@ Create `~/.config/opencode/work.jsonc`:
   "mcp": {
     "jira-mcp": {
       "type": "local",
-      "command": ["node", "/absolute/path/to/jira-mcp/build/server.js"],
+      "command": [
+        "/Users/<you>/.local/share/fnm/aliases/default/bin/node",
+        "/Users/<you>/.fnm/global/lib/node_modules/@<org>/jira-mcp/build/server.js"
+      ],
       "environment": { "JIRA_PAT": "{env:JIRA_PAT}" }
     },
     "confluence-mcp": {
       "type": "local",
-      "command": ["node", "/absolute/path/to/confluence-mcp/build/server.js"],
+      "command": [
+        "/Users/<you>/.local/share/fnm/aliases/default/bin/node",
+        "/Users/<you>/.fnm/global/lib/node_modules/@<org>/confluence-mcp/build/server.js"
+      ],
       "environment": { "CONFLUENCE_PAT": "{env:CONFLUENCE_PAT}" }
     },
     "jenkins": {
@@ -87,6 +93,40 @@ Create `~/.config/opencode/work.jsonc`:
 > `requirements-clarifier.md` and `tech-lead.md` reference `jira-mcp_jira_get_issue` /
 > `jira-mcp_*`. Rename the key and those agents silently lose their Jira tools — the calls just
 > never resolve.
+
+### Getting the `command` paths right
+
+OpenCode passes `command` straight to the process spawner, with no shell in between. That is why
+VS Code and a terminal can run a server that OpenCode reports as "port closed": they find things
+through your shell, and OpenCode only runs the literal paths. If either path doesn't exist, the
+process never starts, and the only error you get is that the connection closed.
+
+- **Write absolute paths.** `~` and `$HOME` are not expanded, so `~/.fnm/global/...` is looked
+  up as a folder literally named `~` and fails. Write out `/Users/<you>/...` in full.
+- **Point `node` at fnm's `default` alias:** `~/.local/share/fnm/aliases/default/bin/node`
+  (written out in full). It stays valid across Node upgrades and follows `fnm default <version>`.
+  - Not a bare `"node"`. It resolves against whatever `PATH` OpenCode inherited. Started outside
+    fish (Dock, Raycast), fnm never ran, so `node` is missing or is Homebrew's. Started from fish
+    inside a project, `fnm env --use-on-cd` has switched to that project's `.nvmrc` or
+    `.node-version`, so the server runs on a different Node in every repo.
+  - Not a versioned path (`.../fnm/node-versions/v24.x.y/installation/bin/node`). It breaks as
+    soon as that version is removed.
+  - Not the output of `which node`. Under fnm it's a per-shell path in
+    `~/.local/state/fnm_multishells/<id>/bin`, which disappears when that shell's folder is
+    cleaned up.
+- **Point the server at where it's actually installed.** Moving npm's global prefix (for
+  example to `~/.fnm/global`) moves the packages too. `npm prefix -g` prints the current prefix
+  in full; the server lives under `<prefix>/lib/node_modules/`.
+- **If a package ever includes native add-ons**, reinstall it after moving `fnm default` to a new
+  major Node version. Plain JS servers like these don't need this.
+
+To check, run the exact command outside OpenCode. It should sit waiting for input, not exit:
+
+```bash
+opencode debug config | grep -A8 '"jira-mcp"'   # the literal command OpenCode will run
+ls -l <node path> <server.js path>              # both must exist
+<node path> <server.js path>                    # Ctrl-C once it's clearly waiting
+```
 
 Tokens resolve from `~/.config/fish/conf.d/.env.work` via `{env:...}`. Don't hardcode them here
 even though the file is gitignored.
