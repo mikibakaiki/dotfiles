@@ -17,7 +17,7 @@ Do the steps **in order**. Several of them exist because the obvious order loses
 | `facet:`, `refused:`, shared `tools/` folder | Gone. Tool caveats are ordinary notes | They only existed to route between two vaults |
 | stow folded whole directories into the repo | `--no-folding`: directories are real, only tracked files are links | Keys, tokens and overrides were landing inside `~/dotfiles` |
 | Work override in `~/.config/opencode/opencode.json` | `~/.config/opencode/work.jsonc` via `OPENCODE_CONFIG` | The old file's `instructions` were overwritten, so work rules never loaded |
-| `instructions: ["style.md"]` | Style text merged into the global `AGENTS.md`; `style.md` deleted | A relative path never loaded, and OpenCode V2 loads no `instructions` entries at all |
+| `instructions: ["style.md"]` | Style text merged into the global `AGENTS.md`; `style.md` deleted | A relative path never loaded, and OpenCode V2 does not currently load `instructions` entries at all |
 | Work rules in the tracked `AGENTS.md` | Untracked `AGENTS.md` in the folder holding the work repos | This repo is public; V2 loads `AGENTS.md` files on the way up to `$HOME` |
 | OpenCode V1 config keys (`provider`, `permission`, `plugin`, `small_model`) | Native V2 keys (`providers`, `permissions`, `plugins`, `agents.title`) | OpenCode V2; see the README's OpenCode section |
 | `vscode/mcp.json` tracked | `mcp.json.example` tracked, real file ignored | It named the employer's package scope |
@@ -74,6 +74,9 @@ rm -rf ~/.config/zed/prompts && mv ~/.config/zed/prompts.new ~/.config/zed/promp
 directory.) The database is still tracked in git; untracking it is a separate decision, because a
 commit that deletes it would delete it on any machine that pulls it while still folded.
 
+**Every machine, work or personal:** `style.md` was deleted from the repo, so its stow link now
+points at nothing. Remove it: `rm ~/.config/opencode/style.md` (or `stow -R` the `opencode` package).
+
 ## 3. Retire the old helpers
 
 Old notes mention `llm-up`, `llm-fast` and `__llm_serve` defined somewhere untracked. The repo now
@@ -92,14 +95,12 @@ Anything listed other than `conf.d/llm.fish` — delete it, or rename the functi
   ```bash
   mv ~/.config/opencode/opencode.json ~/.config/opencode/work.jsonc
   ```
-  Then delete its `instructions` key (V2 loads nothing from it) and convert the rest to the V2
+  Then delete its `instructions` key (V2 doesn't currently load anything from it) and convert the rest to the V2
   shape in [setup-work-machine.md §1](setup-work-machine.md#1-opencode-mcp-servers): `mcp.servers`,
   `permissions`, `agents`. If you never had one, create `work.jsonc` from that section.
 - **Work rules.** The pull stripped them from the tracked `AGENTS.md`. Create an `AGENTS.md` in the
   folder that holds your work repos. The content and the folder choice are in
   [setup-work-machine.md §2](setup-work-machine.md#2-work-specific-agent-instructions).
-- **Dangling link.** `style.md` was deleted from the repo, so its stow link now points at nothing.
-  Remove it: `rm ~/.config/opencode/style.md` (or `stow -R` the `opencode` package).
 - **VS Code MCP:** `cp ~/mcp.json.keep ~/dotfiles/vscode/mcp.json && ~/dotfiles/vscode/install.sh`
 - **Git identity:** [setup-work-machine.md §4](setup-work-machine.md#4-work-git-identity). On this
   machine, work is the default and personal is scoped to `~/dotfiles/`.
@@ -108,7 +109,7 @@ Check it in a **new** fish shell:
 
 ```bash
 exec fish
-opencode debug config | grep -c jira-mcp            # non-zero
+opencode mcp list                                   # jira-mcp, confluence-mcp, jenkins connected
 ```
 
 ## 5. Consolidate the vaults

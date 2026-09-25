@@ -4,16 +4,16 @@
   // Native OpenCode V2 format. V2 still reads V1 keys, but nested entries (agents, providers,
   // models) must stay entirely in one format — don't mix V1 fields back into these.
 
-  // No `instructions` here: V2 accepts the field but never loads its entries. The terse-chat
-  // style and the /handoff nudge that style.md used to carry now live in AGENTS.md next to this
-  // file, which V2 always loads as the global instructions.
+  // No `instructions` here: V2 accepts the field but does not currently load its entries. The
+  // terse-chat style and the /handoff nudge that style.md used to carry now live in AGENTS.md
+  // next to this file, which V2 always loads as the global instructions.
 
   // Model — via GitHub Copilot subscription (no separate Anthropic billing)
   "model": "github-copilot/claude-sonnet-5",
 
   "agents": {
-    // Replaces V1 `small_model`. V2 maps that key only to `title`; `summary` is pinned too
-    // because V1 used small_model for both jobs. Keeps these background tasks off Copilot.
+    // Replaces V1 `small_model`, which V2 maps to `title`. `summary` (another hidden
+    // maintenance agent) is pinned too so it stays off Copilot as well.
     // llama-server answers with whichever model is loaded, so this works with either one
     // running. Caveat: if llama-server is down, titles and summaries fail even when the main
     // model is Copilot.
@@ -22,6 +22,11 @@
     },
     "summary": {
       "model": "llamacpp/qwen3.8-27b-local"
+    },
+    // The built-in explore agent ships its own policy that allows web search. The docs don't say
+    // whether that lands before or after these rules, so deny it here explicitly as well.
+    "explore": {
+      "permissions": [{ "action": "websearch", "resource": "*", "effect": "deny" }]
     }
   },
 
@@ -34,7 +39,7 @@
       "models": {
         "qwen3.8-27b-local": {
           "name": "Qwen3.8 27B (local)",
-          "capabilities": { "tools": true },
+          "capabilities": { "tools": true, "input": ["text"], "output": ["text"] },
           // context must match llama-server's -c flag; 16384 output leaves room for thinking
           "limit": { "context": 65536, "output": 16384 }
         },
@@ -43,7 +48,7 @@
         // q8_0 KV cache; these two numbers must stay in step or requests fail with HTTP 400.
         "qwen3.6-35b-a3b-local": {
           "name": "Qwen3.6 35B-A3B (local, fast)",
-          "capabilities": { "tools": true },
+          "capabilities": { "tools": true, "input": ["text"], "output": ["text"] },
           "limit": { "context": 32768, "output": 16384 }
         }
       }
@@ -57,7 +62,12 @@
   // expect; /handoff echoing its frontmatter is the other.
   // The zk-* functions run OpenCode from inside the vault, so this never gets in their way.
   // V2 expands the leading ~ for external_directory resources.
+  //
+  // Web search is off for every agent: V2 ships a built-in websearch tool that is allowed by
+  // default, and a query can carry whatever the session has read (including vault content).
+  // Agents that need it can allow it in their own permissions, which apply after these.
   "permissions": [
+    { "action": "websearch", "resource": "*", "effect": "deny" },
     { "action": "external_directory", "resource": "*", "effect": "ask" },
     { "action": "external_directory", "resource": "~/code/Zettelkasten/**", "effect": "deny" },
     { "action": "external_directory", "resource": "~/code/Zettelkasten/raw/**", "effect": "ask" }
@@ -67,9 +77,10 @@
     // Pinned: bump deliberately and record it in a handoff.
     // Holding at 3.1.15 because 3.2.0 was released 2026-09-20 and hadn't been soaked yet.
     // Re-evaluate that on any bump — don't read this as still-current advice.
-    // Unverified on V2: 3.1.15 is written against the V1 plugin API (@opencode-ai/plugin),
-    // not V2's @opencode/plugin. Check it loads before relying on it; see
-    // docs/setup-zettelkasten.md.
+    // KNOWN FAILURE on V2: the plugin API is one of V2's documented breaking changes, and
+    // every published DCP release (3.1.15 through 3.2.8-beta0) targets the V1 API
+    // (@opencode-ai/plugin), not V2's @opencode/plugin. Expect it not to load. Kept on purpose
+    // as a known failure: bump the pin once a V2 build ships; see docs/setup-zettelkasten.md.
     "@tarquinen/opencode-dcp@3.1.15"
   ]
 

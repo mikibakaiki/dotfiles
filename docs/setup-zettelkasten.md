@@ -62,9 +62,10 @@ opencode auth login        # the top-level agent runs on Copilot; the zk agents 
 fails on its first message with an auth error, even though every Zettelkasten agent itself runs
 locally.
 
-The config is written for OpenCode **V2**. On a V1 install it won't work: V1 ignores the native V2
-keys (`providers`, `permissions`, `plugins`, `agents`), so the local provider, the privacy wall and
-DCP would all silently disappear. Upgrade rather than downgrading the config.
+The config is written for OpenCode **V2**. Don't run it on a V1 install: the native V2 keys
+(`providers`, `permissions`, `plugins`, `agents`) aren't V1 config, so the local provider and the
+privacy wall would at best be ignored (not verified whether V1 ignores them or rejects the file).
+Upgrade rather than downgrading the config.
 
 Check against the OpenCode changelog/docs for:
 - `opencode.jsonc` (JSONC, not just `opencode.json`) support
@@ -79,14 +80,26 @@ If any of these aren't supported by your installed version:
   note the workaround in a handoff once the dry run (section 4) works.
 
 Then confirm the tracked instructions actually load. This check is for real: they used to live in
-`style.md`, loaded through `instructions`, and V2 accepts that field without loading anything from
-it. They're now in the global `AGENTS.md`, which V2 always loads. Ask a fresh session "what does
+`style.md`, loaded through `instructions`, and V2 accepts that field but does not currently load
+anything from it. They're now in the global `AGENTS.md`, which V2 always loads. Ask a fresh session "what does
 your global AGENTS.md say about /handoff?" — it should paraphrase the capture nudge.
 
-And confirm the DCP plugin loads. The pinned 3.1.15 is built on the V1 plugin API
-(`@opencode-ai/plugin`), not V2's `@opencode/plugin`, and V2's docs don't say V1 plugins still run.
-If OpenCode's plugin status or logs show it failing, either move to a DCP release that supports V2
-or drop it from `plugins` (V2 has its own `compaction` settings), and record which in a handoff.
+**DCP is a known failure on V2.** The plugin API is one of V2's documented breaking changes, and
+every published DCP release (3.1.15 through 3.2.8-beta0, as of 2026-09-25) is built on the V1 API
+(`@opencode-ai/plugin`), not V2's `@opencode/plugin`. It stays in `plugins` on purpose, as a known
+failure, so the pin is there to bump once a V2 build ships; until then expect `opencode plugin list` to show it failing, with no
+effect on anything else. When a V2-compatible release appears (`npm view @tarquinen/opencode-dcp
+peerDependencies` naming `@opencode/plugin`), bump the pin and record it in a handoff.
+
+Two more things to check once, on the first real sessions:
+- **Temperature on the GPT agents.** Agent `temperature` now travels as `request.body.temperature`,
+  a raw request-body field. If Copilot rejects it for `gpt-5.4`, `gpt-5.4-mini` or `gpt-5-mini`,
+  those agents' requests fail outright: run one request each through `review-b`,
+  `test-automation-engineer` and `update-agents`, and delete the `request:` block from any that errors.
+- **The raw/ exception.** V2 matches `external_directory` against the directory boundary it
+  computes (normally ending in `/*`). The dry run in section 4 must show `/handoff` *prompting* for
+  `~/code/Zettelkasten/raw/`; a flat denial means the reported boundary was the vault root and the
+  pattern needs adjusting. If `~/code` is a symlink, write the real path instead of `~`.
 
 ---
 

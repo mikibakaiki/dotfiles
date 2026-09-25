@@ -47,9 +47,7 @@ permissions:
   - { action: edit, resource: "*", effect: allow }
   - { action: shell, resource: "*", effect: deny }
   - { action: shell, resource: "git log *", effect: allow }
-  - { action: shell, resource: "git log", effect: allow }
   - { action: shell, resource: "git diff *", effect: allow }
-  - { action: shell, resource: "git diff", effect: allow }
   - { action: shell, resource: "git worktree list", effect: allow }
   - { action: shell, resource: "git worktree add *", effect: allow }
   - { action: shell, resource: "git worktree remove *", effect: allow }
@@ -181,7 +179,7 @@ If either agent raised open questions requiring a decision (e.g. a choice betwee
 
 ### Step 2b — Independent critique
 
-Once the plan is complete, **before presenting it to the user**, invoke `@plan-critic-a` and `@plan-critic-b` **in parallel** (a single message with two Task tool calls). Pass each critic the full requirements brief, technical design, and task list. The two critics operate independently — do not share either critic's output with the other.
+Once the plan is complete, **before presenting it to the user**, invoke `@plan-critic-a` and `@plan-critic-b` **in parallel** (a single message with two subagent tool calls). Pass each critic the full requirements brief, technical design, and task list. The two critics operate independently — do not share either critic's output with the other.
 
 ```
 // Both of these Task calls go in a single message (parallel invocation):
@@ -350,7 +348,7 @@ question({
 
 ### Step 2 — Produce the developer brief
 
-Delegate to the `requirements-clarifier` subagent using the Task tool. Pass the full ticket input as the prompt:
+Delegate to the `requirements-clarifier` subagent using the subagent tool. Pass the full ticket input as the prompt:
 
 ```
 Task({
@@ -511,7 +509,7 @@ When the user requests a code review, **first gather context** before invoking t
 3. Fetch the Jira ticket using the `jira-mcp_jira_get_issue` tool with that slug to retrieve the original requirements and acceptance criteria.
 4. Run `git diff upstream/develop...HEAD` to capture the full branch diff against `develop`.
 
-Then invoke `@review-a` and `@review-b` **in parallel** (a single message with two Task tool calls), passing each the full context you gathered:
+Then invoke `@review-a` and `@review-b` **in parallel** (a single message with two subagent tool calls), passing each the full context you gathered:
 
 ```
 // Both Task calls go in a single message (parallel invocation):

@@ -48,7 +48,9 @@ permissions:
   - { action: edit, resource: "*", effect: deny }
   - { action: shell, resource: "*", effect: deny }
   - { action: subagent, resource: "*", effect: deny }
-  # MCP tools disabled — uncomment to re-enable Jira integration
+  # Jira tools: on the work machine, work.jsonc already allows jira-mcp_* for this agent
+  # (docs/setup-work-machine.md). Uncomment these only if you drop that allow and want just
+  # these two tools.
   # - { action: jira-mcp_jira_get_issue, resource: "*", effect: allow }
   # - { action: jira-mcp_jira_search_issues, resource: "*", effect: allow }
   - { action: jenkins_getBuild, resource: "*", effect: allow }

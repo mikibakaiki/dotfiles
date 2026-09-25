@@ -11,17 +11,11 @@ permissions:
   - { action: edit, resource: "*", effect: allow }
   - { action: shell, resource: "*", effect: allow }
   - { action: shell, resource: "git add *", effect: deny }
-  - { action: shell, resource: "git add", effect: deny }
   - { action: shell, resource: "git reset *", effect: deny }
-  - { action: shell, resource: "git reset", effect: deny }
   - { action: shell, resource: "git commit *", effect: deny }
-  - { action: shell, resource: "git commit", effect: deny }
   - { action: shell, resource: "git push *", effect: deny }
-  - { action: shell, resource: "git push", effect: deny }
   - { action: shell, resource: "rm *", effect: deny }
-  - { action: shell, resource: "rm", effect: deny }
   - { action: shell, resource: "rmdir *", effect: deny }
-  - { action: shell, resource: "rmdir", effect: deny }
   - { action: subagent, resource: "*", effect: deny }
 ---
 You are an elite Test Automation Engineer with deep expertise in software quality assurance and defect analysis. You combine the rigor of a forensic investigator with the systematic approach of an industrial engineer to ensure software correctness.

@@ -36,18 +36,35 @@ The work settings live in one untracked file, `~/.config/opencode/work.jsonc`, l
 config layer through `OPENCODE_CONFIG`. `config.fish` sets that variable automatically whenever the
 file exists, so creating the file is all it takes, and a machine without one is unaffected.
 
-Why this file and not `~/.config/opencode/opencode.json`, which older notes suggested: verified
-against OpenCode V1's source, it loads `config.json` → `opencode.json` → `opencode.jsonc` from that
-directory with a plain deep merge, where later files win and **arrays are replaced**. The tracked
-`opencode.jsonc` loads last, so a same-named array in the override (it was `instructions` then; now
-it would be `permissions`) loses to the tracked one, silently. `OPENCODE_CONFIG` is a separate layer
-that loads *after* those files.
+Why this file and not `~/.config/opencode/opencode.json`, which older notes suggested: under V1
+(verified against its source), that directory's files were deep-merged with **arrays replaced**, so
+the override's `instructions` lost to the tracked `opencode.jsonc`, silently. `OPENCODE_CONFIG` was a
+separate layer loaded after them. (V2 appends `permissions` and `plugins` across layers instead of
+replacing them, so that particular trap is V1 history.)
 
-That reasoning was checked against V1. The V2 docs don't mention `OPENCODE_CONFIG` at all, so treat
-it as unverified until the check at the end of this section passes. If it fails, V2's documented
-fallback is a project config: V2 merges every `opencode.jsonc` from the directory you start in up to
-the filesystem root, so the same content saved as `~/code/work/opencode.jsonc` (next to the work
-`AGENTS.md` from §2) applies to every work repo.
+The V2 docs don't mention `OPENCODE_CONFIG` at all, so treat it as unverified until the check at the
+end of this section passes. A documented alternative: V2 merges every `opencode.jsonc` from the
+directory you start in up to the filesystem root, so the same content saved as
+`~/code/work/opencode.jsonc` (next to the work `AGENTS.md` from §2) applies to every work repo.
+
+**The background service and environment variables.** V2 runs OpenCode as a shared background
+service, and shell exports reach it only if that service was started from a shell that already had
+them. So `OPENCODE_CONFIG` from `config.fish`, and the `{env:JIRA_PAT}`-style tokens below from
+`.env.work`, can silently be missing. Persist them in the service's managed environment once (this
+stops a running service; the next `opencode` command restarts it with the new values):
+
+```fish
+opencode service set env OPENCODE_CONFIG ~/.config/opencode/work.jsonc
+opencode service set env JIRA_PAT $JIRA_PAT
+opencode service set env CONFLUENCE_PAT $CONFLUENCE_PAT
+opencode service set env JENKINS_TOKEN $JENKINS_TOKEN
+```
+
+That stores the tokens in the service's own configuration on disk, outside this repo; re-run the
+lines when a token rotates, and `opencode service unset env <NAME>` removes one. If you'd rather not
+persist them, run `opencode --standalone` instead, which starts a private server that inherits the
+current shell's environment. The `~/code/work/opencode.jsonc` alternative above removes the need for
+`OPENCODE_CONFIG`, but the tokens still have to reach the server one of these two ways.
 
 Because stow runs with `--no-folding`, `~/.config/opencode` is a real directory on this machine and
 `work.jsonc` never enters the repo. `.gitignore` lists it anyway, as a safety net.
@@ -77,6 +94,7 @@ don't mix the two formats inside one agent entry.)
       "jenkins": {
         "type": "remote",
         "url": "https://your-jenkins/mcp-server/mcp",
+        "oauth": false,
         "headers": { "Authorization": "Basic {env:JENKINS_TOKEN}" },
         "codemode": false
       }
@@ -115,10 +133,13 @@ don't mix the two formats inside one agent entry.)
 > `execute` tool instead of exposing them under those names; `codemode: false` keeps the direct
 > tools the agents ask for.
 >
-> Two things the V2 docs leave open, so check them here rather than assume: whether a `-` in a
-> server key survives V2's tool-name normalization (if `opencode debug config` or the tool list
-> shows `jira_mcp_…`, rename the rules and the agent references to match), and whether the
-> built-in `explore` agent's own read-only policy still overrides these allows.
+> The `-` in `jira-mcp` is safe: V2's name normalization only replaces characters other than
+> letters, numbers, `_` and `-`. `oauth: false` on `jenkins` stops V2 from attempting OAuth
+> (on by default for remote servers) when the server authenticates with a header instead.
+>
+> One thing the V2 docs leave open: the built-in `explore` agent ships a read-only policy, and the
+> docs don't say whether it lands before or after these allows. If `explore` can't reach the MCP
+> tools, that's why; `requirements-clarifier` is the one that matters.
 
 Tokens resolve from `~/.config/fish/conf.d/.env.work` via `{env:...}`. Don't hardcode them here
 even though the file is gitignored.
@@ -170,16 +191,20 @@ Verify, in a **new** fish shell so `OPENCODE_CONFIG` is set:
 
 ```bash
 echo $OPENCODE_CONFIG                              # → ~/.config/opencode/work.jsonc, expanded
-opencode debug config | grep -c jira-mcp           # non-zero: the MCP servers merged in
+opencode mcp list                                  # ✓ jira-mcp / confluence-mcp / jenkins  connected
 cd ~/dotfiles && git status --short                # nothing for work.jsonc
 ```
+
+If `opencode mcp list` shows none of the three, the work layer isn't loading: check the service
+environment above, or switch to the `~/code/work/opencode.jsonc` alternative. Listed but not
+connected usually means a token didn't reach the service.
 
 Then start `opencode` inside one work repo and ask "which default branch do we target?" — it should
 answer `master` from the work `AGENTS.md`. Start it in `~/dotfiles` and ask again; it shouldn't know.
 
 (Don't verify by asking the Zettelkasten agent to list its MCP tools. The config above deliberately
-disables them for every agent except `requirements-clarifier` and `explore`, so it would honestly
-report none even when everything works.)
+disables them for every agent except `requirements-clarifier`, `explore`, and `tech-lead` (Jira only,
+through its own `jira-mcp_*` allow), so it would honestly report none even when everything works.)
 
 ---
 

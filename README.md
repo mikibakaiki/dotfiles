@@ -411,15 +411,17 @@ rather than tracking `@latest`.
 
 The global `AGENTS.md` replaces the old `opencode-caveman` plugin: terse chat replies, normal
 English for anything written to disk, and the `/handoff` capture nudge. That text used to live in a
-separate `style.md` loaded through `instructions`, but OpenCode V2 accepts `instructions` without
-loading any of its entries, so it moved into `AGENTS.md`, the one instruction file V2 always loads.
+separate `style.md` loaded through `instructions`, but OpenCode V2 accepts `instructions` and does
+not currently load any of its entries, so it moved into `AGENTS.md`, the one instruction file V2 always loads.
 The `./plugins/graphify.js` local plugin referenced here previously was never actually committed to
 the repo; dropped.
 
 The config is in OpenCode's native V2 format (`providers`, `permissions`, `plugins`, and
 `agents.title`/`agents.summary` in place of `small_model`; agent frontmatter uses `permissions:` lists and
 `request.body.temperature`). V2 still reads the V1 keys, but a nested entry has to stay entirely in
-one format, so don't paste V1 snippets into an existing agent or provider.
+one format, so don't paste V1 snippets into an existing agent or provider. Web search is denied for
+every agent by default. The pinned DCP plugin is a known failure on V2 (see
+[docs/setup-zettelkasten.md](docs/setup-zettelkasten.md)).
 
 Work-specific MCP servers (Jira, Confluence, Jenkins) and work rules are **not** in tracked config.
 On the work Mac the MCP servers go in an untracked `~/.config/opencode/work.jsonc`, which
@@ -432,7 +434,7 @@ See [docs/setup-zettelkasten.md](docs/setup-zettelkasten.md) for the Zettelkaste
 (`zettelkasten.md`/`archivist.md`, `/handoff`, and the `zk-status`/`zk-ingest`/`zk`/`zk-lint` fish
 functions).
 
-Runtime files (`node_modules/`, `skills/`, `tui.json`) excluded via
+Runtime files (`node_modules/`, `skills/`, `tui.json`, `cli.json`) excluded via
 `.stow-local-ignore` — opencode manages these itself.
 
 ---
