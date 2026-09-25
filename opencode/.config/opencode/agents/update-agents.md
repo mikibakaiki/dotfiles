@@ -2,17 +2,18 @@
 description: Checks all agent config files for outdated model IDs and updates them to the latest available versions
 mode: subagent
 model: github-copilot/gpt-5-mini
-temperature: 0.1
-permission:
-  edit: allow
-  bash:
-    "*": allow
-    "git *": deny
-    "git": deny
-    "rm *": deny
-    "rm": deny
-    "rmdir *": deny
-    "rmdir": deny
+request:
+  body:
+    temperature: 0.1
+permissions:
+  - { action: edit, resource: "*", effect: allow }
+  - { action: shell, resource: "*", effect: allow }
+  - { action: shell, resource: "git *", effect: deny }
+  - { action: shell, resource: "git", effect: deny }
+  - { action: shell, resource: "rm *", effect: deny }
+  - { action: shell, resource: "rm", effect: deny }
+  - { action: shell, resource: "rmdir *", effect: deny }
+  - { action: shell, resource: "rmdir", effect: deny }
 ---
 
 You are a maintenance agent. Your job is to keep agent configuration files up to date with the latest available models.

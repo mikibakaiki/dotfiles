@@ -88,13 +88,12 @@ dotfiles/
 │
 ├── opencode/                 ← stow package → ~/.config/opencode/
 │   ├── .stow-local-ignore    — excludes runtime files opencode manages itself
-│   │                           (node_modules, skills, tui.json, package*.json)
+│   │                           (node_modules, skills, tui.json, cli.json, package*.json)
 │   │                           and opencode.json (a pre-work.jsonc override name)
 │   └── .config/opencode/
-│       ├── opencode.jsonc    — model, small_model, provider, privacy wall, plugins
+│       ├── opencode.jsonc    — V2 format: model, title agent, providers, privacy wall, plugins
 │       ├── dcp.jsonc         — DCP plugin config
-│       ├── style.md          — terse-chat / normal-English instructions
-│       ├── AGENTS.md         — agent usage guide
+│       ├── AGENTS.md         — global instructions: terse-chat style, /handoff nudge, environment
 │       ├── agents/           — agent definitions, incl. the Zettelkasten pair:
 │       │                       zettelkasten (Librarian), archivist
 │       └── commands/         — slash commands, incl. /handoff
@@ -410,17 +409,22 @@ Plugins:
 Pinned to an exact version in `opencode.jsonc` (bumped deliberately, recorded in a handoff)
 rather than tracking `@latest`.
 
-`instructions: ["~/.config/opencode/style.md"]` in `opencode.jsonc` replaces the old
-`opencode-caveman` plugin: terse chat replies, normal English for anything written to disk, and the
-`/handoff` capture nudge. The `~/` matters. OpenCode resolves a *relative* `instructions` entry
-against the project you're working in, so the bare `"style.md"` this used to say loaded nothing in
-normal use. The `./plugins/graphify.js` local plugin referenced here previously was never actually
-committed to the repo; dropped.
+The global `AGENTS.md` replaces the old `opencode-caveman` plugin: terse chat replies, normal
+English for anything written to disk, and the `/handoff` capture nudge. That text used to live in a
+separate `style.md` loaded through `instructions`, but OpenCode V2 accepts `instructions` without
+loading any of its entries, so it moved into `AGENTS.md`, the one instruction file V2 always loads.
+The `./plugins/graphify.js` local plugin referenced here previously was never actually committed to
+the repo; dropped.
+
+The config is in OpenCode's native V2 format (`providers`, `permissions`, `plugins`, and
+`agents.title`/`agents.summary` in place of `small_model`; agent frontmatter uses `permissions:` lists and
+`request.body.temperature`). V2 still reads the V1 keys, but a nested entry has to stay entirely in
+one format, so don't paste V1 snippets into an existing agent or provider.
 
 Work-specific MCP servers (Jira, Confluence, Jenkins) and work rules are **not** in tracked config.
-On the work Mac they go in an untracked `~/.config/opencode/work.jsonc`, which `config.fish` loads
-as an extra layer via `OPENCODE_CONFIG` whenever the file exists. That layer loads after the global
-config and adds to its `instructions` rather than replacing them. See
+On the work Mac the MCP servers go in an untracked `~/.config/opencode/work.jsonc`, which
+`config.fish` loads as an extra layer via `OPENCODE_CONFIG` whenever the file exists, and the work
+rules go in an untracked `AGENTS.md` in the folder that holds the work repos. See
 [docs/setup-work-machine.md](docs/setup-work-machine.md). Credentials still come from
 `{env:JIRA_PAT}` etc., values from `.env.work`, never hardcoded.
 

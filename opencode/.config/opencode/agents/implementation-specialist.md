@@ -38,26 +38,26 @@ description: >-
   </example>
 mode: subagent
 model: github-copilot/claude-sonnet-5
-temperature: 0.3
-permission:
-  edit: allow
-  bash:
-    "*": allow
-    "git add *": deny
-    "git add": deny
-    "git reset *": deny
-    "git reset": deny
-    "git push *": deny
-    "git push": deny
-    "git commit *": deny
-    "git commit": deny
-    "rm *": deny
-    "rm": deny
-    "rmdir *": deny
-    "rmdir": deny
-  task:
-    "*": deny
-    "explore": allow
+request:
+  body:
+    temperature: 0.3
+permissions:
+  - { action: edit, resource: "*", effect: allow }
+  - { action: shell, resource: "*", effect: allow }
+  - { action: shell, resource: "git add *", effect: deny }
+  - { action: shell, resource: "git add", effect: deny }
+  - { action: shell, resource: "git reset *", effect: deny }
+  - { action: shell, resource: "git reset", effect: deny }
+  - { action: shell, resource: "git push *", effect: deny }
+  - { action: shell, resource: "git push", effect: deny }
+  - { action: shell, resource: "git commit *", effect: deny }
+  - { action: shell, resource: "git commit", effect: deny }
+  - { action: shell, resource: "rm *", effect: deny }
+  - { action: shell, resource: "rm", effect: deny }
+  - { action: shell, resource: "rmdir *", effect: deny }
+  - { action: shell, resource: "rmdir", effect: deny }
+  - { action: subagent, resource: "*", effect: deny }
+  - { action: subagent, resource: "explore", effect: allow }
 ---
 
 You are an Implementation Specialist — a disciplined backend developer who executes delegated tasks with precision and zero architectural drift.

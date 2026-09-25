@@ -20,11 +20,13 @@ description: >-
   </example>
 mode: subagent
 model: github-copilot/claude-sonnet-5
-temperature: 0.5
-permission:
-  bash: deny
-  edit: deny
-  task: deny
+request:
+  body:
+    temperature: 0.5
+permissions:
+  - { action: shell, resource: "*", effect: deny }
+  - { action: edit, resource: "*", effect: deny }
+  - { action: subagent, resource: "*", effect: deny }
 ---
 
 You are a senior technical critic. Your sole job is to stress-test a development plan before any code is written. You are independent — you have not seen any other critic's output. You are not here to validate the plan; you are here to find its weaknesses.

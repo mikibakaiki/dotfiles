@@ -30,13 +30,13 @@ for `--adopt` without reading what it does.
 
 What each tracked file does:
 
-- `opencode/.config/opencode/opencode.jsonc` — the main config: `instructions` (loads `style.md`),
-  `small_model`, the `llamacpp` provider (both Qwen models), the `external_directory` privacy wall,
-  and the DCP plugin pin.
-- `opencode/.config/opencode/style.md` — terse chat replies, normal English for anything written to
-  disk, and the `/handoff` capture nudge.
+- `opencode/.config/opencode/opencode.jsonc` — the main config, in OpenCode's native V2 format: the
+  `title` and `summary` agents' model (V1's `small_model`), the `llamacpp` provider (both Qwen models), the
+  `external_directory` privacy wall in `permissions`, and the DCP plugin pin in `plugins`.
+- `opencode/.config/opencode/AGENTS.md` — the global instructions: terse chat replies, normal
+  English for anything written to disk, and the `/handoff` capture nudge.
 - `opencode/.config/opencode/agents/zettelkasten.md` — the Librarian. Ingests `raw/` into `wiki/`
-  and runs lint passes. Local model, `bash` denied, `external_directory` denied.
+  and runs lint passes. Local model, `shell` denied, `external_directory` denied.
 - `opencode/.config/opencode/agents/archivist.md` — read-only Q&A over the wiki. Local model.
 - `opencode/.config/opencode/commands/handoff.md` — writes a session handoff into the vault's
   `raw/`. Pinned to the local Qwen model regardless of what model the session itself used, so the
@@ -62,25 +62,31 @@ opencode auth login        # the top-level agent runs on Copilot; the zk agents 
 fails on its first message with an auth error, even though every Zettelkasten agent itself runs
 locally.
 
+The config is written for OpenCode **V2**. On a V1 install it won't work: V1 ignores the native V2
+keys (`providers`, `permissions`, `plugins`, `agents`), so the local provider, the privacy wall and
+DCP would all silently disappear. Upgrade rather than downgrading the config.
+
 Check against the OpenCode changelog/docs for:
 - `opencode.jsonc` (JSONC, not just `opencode.json`) support
 - `--agent` flag on both `opencode` (interactive) and `opencode run`
-- pattern maps (glob-style keys) for `permission.external_directory`
-- `~` expansion inside those pattern keys (the config here relies on `~/code/Zettelkasten/**`
-  resolving correctly)
+- `external_directory` rules in the ordered `permissions` array, last match wins
+- `~` expansion in those `resource` patterns (the config here relies on `~/code/Zettelkasten/**`
+  resolving correctly; V2's docs say it expands a leading `~` for `external_directory`)
 
 If any of these aren't supported by your installed version:
 - Upgrade OpenCode, **or**
 - Adjust the patterns (e.g. expand `~` to the literal home path yourself in `opencode.jsonc`) and
   note the workaround in a handoff once the dry run (section 4) works.
 
-Then confirm the tracked instructions actually load. This check is for real:
-`instructions` used to name a bare `style.md`, which OpenCode resolved against the current
-project and so never loaded.
+Then confirm the tracked instructions actually load. This check is for real: they used to live in
+`style.md`, loaded through `instructions`, and V2 accepts that field without loading anything from
+it. They're now in the global `AGENTS.md`, which V2 always loads. Ask a fresh session "what does
+your global AGENTS.md say about /handoff?" — it should paraphrase the capture nudge.
 
-```bash
-opencode debug config | grep -A3 '"instructions"'   # → "~/.config/opencode/style.md"
-```
+And confirm the DCP plugin loads. The pinned 3.1.15 is built on the V1 plugin API
+(`@opencode-ai/plugin`), not V2's `@opencode/plugin`, and V2's docs don't say V1 plugins still run.
+If OpenCode's plugin status or logs show it failing, either move to a DCP release that supports V2
+or drop it from `plugins` (V2 has its own `compaction` settings), and record which in a handoff.
 
 ---
 
@@ -256,7 +262,7 @@ Don't wire it into the main config. If you want to measure it:
 Written on Linux with no `fish`, `opencode` CLI, or `launchd` — every command above comes from the
 spec and **none of it has been run**. What *was* checked statically: the fish file's structure, the
 frontmatter stamp detection (against a body line starting `ingested:`, a file with no frontmatter,
-and a legacy `refused:` stamp), and that `opencode.jsonc` parses with its permission map intact.
+and a legacy `refused:` stamp), and that `opencode.jsonc` parses with its permissions intact.
 Nothing else. Treat sections 2 and 4 as the ones most likely to surface a real problem — version
 mismatches and pattern-matching quirks — and go slowly through them.
 

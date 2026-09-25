@@ -40,36 +40,36 @@ description: >-
   </example>
 mode: primary
 model: github-copilot/claude-opus-5
-temperature: 0.3
-permission:
-  edit: allow
-  bash:
-    "*": deny
-    "git log *": allow
-    "git log": allow
-    "git diff *": allow
-    "git diff": allow
-    "git worktree list": allow
-    "git worktree add *": allow
-    "git worktree remove *": allow
-    "git fetch *": allow
-    "git checkout *": allow
-    "git branch -d *": allow
-  question: allow
-  jira-mcp_*: allow
-  task:
-    "*": deny
-    "requirements-clarifier": allow
-    "architect-designer": allow
-    "implementation-specialist": allow
-    "test-automation-engineer": allow
-    "review-a": allow
-    "review-b": allow
-    "task-planner": allow
-    "explore": allow
-    "update-agents": allow
-    "plan-critic-a": allow
-    "plan-critic-b": allow
+request:
+  body:
+    temperature: 0.3
+permissions:
+  - { action: edit, resource: "*", effect: allow }
+  - { action: shell, resource: "*", effect: deny }
+  - { action: shell, resource: "git log *", effect: allow }
+  - { action: shell, resource: "git log", effect: allow }
+  - { action: shell, resource: "git diff *", effect: allow }
+  - { action: shell, resource: "git diff", effect: allow }
+  - { action: shell, resource: "git worktree list", effect: allow }
+  - { action: shell, resource: "git worktree add *", effect: allow }
+  - { action: shell, resource: "git worktree remove *", effect: allow }
+  - { action: shell, resource: "git fetch *", effect: allow }
+  - { action: shell, resource: "git checkout *", effect: allow }
+  - { action: shell, resource: "git branch -d *", effect: allow }
+  - { action: question, resource: "*", effect: allow }
+  - { action: jira-mcp_*, resource: "*", effect: allow }
+  - { action: subagent, resource: "*", effect: deny }
+  - { action: subagent, resource: "requirements-clarifier", effect: allow }
+  - { action: subagent, resource: "architect-designer", effect: allow }
+  - { action: subagent, resource: "implementation-specialist", effect: allow }
+  - { action: subagent, resource: "test-automation-engineer", effect: allow }
+  - { action: subagent, resource: "review-a", effect: allow }
+  - { action: subagent, resource: "review-b", effect: allow }
+  - { action: subagent, resource: "task-planner", effect: allow }
+  - { action: subagent, resource: "explore", effect: allow }
+  - { action: subagent, resource: "update-agents", effect: allow }
+  - { action: subagent, resource: "plan-critic-a", effect: allow }
+  - { action: subagent, resource: "plan-critic-b", effect: allow }
 ---
 
 You are the Builder — the orchestrator of this development workflow. Understand user requests, break them into clear steps, and delegate to specialist agents when appropriate.

@@ -41,21 +41,22 @@ description: >-
   </example>
 mode: subagent
 model: github-copilot/claude-haiku-4.5
-temperature: 0.2
-permission:
-  edit: deny
-  bash: deny
-  task: deny
+request:
+  body:
+    temperature: 0.2
+permissions:
+  - { action: edit, resource: "*", effect: deny }
+  - { action: shell, resource: "*", effect: deny }
+  - { action: subagent, resource: "*", effect: deny }
   # MCP tools disabled — uncomment to re-enable Jira integration
-  # permission:
-  #   jira-mcp_jira_get_issue: allow
-  #   jira-mcp_jira_search_issues: allow
-  jenkins_getBuild: allow
-  jenkins_getBuildLog: allow
-  jenkins_searchBuildLog: allow
-  jenkins_getJob: allow
-  jenkins_getJobs: allow
-  jenkins_getStatus: allow
+  # - { action: jira-mcp_jira_get_issue, resource: "*", effect: allow }
+  # - { action: jira-mcp_jira_search_issues, resource: "*", effect: allow }
+  - { action: jenkins_getBuild, resource: "*", effect: allow }
+  - { action: jenkins_getBuildLog, resource: "*", effect: allow }
+  - { action: jenkins_searchBuildLog, resource: "*", effect: allow }
+  - { action: jenkins_getJob, resource: "*", effect: allow }
+  - { action: jenkins_getJobs, resource: "*", effect: allow }
+  - { action: jenkins_getStatus, resource: "*", effect: allow }
 ---
 
 You are an elite Product Manager and Requirements Architect with deep expertise in agile product development, user-centered design, and technical specification writing. Your sole purpose is to transform ambiguous or incomplete task descriptions into crystal-clear, actionable requirements that engineers can implement with confidence.

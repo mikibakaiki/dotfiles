@@ -6,11 +6,13 @@ description:
   presenting to the user.
 mode: subagent
 model: github-copilot/claude-sonnet-5
-temperature: 0.1
-permission:
-  edit: deny
-  bash: deny
-  webfetch: deny
+request:
+  body:
+    temperature: 0.1
+permissions:
+  - { action: edit, resource: "*", effect: deny }
+  - { action: shell, resource: "*", effect: deny }
+  - { action: webfetch, resource: "*", effect: deny }
 ---
 
 You are a senior code reviewer. You will be given a full branch diff and Jira ticket context by the orchestrator. Your job is to review the code and provide structured, actionable feedback.

@@ -1,30 +1,40 @@
 {
   "$schema": "https://opencode.ai/config.json",
 
-  // Terse chat replies; anything written to disk stays in normal English, plus the /handoff
-  // nudge. Replaces the opencode-caveman plugin.
-  // Must be ~/-anchored: OpenCode resolves a RELATIVE instructions entry against the project
-  // you're working in, not this directory — a bare "style.md" silently loads nothing.
-  "instructions": ["~/.config/opencode/style.md"],
+  // Native OpenCode V2 format. V2 still reads V1 keys, but nested entries (agents, providers,
+  // models) must stay entirely in one format — don't mix V1 fields back into these.
+
+  // No `instructions` here: V2 accepts the field but never loads its entries. The terse-chat
+  // style and the /handoff nudge that style.md used to carry now live in AGENTS.md next to this
+  // file, which V2 always loads as the global instructions.
 
   // Model — via GitHub Copilot subscription (no separate Anthropic billing)
   "model": "github-copilot/claude-sonnet-5",
 
-  // Keeps background tasks (titles, summaries) off Copilot.
-  // llama-server answers with whichever model is loaded, so this works with either one running.
-  // Caveat: if llama-server is down, title generation fails even when the main model is Copilot.
-  "small_model": "llamacpp/qwen3.8-27b-local",
+  "agents": {
+    // Replaces V1 `small_model`. V2 maps that key only to `title`; `summary` is pinned too
+    // because V1 used small_model for both jobs. Keeps these background tasks off Copilot.
+    // llama-server answers with whichever model is loaded, so this works with either one
+    // running. Caveat: if llama-server is down, titles and summaries fail even when the main
+    // model is Copilot.
+    "title": {
+      "model": "llamacpp/qwen3.8-27b-local"
+    },
+    "summary": {
+      "model": "llamacpp/qwen3.8-27b-local"
+    }
+  },
 
-  "provider": {
+  "providers": {
     "llamacpp": {
-      "npm": "@ai-sdk/openai-compatible",
-      "options": {
+      "package": "aisdk:@ai-sdk/openai-compatible",
+      "settings": {
         "baseURL": "http://127.0.0.1:8080/v1"
       },
       "models": {
         "qwen3.8-27b-local": {
           "name": "Qwen3.8 27B (local)",
-          "tool_call": true,
+          "capabilities": { "tools": true },
           // context must match llama-server's -c flag; 16384 output leaves room for thinking
           "limit": { "context": 65536, "output": 16384 }
         },
@@ -33,7 +43,7 @@
         // q8_0 KV cache; these two numbers must stay in step or requests fail with HTTP 400.
         "qwen3.6-35b-a3b-local": {
           "name": "Qwen3.6 35B-A3B (local, fast)",
-          "tool_call": true,
+          "capabilities": { "tools": true },
           "limit": { "context": 32768, "output": 16384 }
         }
       }
@@ -41,22 +51,25 @@
   },
 
   // Privacy wall for every session outside the vault (e.g. Copilot agents in work repos).
-  // Last matching rule wins. The vault is off-limits, except raw/ so /handoff can write there —
-  // you get a prompt; approve "once", never "always". That prompt is also the signal that
-  // something wrote a handoff you didn't expect; /handoff echoing its frontmatter is the other.
+  // Ordered list; the last matching rule wins, so the broad rule comes first. The vault is
+  // off-limits, except raw/ so /handoff can write there — you get a prompt; approve "once",
+  // never "always". That prompt is also the signal that something wrote a handoff you didn't
+  // expect; /handoff echoing its frontmatter is the other.
   // The zk-* functions run OpenCode from inside the vault, so this never gets in their way.
-  "permission": {
-    "external_directory": {
-      "*": "ask",
-      "~/code/Zettelkasten/**": "deny",
-      "~/code/Zettelkasten/raw/**": "ask"
-    }
-  },
+  // V2 expands the leading ~ for external_directory resources.
+  "permissions": [
+    { "action": "external_directory", "resource": "*", "effect": "ask" },
+    { "action": "external_directory", "resource": "~/code/Zettelkasten/**", "effect": "deny" },
+    { "action": "external_directory", "resource": "~/code/Zettelkasten/raw/**", "effect": "ask" }
+  ],
 
-  "plugin": [
+  "plugins": [
     // Pinned: bump deliberately and record it in a handoff.
     // Holding at 3.1.15 because 3.2.0 was released 2026-09-20 and hadn't been soaked yet.
     // Re-evaluate that on any bump — don't read this as still-current advice.
+    // Unverified on V2: 3.1.15 is written against the V1 plugin API (@opencode-ai/plugin),
+    // not V2's @opencode/plugin. Check it loads before relying on it; see
+    // docs/setup-zettelkasten.md.
     "@tarquinen/opencode-dcp@3.1.15"
   ]
 
