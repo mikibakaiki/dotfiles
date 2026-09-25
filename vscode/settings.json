@@ -32,7 +32,7 @@
   "terminal.integrated.defaultProfile.osx": "fish",
   "git.confirmSync": false,
   "gitlens.ai.model": "vscode",
-  "gitlens.ai.vscode.model": "copilotcli:claude-sonnet-4.6",
+  "gitlens.ai.vscode.model": "copilotcli:gpt-6-luna",
   "terminal.integrated.stickyScroll.enabled": false,
   "atlascode.jira.enabled": true,
   "atlascode.bitbucket.enabled": true,
