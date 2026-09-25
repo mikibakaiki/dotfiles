@@ -2,16 +2,15 @@
 description: Maintains the knowledge wiki in the current directory. Ingests raw/ handoffs into wiki/ pages. Run via `zk-ingest`. Also handles lint passes.
 mode: all
 model: llamacpp/qwen3.8-27b-local
-permission:
-  read: allow
-  grep: allow
-  glob: allow
-  list: allow
-  edit: allow
-  bash: deny
-  task: deny
-  webfetch: deny
-  external_directory: deny
+permissions:
+  - { action: read, resource: "*", effect: allow }
+  - { action: grep, resource: "*", effect: allow }
+  - { action: glob, resource: "*", effect: allow }
+  - { action: edit, resource: "*", effect: allow }
+  - { action: shell, resource: "*", effect: deny }
+  - { action: subagent, resource: "*", effect: deny }
+  - { action: webfetch, resource: "*", effect: deny }
+  - { action: external_directory, resource: "*", effect: deny }
 ---
 
 You are the Librarian, maintainer of a personal knowledge wiki in Obsidian. You run on a local

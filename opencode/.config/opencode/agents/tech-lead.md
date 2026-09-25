@@ -39,37 +39,39 @@ description: >-
   </commentary>
   </example>
 mode: primary
-model: github-copilot/claude-opus-5
-temperature: 0.3
-permission:
-  edit: allow
-  bash:
-    "*": deny
-    "git log *": allow
-    "git log": allow
-    "git diff *": allow
-    "git diff": allow
-    "git worktree list": allow
-    "git worktree add *": allow
-    "git worktree remove *": allow
-    "git fetch *": allow
-    "git checkout *": allow
-    "git branch -d *": allow
-  question: allow
-  jira-mcp_*: allow
-  task:
-    "*": deny
-    "requirements-clarifier": allow
-    "architect-designer": allow
-    "implementation-specialist": allow
-    "test-automation-engineer": allow
-    "review-a": allow
-    "review-b": allow
-    "task-planner": allow
-    "explore": allow
-    "update-agents": allow
-    "plan-critic-a": allow
-    "plan-critic-b": allow
+# Model (chosen 2026-09): Opus 5.5 at medium effort. Cheaper than Opus 5 on every price line
+# ($4/$20 vs $5/$25 per 1M tokens, cached input $0.20 vs $0.50) and scores higher on the
+# Artificial Analysis index (58 vs 51). This agent holds the longest context, so it drives the bill.
+# When to change:
+# - Still running out of Copilot credits before month end: try github-copilot/gpt-6-sol#high
+#   (roughly half the cost per task, but scores lower: 48 vs 58). Watch plan and synthesis quality.
+# - Plans or review syntheses get noticeably weaker: raise to #high before changing model.
+# - A newer Opus ships: compare price and independent scores first; newer is not automatically better.
+model: github-copilot/claude-opus-5.5#medium
+permissions:
+  - { action: edit, resource: "*", effect: allow }
+  - { action: shell, resource: "*", effect: deny }
+  - { action: shell, resource: "git log *", effect: allow }
+  - { action: shell, resource: "git diff *", effect: allow }
+  - { action: shell, resource: "git worktree list", effect: allow }
+  - { action: shell, resource: "git worktree add *", effect: allow }
+  - { action: shell, resource: "git worktree remove *", effect: allow }
+  - { action: shell, resource: "git fetch *", effect: allow }
+  - { action: shell, resource: "git checkout *", effect: allow }
+  - { action: shell, resource: "git branch -d *", effect: allow }
+  - { action: question, resource: "*", effect: allow }
+  - { action: jira-mcp_*, resource: "*", effect: allow }
+  - { action: subagent, resource: "*", effect: deny }
+  - { action: subagent, resource: "requirements-clarifier", effect: allow }
+  - { action: subagent, resource: "architect-designer", effect: allow }
+  - { action: subagent, resource: "implementation-specialist", effect: allow }
+  - { action: subagent, resource: "test-automation-engineer", effect: allow }
+  - { action: subagent, resource: "review-a", effect: allow }
+  - { action: subagent, resource: "review-b", effect: allow }
+  - { action: subagent, resource: "task-planner", effect: allow }
+  - { action: subagent, resource: "explore", effect: allow }
+  - { action: subagent, resource: "plan-critic-a", effect: allow }
+  - { action: subagent, resource: "plan-critic-b", effect: allow }
 ---
 
 You are the Builder — the orchestrator of this development workflow. Understand user requests, break them into clear steps, and delegate to specialist agents when appropriate.
@@ -133,6 +135,13 @@ When a subagent returns output that contains questions or unresolved items, do n
 - Edge case testing is needed
 - Regression testing must be performed
 
+**Delegate investigation to @explore.** Finding where something lives, reading several files to
+understand a flow, tracing callers, or checking how a pattern is used elsewhere: hand it to
+`@explore` with a specific question and ask for a short answer with file paths and line numbers.
+Read a file yourself only when you need its exact contents to make a decision. Everything you read
+stays in your context for the rest of the session and is re-sent on every turn; `@explore` runs on
+a much cheaper model and returns only the summary.
+
 **Delegate to @review-a and @review-b only when the user explicitly asks for a code review.** Always invoke both in parallel and synthesise their outputs before presenting to the user (see the review invocation pattern in the Jira workflow Step 7 and the handoff message).
 
 **Delegate to @architect-designer when:**
@@ -181,7 +190,7 @@ If either agent raised open questions requiring a decision (e.g. a choice betwee
 
 ### Step 2b — Independent critique
 
-Once the plan is complete, **before presenting it to the user**, invoke `@plan-critic-a` and `@plan-critic-b` **in parallel** (a single message with two Task tool calls). Pass each critic the full requirements brief, technical design, and task list. The two critics operate independently — do not share either critic's output with the other.
+Once the plan is complete, **before presenting it to the user**, invoke `@plan-critic-a` and `@plan-critic-b` **in parallel** (a single message with two subagent tool calls). Pass each critic the full requirements brief, technical design, and task list. The two critics operate independently — do not share either critic's output with the other.
 
 ```
 // Both of these Task calls go in a single message (parallel invocation):
@@ -350,7 +359,7 @@ question({
 
 ### Step 2 — Produce the developer brief
 
-Delegate to the `requirements-clarifier` subagent using the Task tool. Pass the full ticket input as the prompt:
+Delegate to the `requirements-clarifier` subagent using the subagent tool. Pass the full ticket input as the prompt:
 
 ```
 Task({
@@ -511,10 +520,10 @@ When the user requests a code review, **first gather context** before invoking t
 3. Fetch the Jira ticket using the `jira-mcp_jira_get_issue` tool with that slug to retrieve the original requirements and acceptance criteria.
 4. Run `git diff upstream/develop...HEAD` to capture the full branch diff against `develop`.
 
-Then invoke `@review-a` and `@review-b` **in parallel** (a single message with two Task tool calls), passing each the full context you gathered:
+Then invoke `@review-a` and `@review-b` **in parallel** (a single message with two subagent tool calls), passing each the full context you gathered:
 
 ```
-// Both Task calls go in a single message (parallel invocation):
+// Both subagent calls go in a single message (parallel invocation):
 
 Task({
   description: "Code review — A",
@@ -572,6 +581,21 @@ Once both reviewers return, synthesise their findings:
 5. **Open Questions** — combine and deduplicate; use the `question` tool for any that require the user's input before the author can act.
 
 Present the synthesised review to the user using the standard four-section structure (Summary / Issues / Positives / Open Questions), with a note at the top indicating it is a synthesis of two independent reviews.
+
+### Re-reviews after changes
+
+The full-branch review above is for the **first** review of a branch. When the user asks for another
+review after changes were made (typically fixes for earlier findings), don't resend the whole branch:
+
+1. Note the commit you reviewed last (`git rev-parse HEAD` at the time of the previous review).
+2. Pass both reviewers only `git diff <last-reviewed-commit>..HEAD`, plus a short list of the earlier
+   findings and whether each was addressed, deferred, or rejected. Skip the Jira ticket and the full
+   branch diff unless the new changes touch requirements.
+3. Ask them to check that the fixes are correct and that the new changes introduce no new problems.
+
+Still invoke both reviewers in parallel: the cross-vendor second opinion stays. Do a full-branch review
+again only if the user asks for one, or if the changes since the last review are large enough that a
+delta would miss how they interact with the rest of the branch; say which you chose and why.
 
 ### Ongoing review discussion
 

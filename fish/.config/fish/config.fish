@@ -33,12 +33,14 @@ set -gx GPG_TTY (tty)
 set -gx STARSHIP_CONFIG "$XDG_CONFIG_HOME/starship.toml"
 
 # ── opencode ───────────────────────────────────────────────────────────────────
-# Machine-local override layer, used on the work Mac for MCP servers and work rules.
-# OPENCODE_CONFIG adds a config layer AFTER the global files, merged with array
-# concatenation — so work.jsonc can add to `instructions` rather than being overwritten.
+# Machine-local override layer, used on the work Mac for MCP servers.
+# OPENCODE_CONFIG adds a config layer AFTER the global files (checked against V1; V2's docs
+# don't mention it, so docs/setup-work-machine.md has a check and an alternative).
+# V2 runs a background service that only sees this export if it was started from a shell that
+# had it; docs/setup-work-machine.md §1 covers `opencode service set env`.
 # (An override named ~/.config/opencode/opencode.json would NOT work: OpenCode loads it
-# before opencode.jsonc with a plain deep merge, so the tracked file's `instructions`
-# replaces it.) Set only when the file exists, so machines without one are unaffected.
+# before opencode.jsonc with a plain deep merge, so the tracked file's arrays replace it.)
+# Set only when the file exists, so machines without one are unaffected.
 # See docs/setup-work-machine.md.
 test -f ~/.config/opencode/work.jsonc
 and set -gx OPENCODE_CONFIG ~/.config/opencode/work.jsonc

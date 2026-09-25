@@ -19,12 +19,15 @@ description: >-
   </commentary>
   </example>
 mode: subagent
-model: github-copilot/gpt-5.4
-temperature: 0.5
-permission:
-  bash: deny
-  edit: deny
-  task: deny
+# Model (chosen 2026-09): GPT-6 Sol at high effort. Replaces GPT-5.4 (retired 2026-10-19) and is
+# cheaper ($2/$10 vs $2.50/$15). Keep this one on OpenAI: plan-critic-a is the Anthropic side.
+# When to change:
+# - Critiques feel shallow: try #xhigh first; GPT-6 Astra ($10/$50) is five times the price.
+model: github-copilot/gpt-6-sol#high
+permissions:
+  - { action: shell, resource: "*", effect: deny }
+  - { action: edit, resource: "*", effect: deny }
+  - { action: subagent, resource: "*", effect: deny }
 ---
 You are a senior technical critic. Your sole job is to stress-test a development plan before any code is written. You are independent — you have not seen any other critic's output. You are not here to validate the plan; you are here to find its weaknesses.
 

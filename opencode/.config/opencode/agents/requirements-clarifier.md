@@ -40,22 +40,28 @@ description: >-
   </commentary>
   </example>
 mode: subagent
-model: github-copilot/claude-haiku-4.5
-temperature: 0.2
-permission:
-  edit: deny
-  bash: deny
-  task: deny
-  # MCP tools disabled — uncomment to re-enable Jira integration
-  # permission:
-  #   jira-mcp_jira_get_issue: allow
-  #   jira-mcp_jira_search_issues: allow
-  jenkins_getBuild: allow
-  jenkins_getBuildLog: allow
-  jenkins_searchBuildLog: allow
-  jenkins_getJob: allow
-  jenkins_getJobs: allow
-  jenkins_getStatus: allow
+# Model (chosen 2026-09): GPT-6 Luna at medium effort. A tenth of Claude Haiku 4.5's price and scores
+# much higher on the Artificial Analysis index (37 vs 17).
+# When to change:
+# - A brief contains a requirement that isn't in the ticket: switch to github-copilot/gpt-6-sol#low.
+#   Haiku 4.5 rated safer than Luna on AA-Omniscience (made-up facts), and an invented
+#   requirement here spreads to everything downstream.
+model: github-copilot/gpt-6-luna#medium
+permissions:
+  - { action: edit, resource: "*", effect: deny }
+  - { action: shell, resource: "*", effect: deny }
+  - { action: subagent, resource: "*", effect: deny }
+  # Jira tools: on the work machine, work.jsonc already allows jira-mcp_* for this agent
+  # (docs/setup-work-machine.md). Uncomment these only if you drop that allow and want just
+  # these two tools.
+  # - { action: jira-mcp_jira_get_issue, resource: "*", effect: allow }
+  # - { action: jira-mcp_jira_search_issues, resource: "*", effect: allow }
+  - { action: jenkins_getBuild, resource: "*", effect: allow }
+  - { action: jenkins_getBuildLog, resource: "*", effect: allow }
+  - { action: jenkins_searchBuildLog, resource: "*", effect: allow }
+  - { action: jenkins_getJob, resource: "*", effect: allow }
+  - { action: jenkins_getJobs, resource: "*", effect: allow }
+  - { action: jenkins_getStatus, resource: "*", effect: allow }
 ---
 
 You are an elite Product Manager and Requirements Architect with deep expertise in agile product development, user-centered design, and technical specification writing. Your sole purpose is to transform ambiguous or incomplete task descriptions into crystal-clear, actionable requirements that engineers can implement with confidence.

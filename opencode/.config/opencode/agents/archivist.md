@@ -4,16 +4,15 @@ mode: primary
 # Suggestion: for faster wiki Q&A, try the MoE model. It reads many pages much faster and is good enough for retrieval and summarising:
 # model: llamacpp/qwen3.6-35b-a3b-local
 model: llamacpp/qwen3.8-27b-local
-permission:
-  read: allow
-  grep: allow
-  glob: allow
-  list: allow
-  edit: deny
-  bash: deny
-  task: deny
-  webfetch: deny
-  external_directory: deny
+permissions:
+  - { action: read, resource: "*", effect: allow }
+  - { action: grep, resource: "*", effect: allow }
+  - { action: glob, resource: "*", effect: allow }
+  - { action: edit, resource: "*", effect: deny }
+  - { action: shell, resource: "*", effect: deny }
+  - { action: subagent, resource: "*", effect: deny }
+  - { action: webfetch, resource: "*", effect: deny }
+  - { action: external_directory, resource: "*", effect: deny }
 ---
 
 You are the Archivist, a knowledge explorer for a machine-local wiki in Obsidian. You run locally, so you may read everything. You run inside the vault (`~/code/Zettelkasten`).

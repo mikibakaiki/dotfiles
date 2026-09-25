@@ -22,7 +22,8 @@ Gather these before you start — they're the only employer-specific values invo
 | Confluence MCP server path | same shape | same |
 | Jenkins MCP URL | `https://<jenkins-host>/mcp-server/mcp` | same |
 | Private npm scope | `@<org>/jira-mcp` | `vscode/mcp.json` |
-| Bitbucket / SCM host | `<host>/projects/<KEY>/repos/<SLUG>` | `~/.config/opencode/AGENTS.work.local.md` |
+| Folder that holds your work repos | e.g. `~/code/work/` | where the work `AGENTS.md` goes (§2) |
+| Bitbucket / SCM host | `<host>/projects/<KEY>/repos/<SLUG>` | `<work repos folder>/AGENTS.md` |
 | Jira ticket types | e.g. `PCA story` / `PCA Bug` | same |
 | Work git identity | `you@employer.example` | `~/.config/git/config.local` |
 | Where your *personal* repos live | `~/dotfiles/` | `~/.config/git/config.local` |
@@ -35,58 +36,110 @@ The work settings live in one untracked file, `~/.config/opencode/work.jsonc`, l
 config layer through `OPENCODE_CONFIG`. `config.fish` sets that variable automatically whenever the
 file exists, so creating the file is all it takes, and a machine without one is unaffected.
 
-Why this file and not `~/.config/opencode/opencode.json`, which older notes suggested: verified
-against OpenCode's source, it loads `config.json` → `opencode.json` → `opencode.jsonc` from that
-directory with a plain deep merge, where later files win and **arrays are replaced**. The tracked
-`opencode.jsonc` loads last, so its `instructions` would overwrite yours and your work rules would
-never load, silently. `OPENCODE_CONFIG` is a separate layer that loads *after* those files and
-merges arrays by concatenating them, so your entries add to the tracked ones instead of losing to
-them.
+Why this file and not `~/.config/opencode/opencode.json`, which older notes suggested: under V1
+(verified against its source), that directory's files were deep-merged with **arrays replaced**, so
+the override's `instructions` lost to the tracked `opencode.jsonc`, silently. `OPENCODE_CONFIG` was a
+separate layer loaded after them. (V2 appends `permissions` and `plugins` across layers instead of
+replacing them, so that particular trap is V1 history.)
+
+The V2 docs don't mention `OPENCODE_CONFIG` at all, so treat it as unverified until the check at the
+end of this section passes. A documented alternative: V2 merges every `opencode.jsonc` from the
+directory you start in up to the filesystem root, so the same content saved as
+`~/code/work/opencode.jsonc` (next to the work `AGENTS.md` from §2) applies to every work repo.
+
+**The background service and environment variables.** V2 runs OpenCode as a shared background
+service, and shell exports reach it only if that service was started from a shell that already had
+them. So `OPENCODE_CONFIG` from `config.fish`, and the `{env:JIRA_PAT}`-style tokens below from
+`.env.work`, can silently be missing. Persist them in the service's managed environment once (this
+stops a running service; the next `opencode` command restarts it with the new values):
+
+```fish
+opencode service set env OPENCODE_CONFIG ~/.config/opencode/work.jsonc
+opencode service set env JIRA_PAT $JIRA_PAT
+opencode service set env CONFLUENCE_PAT $CONFLUENCE_PAT
+opencode service set env JENKINS_TOKEN $JENKINS_TOKEN
+```
+
+That stores the tokens in the service's own configuration on disk, outside this repo; re-run the
+lines when a token rotates, and `opencode service unset env <NAME>` removes one. If you'd rather not
+persist them, run `opencode --standalone` instead, which starts a private server that inherits the
+current shell's environment. The `~/code/work/opencode.jsonc` alternative above removes the need for
+`OPENCODE_CONFIG`, but the tokens still have to reach the server one of these two ways.
 
 Because stow runs with `--no-folding`, `~/.config/opencode` is a real directory on this machine and
 `work.jsonc` never enters the repo. `.gitignore` lists it anyway, as a safety net.
 
 Create `~/.config/opencode/work.jsonc`:
 
-```json
+This is OpenCode V2's native format, matching the tracked `opencode.jsonc`. (V1 had the servers
+directly under `mcp`, a `tools` on/off map, and a singular `agent` key. V2 still reads those, but
+don't mix the two formats inside one agent entry.)
+
+```jsonc
 {
   "mcp": {
-    "jira-mcp": {
-      "type": "local",
-      "command": ["node", "/absolute/path/to/jira-mcp/build/server.js"],
-      "environment": { "JIRA_PAT": "{env:JIRA_PAT}" }
-    },
-    "confluence-mcp": {
-      "type": "local",
-      "command": ["node", "/absolute/path/to/confluence-mcp/build/server.js"],
-      "environment": { "CONFLUENCE_PAT": "{env:CONFLUENCE_PAT}" }
-    },
-    "jenkins": {
-      "type": "remote",
-      "url": "https://your-jenkins/mcp-server/mcp",
-      "headers": { "Authorization": "Basic {env:JENKINS_TOKEN}" }
+    "servers": {
+      "jira-mcp": {
+        "type": "local",
+        "command": ["node", "/absolute/path/to/jira-mcp/build/server.js"],
+        "environment": { "JIRA_PAT": "{env:JIRA_PAT}" },
+        "codemode": false
+      },
+      "confluence-mcp": {
+        "type": "local",
+        "command": ["node", "/absolute/path/to/confluence-mcp/build/server.js"],
+        "environment": { "CONFLUENCE_PAT": "{env:CONFLUENCE_PAT}" },
+        "codemode": false
+      },
+      "jenkins": {
+        "type": "remote",
+        "url": "https://your-jenkins/mcp-server/mcp",
+        "oauth": false,
+        "headers": { "Authorization": "Basic {env:JENKINS_TOKEN}" },
+        "codemode": false
+      }
     }
   },
-  "tools": {
-    "jira-mcp*": false,
-    "confluence-mcp*": false,
-    "jenkins*": false
-  },
-  "agent": {
+  // Off for every agent by default. The last matching rule wins, so the per-agent allows below
+  // override this.
+  "permissions": [
+    { "action": "jira-mcp_*", "resource": "*", "effect": "deny" },
+    { "action": "confluence-mcp_*", "resource": "*", "effect": "deny" },
+    { "action": "jenkins_*", "resource": "*", "effect": "deny" }
+  ],
+  "agents": {
     "requirements-clarifier": {
-      "tools": { "jira-mcp*": true, "confluence-mcp*": true, "jenkins*": true }
+      "permissions": [
+        { "action": "jira-mcp_*", "resource": "*", "effect": "allow" },
+        { "action": "confluence-mcp_*", "resource": "*", "effect": "allow" },
+        { "action": "jenkins_*", "resource": "*", "effect": "allow" }
+      ]
     },
     "explore": {
-      "tools": { "jira-mcp*": true, "confluence-mcp*": true, "jenkins*": true }
+      "permissions": [
+        { "action": "jira-mcp_*", "resource": "*", "effect": "allow" },
+        { "action": "confluence-mcp_*", "resource": "*", "effect": "allow" },
+        { "action": "jenkins_*", "resource": "*", "effect": "allow" }
+      ]
     }
   }
 }
 ```
 
-> **Keep the server keyed `jira-mcp`.** MCP tool names are `<server-key>_<tool>`, and
-> `requirements-clarifier.md` and `tech-lead.md` reference `jira-mcp_jira_get_issue` /
-> `jira-mcp_*`. Rename the key and those agents silently lose their Jira tools — the calls just
-> never resolve.
+> **Keep the server keyed `jira-mcp`, and keep `"codemode": false`.** MCP tool names are
+> `<server-key>_<tool>`, and `requirements-clarifier.md` and `tech-lead.md` reference
+> `jira-mcp_jira_get_issue` / `jira-mcp_*`. Rename the key and those agents silently lose their
+> Jira tools. V2 also defaults every server to Code Mode, which groups its tools behind one
+> `execute` tool instead of exposing them under those names; `codemode: false` keeps the direct
+> tools the agents ask for.
+>
+> The `-` in `jira-mcp` is safe: V2's name normalization only replaces characters other than
+> letters, numbers, `_` and `-`. `oauth: false` on `jenkins` stops V2 from attempting OAuth
+> (on by default for remote servers) when the server authenticates with a header instead.
+>
+> One thing the V2 docs leave open: the built-in `explore` agent ships a read-only policy, and the
+> docs don't say whether it lands before or after these allows. If `explore` can't reach the MCP
+> tools, that's why; `requirements-clarifier` is the one that matters.
 
 Tokens resolve from `~/.config/fish/conf.d/.env.work` via `{env:...}`. Don't hardcode them here
 even though the file is gitignored.
@@ -96,9 +149,17 @@ even though the file is gitignored.
 ## 2. Work-specific agent instructions
 
 The tracked `opencode/.config/opencode/AGENTS.md` holds only generic content — style, shell, OS,
-and the wiki pointer. Anything tied to an employer goes in an untracked override.
+and the wiki pointer. Anything tied to an employer goes in an untracked file.
 
-Create `~/.config/opencode/AGENTS.work.local.md`:
+OpenCode V2 no longer loads files listed in `instructions` (it accepts the field and ignores its
+entries), so the old `AGENTS.work.local.md` + `instructions` route is dead. What V2 does load is
+every `AGENTS.md` from the directory you start it in up to `$HOME`. So put the work rules in an
+`AGENTS.md` in the folder that holds your work repos, and every session in any of them picks it up.
+
+Use a folder that holds **only** work repos, e.g. `~/code/work/`. Not `~/code/` itself: that would
+also load these rules into the vault at `~/code/Zettelkasten`, and into anything else there.
+
+Create `~/code/work/AGENTS.md` (adjust the folder):
 
 ```markdown
 ## Runtime
@@ -120,28 +181,30 @@ Create `~/.config/opencode/AGENTS.work.local.md`:
 - Ticket issue type is always **PCA story** or **PCA Bug**, never generic Story/Bug.
 ```
 
-Then add this key to the **same** `work.jsonc`, next to `mcp` (one file, one JSON object):
+Don't add an `instructions` key for it: V2 would accept it and load nothing. And don't put this
+file under `~/dotfiles`; it lives with the work repos, outside this repo.
 
-```json
-"instructions": ["~/.config/opencode/AGENTS.work.local.md"]
-```
-
-Two details that matter. Use the `~/` path: OpenCode resolves a relative `instructions` entry against
-the *project you're working in*, not the config directory, so a bare filename loads nothing. And
-don't repeat `style.md`: this layer's array is added to the tracked one rather than replacing it.
+If you have an `~/.config/opencode/AGENTS.work.local.md` from the V1 setup, move its content here
+and delete it, along with the `instructions` key in `work.jsonc` that pointed at it.
 
 Verify, in a **new** fish shell so `OPENCODE_CONFIG` is set:
 
 ```bash
 echo $OPENCODE_CONFIG                              # → ~/.config/opencode/work.jsonc, expanded
-opencode debug config | grep -A3 '"instructions"'  # both style.md and AGENTS.work.local.md
-opencode debug config | grep -c jira-mcp           # non-zero: the MCP servers merged in
-cd ~/dotfiles && git status --short                # nothing for work.jsonc or AGENTS.*.local.md
+opencode mcp list                                  # ✓ jira-mcp / confluence-mcp / jenkins  connected
+cd ~/dotfiles && git status --short                # nothing for work.jsonc
 ```
 
+If `opencode mcp list` shows none of the three, the work layer isn't loading: check the service
+environment above, or switch to the `~/code/work/opencode.jsonc` alternative. Listed but not
+connected usually means a token didn't reach the service.
+
+Then start `opencode` inside one work repo and ask "which default branch do we target?" — it should
+answer `master` from the work `AGENTS.md`. Start it in `~/dotfiles` and ask again; it shouldn't know.
+
 (Don't verify by asking the Zettelkasten agent to list its MCP tools. The config above deliberately
-disables them for every agent except `requirements-clarifier` and `explore`, so it would honestly
-report none even when everything works.)
+disables them for every agent except `requirements-clarifier`, `explore`, and `tech-lead` (Jira only,
+through its own `jira-mcp_*` allow), so it would honestly report none even when everything works.)
 
 ---
 

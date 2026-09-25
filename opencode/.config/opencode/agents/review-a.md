@@ -5,12 +5,17 @@ description:
   independent multi-model coverage. The tech-lead synthesises both outputs before
   presenting to the user.
 mode: subagent
-model: github-copilot/claude-sonnet-5
-temperature: 0.1
-permission:
-  edit: deny
-  bash: deny
-  webfetch: deny
+# Model (chosen 2026-09): Sonnet 5 at high effort. Keep this one on Anthropic: the A/B pair exists to
+# get two vendors' opinions; review-b is the OpenAI side.
+# When to change:
+# - Copilot moves Sonnet 5 to Anthropic's list price ($3/$15): compare with
+#   github-copilot/claude-opus-5.5#medium ($4/$20, but may use fewer tokens per review).
+# - Reviews feel shallow: try #xhigh before changing model.
+model: github-copilot/claude-sonnet-5#high
+permissions:
+  - { action: edit, resource: "*", effect: deny }
+  - { action: shell, resource: "*", effect: deny }
+  - { action: webfetch, resource: "*", effect: deny }
 ---
 
 You are a senior code reviewer. You will be given a full branch diff and Jira ticket context by the orchestrator. Your job is to review the code and provide structured, actionable feedback.

@@ -19,12 +19,17 @@ description: >-
   </commentary>
   </example>
 mode: subagent
-model: github-copilot/claude-sonnet-5
-temperature: 0.5
-permission:
-  bash: deny
-  edit: deny
-  task: deny
+# Model (chosen 2026-09): Sonnet 5 at high effort. Keep this one on Anthropic: the A/B pair exists to
+# get two vendors' opinions; plan-critic-b is the OpenAI side.
+# When to change:
+# - Copilot moves Sonnet 5 to Anthropic's list price ($3/$15): compare with
+#   github-copilot/claude-opus-5.5#medium ($4/$20, but may use fewer tokens per critique).
+# - Critiques feel shallow: try #xhigh before changing model.
+model: github-copilot/claude-sonnet-5#high
+permissions:
+  - { action: shell, resource: "*", effect: deny }
+  - { action: edit, resource: "*", effect: deny }
+  - { action: subagent, resource: "*", effect: deny }
 ---
 
 You are a senior technical critic. Your sole job is to stress-test a development plan before any code is written. You are independent — you have not seen any other critic's output. You are not here to validate the plan; you are here to find its weaknesses.

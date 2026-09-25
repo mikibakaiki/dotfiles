@@ -30,13 +30,13 @@ for `--adopt` without reading what it does.
 
 What each tracked file does:
 
-- `opencode/.config/opencode/opencode.jsonc` — the main config: `instructions` (loads `style.md`),
-  `small_model`, the `llamacpp` provider (both Qwen models), the `external_directory` privacy wall,
-  and the DCP plugin pin.
-- `opencode/.config/opencode/style.md` — terse chat replies, normal English for anything written to
-  disk, and the `/handoff` capture nudge.
+- `opencode/.config/opencode/opencode.jsonc` — the main config, in OpenCode's native V2 format: the
+  `title` and `summary` agents' model (V1's `small_model`), the `llamacpp` provider (both Qwen models), the
+  `external_directory` privacy wall in `permissions`, and the DCP plugin pin in `plugins`.
+- `opencode/.config/opencode/AGENTS.md` — the global instructions: terse chat replies, normal
+  English for anything written to disk, and the `/handoff` capture nudge.
 - `opencode/.config/opencode/agents/zettelkasten.md` — the Librarian. Ingests `raw/` into `wiki/`
-  and runs lint passes. Local model, `bash` denied, `external_directory` denied.
+  and runs lint passes. Local model, `shell` denied, `external_directory` denied.
 - `opencode/.config/opencode/agents/archivist.md` — read-only Q&A over the wiki. Local model.
 - `opencode/.config/opencode/commands/handoff.md` — writes a session handoff into the vault's
   `raw/`. Pinned to the local Qwen model regardless of what model the session itself used, so the
@@ -62,25 +62,46 @@ opencode auth login        # the top-level agent runs on Copilot; the zk agents 
 fails on its first message with an auth error, even though every Zettelkasten agent itself runs
 locally.
 
+The config is written for OpenCode **V2**. Don't run it on a V1 install: the native V2 keys
+(`providers`, `permissions`, `plugins`, `agents`) aren't V1 config, so the local provider and the
+privacy wall would at best be ignored (not verified whether V1 ignores them or rejects the file).
+Upgrade rather than downgrading the config.
+
 Check against the OpenCode changelog/docs for:
 - `opencode.jsonc` (JSONC, not just `opencode.json`) support
 - `--agent` flag on both `opencode` (interactive) and `opencode run`
-- pattern maps (glob-style keys) for `permission.external_directory`
-- `~` expansion inside those pattern keys (the config here relies on `~/code/Zettelkasten/**`
-  resolving correctly)
+- `external_directory` rules in the ordered `permissions` array, last match wins
+- `~` expansion in those `resource` patterns (the config here relies on `~/code/Zettelkasten/**`
+  resolving correctly; V2's docs say it expands a leading `~` for `external_directory`)
 
 If any of these aren't supported by your installed version:
 - Upgrade OpenCode, **or**
 - Adjust the patterns (e.g. expand `~` to the literal home path yourself in `opencode.jsonc`) and
   note the workaround in a handoff once the dry run (section 4) works.
 
-Then confirm the tracked instructions actually load. This check is for real:
-`instructions` used to name a bare `style.md`, which OpenCode resolved against the current
-project and so never loaded.
+Then confirm the tracked instructions actually load. This check is for real: they used to live in
+`style.md`, loaded through `instructions`, and V2 accepts that field but does not currently load
+anything from it. They're now in the global `AGENTS.md`, which V2 always loads. Ask a fresh session "what does
+your global AGENTS.md say about /handoff?" — it should paraphrase the capture nudge.
 
-```bash
-opencode debug config | grep -A3 '"instructions"'   # → "~/.config/opencode/style.md"
-```
+**DCP is a known failure on V2.** The plugin API is one of V2's documented breaking changes, and
+every published DCP release (3.1.15 through 3.2.8-beta0, as of 2026-09-25) is built on the V1 API
+(`@opencode-ai/plugin`), not V2's `@opencode/plugin`. It stays in `plugins` on purpose, as a known
+failure, so the pin is there to bump once a V2 build ships; until then expect `opencode plugin list` to show it failing, with no
+effect on anything else. When a V2-compatible release appears (`npm view @tarquinen/opencode-dcp
+peerDependencies` naming `@opencode/plugin`), bump the pin and record it in a handoff.
+
+Two more things to check once, on the first real sessions:
+- **Reasoning-effort variants.** Every Copilot agent picks its effort with a `#variant` suffix
+  (`github-copilot/gpt-6-sol#high`). Variant names come from OpenCode's model catalog, and an unknown
+  one is a model-resolution error for that agent. Run `opencode models github-copilot` and check the
+  variants exist for `claude-opus-5.5`, `claude-sonnet-5`, `gpt-6-sol` and `gpt-6-luna`; if one is
+  missing, drop the suffix on the affected agents. No agent sets `temperature` any more: the newer
+  Claude models reject it, and the OpenAI reasoning models ignore or reject it.
+- **The raw/ exception.** V2 matches `external_directory` against the directory boundary it
+  computes (normally ending in `/*`). The dry run in section 4 must show `/handoff` *prompting* for
+  `~/code/Zettelkasten/raw/`; a flat denial means the reported boundary was the vault root and the
+  pattern needs adjusting. If `~/code` is a symlink, write the real path instead of `~`.
 
 ---
 
@@ -256,7 +277,7 @@ Don't wire it into the main config. If you want to measure it:
 Written on Linux with no `fish`, `opencode` CLI, or `launchd` — every command above comes from the
 spec and **none of it has been run**. What *was* checked statically: the fish file's structure, the
 frontmatter stamp detection (against a body line starting `ingested:`, a file with no frontmatter,
-and a legacy `refused:` stamp), and that `opencode.jsonc` parses with its permission map intact.
+and a legacy `refused:` stamp), and that `opencode.jsonc` parses with its permissions intact.
 Nothing else. Treat sections 2 and 4 as the ones most likely to surface a real problem — version
 mismatches and pattern-matching quirks — and go slowly through them.
 

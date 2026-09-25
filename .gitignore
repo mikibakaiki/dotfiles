@@ -22,8 +22,10 @@ ssh/.ssh/*
 **/opencode/package.json
 **/opencode/package-lock.json
 **/opencode/tui.json
+**/opencode/cli.json
 **/opencode/opencode.json
 **/opencode/work.jsonc
+# V1-era work-rules file; kept so a leftover copy can't be committed by accident
 **/opencode/AGENTS.*.local.md
 
 # ── macOS ──────────────────────────────────────────────────────────────────────
